@@ -1,0 +1,96 @@
+# dependencies
+node_modules
+/.pnp
+.pnp.js
+yarn.lock
+package-lock.json
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+.swc/
+
+# production
+/build
+/dist
+
+# misc
+.DS_Store
+.DS_Store*
+*.pem
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Logs and debugging
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+lerna-debug.log*
+
+# IDE and editor folders
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swp
+*.swo
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+.sublime-workspace
+.nvimlog
+
+# local env files
+.env*.local
+.env
+.env.development
+.env.test
+.env.production
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# Cache directories
+.cache/
+.eslintcache
+.stylelintcache
+.prettiercache
+
+# Temporary files
+.temp
+.tmp
+temp/
+tmp/
+
+# Browser files
+public/workbox-*.js
+public/sw.js
+public/fallback-*.js
+
+# Storybook
+storybook-static/
+
+# Generated files
+src/generated/
