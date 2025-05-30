@@ -27,7 +27,6 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useSettingsStore } from '@/features/progress/useSettingsStore';
 
-
 const drawerWidth = 240;
 
 interface AppLayoutProps {
