@@ -599,13 +599,9 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         
         // Only save back if we need to normalize
         if (JSON.stringify(normalizedSettings) !== JSON.stringify(currentSettings)) {
-          console.log('⚠️ Settings needed normalization, saving normalized version');
-          if (normalizedSettings.useGistStorage && normalizedSettings.githubGistToken) {
-            await gistStorageService.saveSettings(normalizedSettings);
-          } else {
-            // Save directly to Gist storage
-            await gistStorageService.saveSettings(normalizedSettings);
-          }
+          console.log('⚠️ Settings needed normalization, but NOT saving during initialization');
+          // Don't save during initialization - this wastes API calls
+          // Just use the normalized settings in memory
         }
         
         // Initialize appropriate AI service based on selected provider

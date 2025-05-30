@@ -30,7 +30,7 @@ interface ProgressState {
   updateDayCompletion: (day: number, completed: boolean) => void;
   archiveCurrentProgram: () => void;
   loadProgram: (programId: string) => void;
-  createProgram: (topics: Technology[], duration: number) => void;
+  createProgram: (topics: Technology[], duration: number) => Promise<LearningProgram>;
   deleteArchivedProgram: (programId: string) => void;
   saveCurrentProgram: () => void;
   switchProgram: (programId: string) => void;
@@ -220,30 +220,64 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
     }
   },
 
-  createProgram: (topics, duration) => {
-    const newProgram: LearningProgram = {
-      id: `program_${Date.now()}`,
-      dateStarted: new Date().toISOString(),
-      topics,
-      durationDays: duration,
-      currentDay: 1,
-      dailyPlans: Array.from({ length: duration }, (_, i) => ({
-        day: i + 1,
-        theoryBlockIds: [],
-        questionIds: [],
-        codeTaskId: '',
-        completed: false
-      })),
-      progress: [],
-      savedExamples: {}
-    };
-    
-    set({ currentProgram: newProgram });
-    
-    // Save to Gist storage
-    gistStorageService.saveProgram(newProgram).catch(err => {
-      console.error('Failed to save new program to Gist storage:', err);
-    });
+  createProgram: async (topics, duration) => {
+    console.log('🚀 Creating new program with emergency save...');
+    try {
+      // Use the emergency save function to create and save the program
+      // This ensures the program is saved directly to GitHub Gist with retries
+      const { createAndSaveProgram } = await import('@/utils/emergencySave');
+      const newProgram = await createAndSaveProgram(topics, duration);
+      
+      if (newProgram) {
+        console.log('✅ Program created and saved successfully');
+        set({ currentProgram: newProgram });
+        return newProgram;
+      } else {
+        console.error('❌ Failed to create and save program');
+        // Create a local program as fallback
+        const localProgram: LearningProgram = {
+          id: `program_${Date.now()}`,
+          dateStarted: new Date().toISOString(),
+          topics,
+          durationDays: duration,
+          currentDay: 1,
+          dailyPlans: Array.from({ length: duration }, (_, i) => ({
+            day: i + 1,
+            theoryBlockIds: [],
+            questionIds: [],
+            codeTaskId: '',
+            completed: false
+          })),
+          progress: [],
+          savedExamples: {}
+        };
+        
+        set({ currentProgram: localProgram });
+        return localProgram;
+      }
+    } catch (error) {
+      console.error('❌ Critical error in createProgram:', error);
+      // Fallback to local program creation
+      const fallbackProgram: LearningProgram = {
+        id: `program_${Date.now()}`,
+        dateStarted: new Date().toISOString(),
+        topics,
+        durationDays: duration,
+        currentDay: 1,
+        dailyPlans: Array.from({ length: duration }, (_, i) => ({
+          day: i + 1,
+          theoryBlockIds: [],
+          questionIds: [],
+          codeTaskId: '',
+          completed: false
+        })),
+        progress: [],
+        savedExamples: {}
+      };
+      
+      set({ currentProgram: fallbackProgram });
+      return fallbackProgram;
+    }
   },
 
   deleteArchivedProgram: (programId) => {

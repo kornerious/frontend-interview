@@ -1,9 +1,11 @@
 import { Octokit } from '@octokit/rest';
+import { LearningProgram } from '@/types';
+import { rateLimitState, detectRateLimit } from '@/components/RateLimitAlert';
 
 interface GistData {
   settings?: any;
   progress?: any;
-  programs?: any;
+  programs?: LearningProgram[];
   userAnswers?: any;
   analysis?: any;
   bookmarks?: any;
@@ -11,13 +13,124 @@ interface GistData {
   codeExamples?: any;
 }
 
+/**
+ * Rate limit manager to handle GitHub API rate limits
+ * GitHub has a rate limit of 5000 requests per hour for authenticated requests
+ */
+class RateLimitManager {
+  private lastCallTime: number = 0;
+  private minTimeBetweenCalls: number = 500; // Minimum 500ms between calls
+  private requestCount: number = 0;
+  private resetTime: number = 0;
+  private remainingCalls: number = 5000; // Default GitHub limit
+  
+  // Cache for get requests to avoid unnecessary duplicates
+  private cache: Record<string, {data: any, timestamp: number}> = {};
+  private readonly cacheTTL = 10000; // 10 seconds cache TTL
+  
+  constructor() {
+    // Reset counter every hour
+    setInterval(() => {
+      this.requestCount = 0;
+      console.log('🔄 Rate limit counter reset');
+    }, 60 * 60 * 1000);
+  }
+  
+  /**
+   * Update rate limit info from GitHub response headers
+   */
+  updateLimits(headers: any) {
+    if (headers && headers['x-ratelimit-remaining']) {
+      this.remainingCalls = parseInt(headers['x-ratelimit-remaining']);
+      
+      if (headers['x-ratelimit-reset']) {
+        this.resetTime = parseInt(headers['x-ratelimit-reset']) * 1000;
+      }
+      
+      // Log when we're getting low on remaining calls
+      if (this.remainingCalls < 100) {
+        console.warn(`⚠️ GitHub API rate limit running low: ${this.remainingCalls} remaining calls`);
+        console.log(`Reset time: ${new Date(this.resetTime).toLocaleTimeString()}`);
+      }
+    }
+  }
+  
+  /**
+   * Check if a call can be made, and wait if needed
+   */
+  async throttleIfNeeded(): Promise<void> {
+    this.requestCount++;
+    
+    // Calculate dynamic delay based on remaining calls
+    // As we get fewer remaining calls, we wait longer between them
+    let dynamicDelay = this.minTimeBetweenCalls;
+    
+    if (this.remainingCalls < 100) {
+      // Exponential backoff as we approach rate limit
+      dynamicDelay = this.minTimeBetweenCalls * (1 + (100 - this.remainingCalls) / 10);
+    }
+    
+    const now = Date.now();
+    const timeSinceLastCall = now - this.lastCallTime;
+    
+    if (timeSinceLastCall < dynamicDelay) {
+      const waitTime = dynamicDelay - timeSinceLastCall;
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
+    
+    this.lastCallTime = Date.now();
+  }
+  
+  /**
+   * Get cached data if available, otherwise execute the API call
+   */
+  async getCachedOrFetch<T>(cacheKey: string, fetchFn: () => Promise<T>): Promise<T> {
+    // Check cache first
+    const cachedItem = this.cache[cacheKey];
+    const now = Date.now();
+    
+    if (cachedItem && (now - cachedItem.timestamp) < this.cacheTTL) {
+      console.log(`🔍 Using cached data for: ${cacheKey}`);
+      return cachedItem.data;
+    }
+    
+    // Otherwise make the API call with throttling
+    await this.throttleIfNeeded();
+    try {
+      const data = await fetchFn();
+      
+      // Cache the result
+      this.cache[cacheKey] = {
+        data,
+        timestamp: now
+      };
+      
+      return data;
+    } catch (error: any) {
+      // Check if this is a rate limit error
+      if (error?.message?.includes('API rate limit exceeded')) {
+        // Extract reset time if available
+        if (error.response?.headers?.['x-ratelimit-reset']) {
+          this.resetTime = parseInt(error.response.headers['x-ratelimit-reset']) * 1000;
+          this.remainingCalls = 0;
+          console.warn(`⛔ Rate limit exceeded. Reset at ${new Date(this.resetTime).toLocaleTimeString()}`);
+        }
+      }
+      throw error;
+    }
+  }
+}
+
 class GistStorageService {
   private octokit: Octokit | null = null;
-  private gistId: string | null | undefined = null;
-  private isInitialized = false;
+  private gistId: string | null = null;
+  private fileName: string = process.env.NEXT_PUBLIC_GIST_FILENAME || 'FrontendDevInterview.json';
   private cachedData: GistData = {};
-  private fileName = process.env.NEXT_PUBLIC_GIST_FILENAME || "FrontendDevInterview.json";
+  private isInitialized: boolean = false;
   private envGistId = process.env.NEXT_PUBLIC_GIST_ID;
+  
+  // Rate limit manager to control API call frequency
+  private rateLimiter = new RateLimitManager();
 
   /**
    * Initialize GitHub Gist storage with provided token
@@ -142,7 +255,7 @@ class GistStorageService {
         }
       });
       
-      this.gistId = newGist.data.id;
+      this.gistId = newGist.data.id || null;
       console.log('Created new gist:', this.gistId);
     } catch (error) {
       console.error('Error finding/creating gist:', error);
@@ -223,7 +336,116 @@ class GistStorageService {
   private saveLock = false;
   private saveQueue: (() => Promise<boolean>)[] = [];
   private loadPromise: Promise<GistData> | null = null; // Single shared load promise to prevent multiple simultaneous loads
-
+  
+  /**
+   * Direct save to gist - bypasses the queue for critical data
+   * Implements retry logic and proper merge handling
+   */
+  async directSaveToGist(data: Partial<GistData>): Promise<boolean> {
+    // Check if we're currently rate limited
+    if (rateLimitState.isRateLimited) {
+      console.warn('⚠️ DIRECT SAVE: Skipping save due to active rate limit');
+      return false;
+    }
+    
+    if (!this.isInitialized || !this.octokit || !this.gistId) {
+      console.error('❌ Cannot save - not initialized');
+      return false;
+    }
+    
+    // Maximum number of retry attempts
+    const MAX_RETRIES = 3;
+    let attempt = 0;
+    
+    while (attempt < MAX_RETRIES) {
+      try {
+        // First, get the latest data to ensure we're working with current state
+        // This helps prevent race conditions with other components saving
+        await this.loadFromGist();
+        
+        // Deep merge the new data with existing data
+        const mergedData = this.deepMerge(this.cachedData, data);
+        
+        // Check if data would actually change by comparing stringified versions
+        const currentDataStr = JSON.stringify(this.cachedData, null, 2);
+        const newDataStr = JSON.stringify(mergedData, null, 2);
+        
+        // If no changes detected, skip API call
+        if (currentDataStr === newDataStr) {
+          console.log('⏭️ DIRECT SAVE: No changes detected, skipping update call');
+          return true; // Success since nothing needs to be saved
+        }
+        
+        // Update cached data with merged data
+        this.cachedData = mergedData;
+        
+        // Use the rateLimiter to avoid hitting API limits
+        const saveOperation = async () => {
+          // Create content as a stringified version of the cached data
+          const content = JSON.stringify(mergedData, null, 2);
+          
+          // Update the gist with merged data - only if there are actual changes
+          const response = await this.octokit!.gists.update({
+            gist_id: this.gistId!,
+            files: {
+              [this.fileName]: {
+                content
+              }
+            }
+          });
+          
+          // Update rate limit info from response headers
+          if (response.headers) {
+            this.rateLimiter.updateLimits(response.headers);
+          }
+          
+          // Verify the update was successful
+          return response.status >= 200 && response.status < 300;
+        };
+        
+        // Execute the save operation with throttling
+        const success = await this.rateLimiter.getCachedOrFetch(
+          `save_${this.gistId}_${Date.now()}`, // Unique key for each save
+          saveOperation
+        );
+        
+        if (success) {
+          console.log('✅ DIRECT SAVE: Successfully saved data to Gist');
+          return true;
+        }
+        
+        // If we reach here, the save wasn't successful but didn't throw an error
+        attempt++;
+        console.warn(`⚠️ DIRECT SAVE: Attempt ${attempt} failed, retrying...`);
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Exponential backoff
+        
+      } catch (error: any) {
+        attempt++;
+        
+        // Check if this is a rate limit error
+        if (detectRateLimit(error)) {
+          console.warn('⚠️ DIRECT SAVE: Rate limit detected, save failed');
+          return false; // Don't retry if we hit rate limits
+        }
+        
+        // Log and retry for other errors
+        console.error('❌ DIRECT SAVE: Error saving to Gist:', error.message);
+        
+        if (attempt >= MAX_RETRIES) {
+          console.error('❌ DIRECT SAVE: All retry attempts failed');
+          return false;
+        }
+        
+        // Wait before retrying with exponential backoff
+        const delay = Math.pow(2, attempt) * 1000;
+        console.warn(`⚠️ DIRECT SAVE: Retrying in ${delay/1000} seconds...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+    
+    return false; // All attempts failed
+  }
+  
   /**
    * Deep merge utility to properly merge nested objects and arrays
    */
@@ -399,6 +621,7 @@ class GistStorageService {
 
   /**
    * Import data from a specific Gist URL
+   * This method now avoids unnecessary PATCH operations during initialization
    */
   async importFromGistUrl(url: string): Promise<boolean> {
     if (!this.isInitialized || !this.octokit) {
@@ -414,51 +637,57 @@ class GistStorageService {
       if (url.includes('gist.github.com')) {
         const urlParts = url.split('/');
         gistId = urlParts[urlParts.length - 1];
-        if (gistId.includes('#')) {
+        if (gistId && gistId.includes('#')) {
           gistId = gistId.split('#')[0]; // Remove fragment identifier
         }
         
-        console.log('Extracted Gist ID from URL:', gistId);
+        console.log('🔍 Extracted Gist ID from URL:', gistId);
         
-        // Use the Octokit API to get the raw content
-        const response = await this.octokit.gists.get({ gist_id: gistId });
-        if (response.data.files && response.data.files[this.fileName]) {
-          const fileContent = response.data.files[this.fileName];
-          if (fileContent && fileContent.content) {
-            this.cachedData = JSON.parse(fileContent.content);
+        if (gistId) {
+          // Use the Octokit API to get the raw content
+          const response = await this.octokit.gists.get({ gist_id: gistId });
+          
+          // Check for rate limit headers
+          if (response.headers && response.headers['x-ratelimit-remaining']) {
+            const remaining = parseInt(response.headers['x-ratelimit-remaining']);
+            if (remaining < 100) {
+              console.warn(`⚠️ GitHub API rate limit running low: ${remaining} remaining calls`);
+            }
+          }
+          
+          if (response.data.files && response.data.files[this.fileName]) {
+            const fileContent = response.data.files[this.fileName];
+            if (fileContent && fileContent.content) {
+              this.cachedData = JSON.parse(fileContent.content);
+            }
+          } else {
+            console.error('❌ Could not find the expected file in the Gist');
+            return false;
           }
         } else {
-          console.error('Could not find the expected file in the Gist');
+          console.error('❌ Could not extract Gist ID from URL');
           return false;
         }
       } else {
         // Handle direct raw URLs
         const response = await fetch(url);
         if (!response.ok) {
-          console.error(`HTTP error! status: ${response.status}`);
+          console.error(`❌ HTTP error! status: ${response.status}`);
           return false;
         }
         
         this.cachedData = await response.json();
       }
       
-      // Update our gist with the imported data
-      if (this.gistId) {
-        await this.octokit.gists.update({
-          gist_id: this.gistId,
-          files: {
-            [this.fileName]: {
-              content: JSON.stringify(this.cachedData, null, 2)
-            }
-          }
-        });
-      }
+      // IMPORTANT: No PATCH operation here anymore!
+      // Previously this method was unnecessarily saving the data back to the same Gist
+      // during initialization, which was causing rate limit errors
       
-      console.log('Successfully imported data from Gist');
+      console.log('✅ Successfully imported data from Gist to memory');
       return true;
     } catch (error) {
-      console.error('Error importing data from Gist URL:', error);
-      return false;
+      console.error('❌ Error importing data from Gist URL:', error);
+      throw error; // Rethrow so the caller can handle rate limit errors
     }
   }
 
@@ -663,55 +892,83 @@ class GistStorageService {
   }
 
   // Programs
-  async saveProgram(program: any): Promise<boolean> {
-    const programs = this.cachedData.programs || [];
-    const index = programs.findIndex((p: any) => p.id === program.id);
+  async saveProgram(program: LearningProgram): Promise<boolean> {
+    console.log('💾 Saving program with ID:', program?.id);
+    if (!this.isInitialized || !program?.id) return false;
     
-    if (index !== -1) {
-      programs[index] = program;
+    // For programs, we need to merge with existing programs array carefully
+    await this.loadFromGist();
+    let programs = [...(this.cachedData.programs || [])];
+    
+    // Find if program already exists
+    const existingIndex = programs.findIndex(p => p.id === program.id);
+    
+    if (existingIndex >= 0) {
+      programs[existingIndex] = program; // Update
     } else {
-      programs.push(program);
+      programs.push(program); // Add new
     }
     
-    return this.saveToGist({ programs });
+    // Use direct save for programs as they are critical data
+    return this.directSaveToGist({ programs });
   }
 
-  async getAllPrograms(): Promise<any[]> {
-    await this.loadFromGist();
-    return this.cachedData.programs || this.getDefaultData().programs;
-  }
-
-  async getProgram(id: string): Promise<any | undefined> {
-    await this.loadFromGist();
-    const programs = this.cachedData.programs || this.getDefaultData().programs;
-    return programs.find((p: any) => p.id === id);
+  /**
+   * Get all learning programs
+   */
+  async getAllPrograms(): Promise<LearningProgram[]> {
+    try {
+      // Make sure we get fresh data from the gist
+      await this.loadFromGist();
+      
+      // Get programs from cached data
+      const programs = this.cachedData.programs || [];
+      
+      // Log for debugging
+      console.log(`🔍 getAllPrograms found ${programs.length} programs in cached data`);
+      if (programs.length > 0) {
+        console.log('🧾 Program IDs:', programs.map(p => p.id).join(', '));
+      }
+      
+      return programs;
+    } catch (error) {
+      // If we hit an error (like rate limit), return whatever is in cache
+      console.error('❌ Error in getAllPrograms:', error);
+      
+      // Don't let rate limits prevent us from returning cached data
+      if (detectRateLimit(error)) {
+        console.warn('⚠️ Rate limit detected in getAllPrograms, returning cached data');
+      }
+      
+      return this.cachedData.programs || [];
+    }
   }
 
   // Progress
-  async saveProgress(progress: any): Promise<boolean> {
-    const allProgress = this.cachedData.progress || [];
-    allProgress.push(progress);
-    return this.saveToGist({ progress: allProgress });
-  }
-
-  async getAllProgress(): Promise<any[]> {
+  async saveProgress(progressItem: any): Promise<boolean> {
+    console.log('💾 Saving progress item:', progressItem?.questionId || 'unknown');
+    
+    // For progress, we need to merge with existing progress array carefully
     await this.loadFromGist();
-    return this.cachedData.progress || this.getDefaultData().progress;
+    let progress = [...(this.cachedData.progress || [])];
+    
+    // Add the new progress item
+    progress.push(progressItem);
+    
+    // Use direct save which handles optimistic updates and race conditions
+    return this.directSaveToGist({ progress });
   }
-
-  // User Answers
-  async saveUserAnswers(answers: Record<string, string>): Promise<boolean> {
-    return this.saveToGist({ userAnswers: answers });
-  }
-
-  async getUserAnswers(): Promise<Record<string, string>> {
+  
+  async getProgress(): Promise<any[]> {
     await this.loadFromGist();
-    return this.cachedData.userAnswers || this.getDefaultData().userAnswers;
+    return this.cachedData.progress || [];
   }
 
   // Analysis
   async saveAnalysis(analysis: Record<string, any>): Promise<boolean> {
-    return this.saveToGist({ analysis });
+    console.log('💾 Saving analysis data');
+    // Use direct save for analysis as it contains critical user data
+    return this.directSaveToGist({ analysis });
   }
 
   async getAnalysis(): Promise<Record<string, any>> {
@@ -719,9 +976,23 @@ class GistStorageService {
     return this.cachedData.analysis || this.getDefaultData().analysis;
   }
 
+  // User Answers
+  async saveUserAnswers(userAnswers: Record<string, string>): Promise<boolean> {
+    console.log('💾 Saving user answers');
+    // Use direct save for user answers as they are important user data
+    return this.directSaveToGist({ userAnswers });
+  }
+
+  async getUserAnswers(): Promise<Record<string, string>> {
+    await this.loadFromGist();
+    return this.cachedData.userAnswers || this.getDefaultData().userAnswers;
+  }
+
   // Bookmarks
   async saveBookmarks(bookmarks: { questions: string[], tasks: string[], theory: string[] }): Promise<boolean> {
-    return this.saveToGist({ bookmarks });
+    console.log('💾 Saving bookmarks');
+    // Use direct save for bookmarks as they are important user data
+    return this.directSaveToGist({ bookmarks });
   }
 
   async getBookmarks(): Promise<{ questions: string[], tasks: string[], theory: string[] }> {
@@ -738,31 +1009,77 @@ class GistStorageService {
 
   async getConversationHistory(sessionId = 'default-session'): Promise<any[]> {
     await this.loadFromGist();
-    const conversations = this.cachedData.conversations || this.getDefaultData().conversations;
+    const conversations = this.cachedData.conversations || this.getDefaultData().conversations || {};
     return conversations[sessionId] || [];
   }
 
   // Code Examples
   async saveCodeExample(id: string, code: string, contextId = 'global'): Promise<boolean> {
+    // Don't log every code example save to reduce console noise
     const codeExamples = this.cachedData.codeExamples || {};
     const contextExamples = codeExamples[contextId] || {};
     
     contextExamples[id] = code;
     codeExamples[contextId] = contextExamples;
     
+    // Use regular save for code examples to avoid rate limiting
+    // Code examples aren't as critical as programs and progress
     return this.saveToGist({ codeExamples });
   }
 
+  // Add debounce support for frequent saves
+  private saveDebounceTimers: Record<string, NodeJS.Timeout> = {};
+  private lastSaveTime = 0;
+  private readonly MIN_SAVE_INTERVAL = 2000; // Minimum time between saves (ms)
+  
+  /**
+   * Debounced save to prevent excessive API calls
+   * This will ensure we don't make more than one save every MIN_SAVE_INTERVAL ms
+   */
+  private debouncedSave(key: string, saveFunction: () => Promise<boolean>): Promise<boolean> {
+    // Clear any existing timer for this key
+    if (this.saveDebounceTimers[key]) {
+      clearTimeout(this.saveDebounceTimers[key]);
+    }
+    
+    return new Promise((resolve) => {
+      this.saveDebounceTimers[key] = setTimeout(async () => {
+        // Check if we need to wait to respect rate limits
+        const now = Date.now();
+        const timeSinceLastSave = now - this.lastSaveTime;
+        
+        if (timeSinceLastSave < this.MIN_SAVE_INTERVAL) {
+          const waitTime = this.MIN_SAVE_INTERVAL - timeSinceLastSave;
+          await new Promise(r => setTimeout(r, waitTime));
+        }
+        
+        // Perform the save
+        try {
+          const result = await saveFunction();
+          this.lastSaveTime = Date.now();
+          resolve(result);
+        } catch (error) {
+          console.error('Debounced save error:', error);
+          resolve(false);
+        }
+      }, 500); // Debounce for 500ms
+    });
+  }
+  
   async saveCodeExamples(examples: Record<string, string>, contextId = 'global'): Promise<boolean> {
+    // Don't log every save to reduce console noise
     const codeExamples = this.cachedData.codeExamples || {};
     codeExamples[contextId] = examples;
     
-    return this.saveToGist({ codeExamples });
+    // Use debounced regular save for code examples to avoid rate limiting
+    return this.debouncedSave(`codeExamples_${contextId}`, () => {
+      return this.saveToGist({ codeExamples });
+    });
   }
 
   async getCodeExamples(contextId = 'global'): Promise<Record<string, string>> {
     await this.loadFromGist();
-    const codeExamples = this.cachedData.codeExamples || this.getDefaultData().codeExamples;
+    const codeExamples = this.cachedData.codeExamples || this.getDefaultData().codeExamples || {};
     return codeExamples[contextId] || {};
   }
   

@@ -21,7 +21,7 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { useRouter } from 'next/router';
 import AppLayout from '@/components/AppLayout';
 import ProgramSwitcher from '@/components/ProgramSwitcher';
-import { Technology } from '@/types';
+import { Technology, LearningProgram } from '@/types';
 import { useProgressStore } from '@/features/progress/useProgressStore';
 import { useSettingsStore } from '@/features/progress/useSettingsStore';
 import { generateLearningProgram } from '@/features/learning/planner';
@@ -31,7 +31,7 @@ import { codeTasks } from '@/data/sampleTasks';
 import PersonalizedRecommendations from '@/components/PersonalizedRecommendations';
 
 export default function Dashboard() {
-  const { currentProgram, setCurrentProgram, archivedPrograms, loadProgram, saveCurrentProgram } = useProgressStore();
+  const { currentProgram, setCurrentProgram, archivedPrograms, loadProgram, saveCurrentProgram, createProgram } = useProgressStore();
   const { settings, setName, setTechnologies, setLearningDuration } = useSettingsStore();
   const router = useRouter();
   
@@ -40,6 +40,8 @@ export default function Dashboard() {
   const [selectedTechnologies, setSelectedTechnologies] = useState<Technology[]>(settings.selectedTechnologies);
   const [learningDuration, setLocalDuration] = useState(settings.learningDuration);
   const [userName, setUserName] = useState(settings.name);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   // Handle technology selection
   const handleTechnologyToggle = (tech: Technology) => {
@@ -56,10 +58,25 @@ export default function Dashboard() {
   };
   
   // Handle next step
-  const handleNext = () => {
+  const handleNext = async () => {
     if (activeStep === steps.length - 1) {
       // Final step - create program
-      createProgram();
+      // Set loading state
+      setLoading(true);
+      
+      try {
+        // Create program and wait for it to be saved
+        await createProgramAndSave();
+        console.log('✅ Program created and saved, navigating to daily plan');
+        
+        // Navigate to daily plan
+        router.push('/daily');
+      } catch (error) {
+        console.error('❌ Error creating program:', error);
+        setError('Failed to create program. Please try again.');
+      } finally {
+        setLoading(false);
+      }
     } else {
       setActiveStep(prevStep => prevStep + 1);
     }
@@ -71,13 +88,13 @@ export default function Dashboard() {
   };
   
   // Create learning program
-  const createProgram = () => {
-    // Update settings individually
+  const createProgramAndSave = async () => {
+    // First update settings individually
     setName(userName);
     setTechnologies(selectedTechnologies);
     setLearningDuration(learningDuration); // Call the store's setter function with our local state
     
-    // Generate program
+    // Generate the learning program with proper content - this ensures tasks and questions are included
     const newProgram = generateLearningProgram(
       selectedTechnologies,
       learningDuration,
@@ -85,12 +102,21 @@ export default function Dashboard() {
       sampleQuestions,
       codeTasks
     );
-    
-    // Set as current program
+
+    // Set as current program and save it
     setCurrentProgram(newProgram);
+    saveCurrentProgram(); // Ensure it's saved using the normal mechanism too
+
+    // Also trigger the emergency save for extra reliability
+    try {
+      const { saveProgram } = await import('@/utils/emergencySave');
+      await saveProgram(newProgram);
+      console.log('🚀 Program created and emergency saved:', newProgram.id);
+    } catch (error) {
+      console.error('Emergency save failed, but program is created:', error);
+    }
     
-    // Navigate to daily plan
-    router.push('/daily');
+    return newProgram;
   };
   
   // Handle loading an archived program

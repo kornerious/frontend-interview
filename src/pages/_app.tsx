@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useEffect, useState } from 'react';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
