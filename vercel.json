@@ -4,10 +4,10 @@
     { "src": "package.json", "use": "@vercel/next" }
   ],
   "env": {
-    "NEXT_PUBLIC_GITHUB_GIST_TOKEN": "@github_gist_token",
-    "NEXT_PUBLIC_GIST_ID": "@gist_id",
+    "NEXT_PUBLIC_GIST_ID": "0a0399d26187431583faa25604d053de",
     "NEXT_PUBLIC_GIST_FILENAME": "FrontendDevInterview.json",
-    "NEXT_PUBLIC_CLAUDE_API_KEY": "@claude_api_key"
+    "NEXT_PUBLIC_GITHUB_GIST_TOKEN": "${GITHUB_TOKEN}",
+    "NEXT_PUBLIC_CLAUDE_API_KEY": "${CLAUDE_API_KEY}"
   },
   "buildCommand": "npm run build",
   "outputDirectory": ".next"
