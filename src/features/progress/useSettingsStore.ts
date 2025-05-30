@@ -433,10 +433,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       const success = await gistStorageService.importFromGistUrl(url);
       
       if (success) {
-        // Update local state with imported data
-        const importedSettings = await gistStorageService.getSettings();
-        const importedPrograms = await gistStorageService.getAllPrograms();
-        const importedProgress = await gistStorageService.getAllProgress();
         console.log("Successfully imported data from Gist URL");
         return true;
       }

@@ -330,16 +330,36 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
         await gistStorageService.initialize(settings.githubGistToken);
       }
       
-      // Load all programs from Gist storage
+      // Load all programs from Gist storage with improved logging
+      console.log('🔄 Initializing programs from Gist storage...');
       const programs = await gistStorageService.getAllPrograms();
+      console.log(`📊 Found ${programs?.length || 0} total programs in Gist`);
+      
       if (programs && programs.length > 0) {
+        // Log the IDs of available programs
+        console.log('📋 Available program IDs:', programs.map(p => p.id).join(', '));
+        
+        // Find current (non-archived) program
         const current = programs.find(p => !p.archived);
         const archived = programs.filter(p => p.archived);
         
+        console.log(`🔍 Current program: ${current?.id || 'none'}, archived: ${archived.length}`);
+        
+        // Verify program structure before setting
+        if (current) {
+          console.log(`✅ Current program has ${current.dailyPlans?.length || 0} daily plans`);
+          console.log(`📚 Topics: ${current.topics?.join(', ') || 'none'}`);
+        }
+        
+        // Set the programs in the store
         set({ 
           currentProgram: current || null, 
           archivedPrograms: archived || [] 
         });
+        
+        console.log('✅ Programs successfully loaded and set in store');
+      } else {
+        console.warn('⚠️ No programs found in Gist storage');
       }
       
       // Load all progress records

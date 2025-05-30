@@ -68,7 +68,27 @@ const DatabaseInitializer: React.FC<{ children: React.ReactNode }> = ({ children
                     const importSuccess = await settingsStore.importFromGistUrl(gistUrl);
                     if (importSuccess) {
                       console.log("Successfully loaded data from specified Gist");
-                      return; // Skip further initialization if we loaded from Gist
+                      
+                      // DON'T return early - we need to initialize the progress store
+                      // Force a progress store initialization to load programs
+                      console.log("🔄 Initializing progress store after Gist data import...");
+                      try {
+                        await initializeProgress();
+                        console.log("✅ Progress data initialized after Gist import");
+                        
+                        // Verify program was loaded
+                        const currentProgram = progressStore.currentProgram;
+                        if (currentProgram) {
+                          console.log(`📚 Program loaded: ${currentProgram.id} with ${currentProgram.dailyPlans.length} daily plans`);
+                        } else {
+                          console.warn('⚠️ No program loaded after initialization');
+                        }
+                      } catch (initError) {
+                        console.error('❌ Error initializing progress after import:', initError);
+                      }
+                      
+                      // Now we can return - everything is properly initialized
+                      return;
                     }
                   } else {
                     console.warn("Skipping Gist import due to rate limits. Will retry later.");
