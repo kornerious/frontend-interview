@@ -692,7 +692,4 @@ export async function getServerSideProps({ req }) {
 ];
 
 // Export filtered questions by removing completed ones
-export const sampleQuestions: Question[] = allQuestions.filter(question => 
-  // Filter out react_hooks_1 which we know is completed
-  question.id !== 'react_hooks_1'
-);
+export const sampleQuestions: Question[] = allQuestions;

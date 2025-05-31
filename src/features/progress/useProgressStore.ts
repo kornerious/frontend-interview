@@ -66,19 +66,43 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
     const questionId = progress.questionId;
     
     set(state => {
+      // Add the new progress item to the array
       const newProgress = [...state.progress, progress];
       
-      // Use Set to prevent duplicates when adding completed question IDs
+      // Create a new set of completed question IDs to avoid duplications
       let newCompletedQuestionIds = [...state.completedQuestionIds];
+      
+      // Only add to completed if it's correct and not already in the array
       if (isComplete && !newCompletedQuestionIds.includes(questionId)) {
-        newCompletedQuestionIds = [...newCompletedQuestionIds, questionId];
+        newCompletedQuestionIds.push(questionId);
+        
+        // Log for debugging
+        console.log(`Question ${questionId} marked as completed`);
+        console.log(`Updated completed IDs: ${newCompletedQuestionIds.join(', ')}`);
       }
 
-      // Save progress to Gist storage
-      gistStorageService.saveProgress(progress).catch(err => {
-        console.error('Failed to save progress to Gist storage:', err);
-      });
+      // Attempt to save progress to Gist with retry mechanism
+      const saveOperation = async () => {
+        try {
+          await gistStorageService.saveProgress(progress);
+          // After saving, also update the userAnswers if this is a correct answer
+          if (isComplete && progress.questionId) {
+            // We need to also get the answer text from elsewhere
+            const answers = state.userAnswers || {};
+            if (answers[questionId]) {
+              // Make sure this gets saved to Gist too
+              gistStorageService.saveUserAnswers({...answers});
+            }
+          }
+        } catch (err) {
+          console.error('Failed to save progress to Gist storage:', err);
+        }
+      };
       
+      // Initiate save operation
+      saveOperation();
+      
+      // Return updated state
       return { 
         progress: newProgress, 
         completedQuestionIds: newCompletedQuestionIds
@@ -355,18 +379,40 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
       const progressRecords = await gistStorageService.getAllProgress();
       
       if (progressRecords && progressRecords.length > 0) {
-        // Find all correctly answered question IDs
-        const completedQuestionIds = progressRecords
-          .filter(p => p.isCorrect)
-          .map(p => p.questionId);
-
-        // Make sure we use a Set to remove duplicates
-        const uniqueCompletedIds = Array.from(new Set(completedQuestionIds));
-
+        console.log(`Loading ${progressRecords.length} progress records to analyze...`);
+        
+        // Create a special Set of completed question IDs
+        const completedQuestionIdsSet = new Set<string>();
+        
+        // Process all progress records to find which questions have been correctly answered
+        progressRecords.forEach(record => {
+          // Check if this record indicates a correct answer
+          if (record.isCorrect && record.questionId) {
+            completedQuestionIdsSet.add(record.questionId);
+            console.log(`Added ${record.questionId} to completed questions`);
+          }
+        });
+        
+        // Load user answers as a secondary source of truth
+        const userAnswers = await gistStorageService.getUserAnswers() || {};
+        
+        // If a question has an answer stored, consider it completed as well
+        Object.keys(userAnswers).forEach(questionId => {
+          if (questionId && !completedQuestionIdsSet.has(questionId)) {
+            completedQuestionIdsSet.add(questionId);
+            console.log(`Added ${questionId} to completed questions from user answers`);
+          }
+        });
+        
+        // Create array of completed question IDs
+        const completedQuestionIds = Array.from(completedQuestionIdsSet);
+        
+        console.log(`FINAL: ${completedQuestionIds.length} completed questions:`, completedQuestionIds);
+        
         // Store in state
         set({ 
           progress: progressRecords,
-          completedQuestionIds: uniqueCompletedIds
+          completedQuestionIds: completedQuestionIds
         });
       } else {
         // Reset completed questions if no progress records

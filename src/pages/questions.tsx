@@ -14,12 +14,10 @@ import {
   TextField,
   InputAdornment,
   Chip,
-  Stack,
   Grid,
   Card,
   CardContent,
   CardActions,
-  Divider
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import LabelIcon from '@mui/icons-material/Label';
@@ -37,25 +35,11 @@ export default function QuestionsPage() {
   const router = useRouter();
   
   // Get completed question IDs and progress functions from the store
-  const { addProgress, completedQuestionIds, _initializeFromDatabase } = useProgressStore();
-  
-  // Initialize data from Gist database on mount
-  useEffect(() => {
-    const loadData = async () => {
-      await _initializeFromDatabase();
-    };
-    loadData();
-  }, [_initializeFromDatabase]);
-  
-  // Filter out all completed questions from the initial state
-  const filteredInitialQuestions = useMemo(() => {
-    return sampleQuestions.filter(q => !completedQuestionIds.includes(q.id));
-  }, [completedQuestionIds]);
-  
-  // We'll add an effect to update filtered questions after filterQuestions is defined
-  
-  const [questions, setQuestions] = useState(filteredInitialQuestions);
-  const [filteredQuestions, setFilteredQuestions] = useState(filteredInitialQuestions);
+  const { addProgress, completedQuestionIds, _initializeFromDatabase, getUserAnswer } = useProgressStore();
+
+  // Declare state variables first
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const [activeQuestion, setActiveQuestion] = useState<Question | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState<Difficulty | 'all'>('all');
@@ -65,29 +49,16 @@ export default function QuestionsPage() {
   const [page, setPage] = useState(1);
 
   const questionsPerPage = 10;
-  
+
   // Get all unique topics
   const topics = Array.from(new Set(questions.map(q => q.topic)));
-  
+
   // Create a memoized function to filter questions
   const filterQuestions = () => {
     // Start with all questions
-    let filtered = [...questions];
+    let filtered = [...sampleQuestions]; // Use sampleQuestions as source of truth
     const initialCount = filtered.length;
-    
-    // CRITICAL: Filter out completed questions first
-    if (completedQuestionIds && completedQuestionIds.length > 0) {
-      filtered = filtered.filter(question => {
-        const isCompleted = completedQuestionIds.includes(question.id);
-        return !isCompleted;
-      });
 
-      // Extra check for react_hooks_1
-      if (completedQuestionIds.includes('react_hooks_1')) {
-        const stillIncluded = filtered.some(q => q.id === 'react_hooks_1');
-      }
-    }
-    
     // Apply search
     if (searchTerm.trim() !== '') {
       filtered = filtered.filter(q => 
