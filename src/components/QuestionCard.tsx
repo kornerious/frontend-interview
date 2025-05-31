@@ -34,7 +34,7 @@ import ChatIcon from '@mui/icons-material/Chat';
 import ReactMarkdown from 'react-markdown';
 import AIEvaluator from './AIEvaluator';
 import AIConversation from './AIConversation';
-import { useProgressStore } from '@/features/progress/useProgressStore';
+import { useProgressStore } from '@/features/progress/useProgressStoreFirebase';
 import { useSettingsStore } from '@/features/progress/useSettingsStore';
 import Editor from '@monaco-editor/react';
 

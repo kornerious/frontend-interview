@@ -23,7 +23,7 @@ import AppLayout from '@/components/AppLayout';
 import TheoryBlockComponent from '@/components/TheoryBlock';
 import { sampleTheoryBlocks } from '@/data/sampleTheory';
 import { Technology } from '@/types';
-import { useProgressStore } from '@/features/progress/useProgressStore';
+import { useProgressStore } from '@/features/progress/useProgressStoreFirebase';
 import { ArchiveManager } from '@/utils/archiveManager';
 
 export default function TheoryPage() {

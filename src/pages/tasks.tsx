@@ -26,7 +26,7 @@ import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import AppLayout from '@/components/AppLayout';
 import LeetEditor from '@/components/LeetEditor';
 import { codeTasks } from '@/data/sampleTasks';
-import { useProgressStore } from '@/features/progress/useProgressStore';
+import { useProgressStore } from '@/features/progress/useProgressStoreFirebase';
 import { CodeTask, Difficulty } from '@/types';
 
 export default function TasksPage() {

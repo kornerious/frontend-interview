@@ -17,7 +17,7 @@ import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import { getAIService } from '@/utils/aiService';
 import { AIProvider } from '@/types';
 import { useSettingsStore } from '@/features/progress/useSettingsStore';
-import { useProgressStore } from '@/features/progress/useProgressStore';
+import { useProgressStore } from '@/features/progress/useProgressStoreFirebase';
 import ReactMarkdown from 'react-markdown';
 
 interface AIConversationProps {

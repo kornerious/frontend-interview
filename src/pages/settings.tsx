@@ -21,7 +21,7 @@ import {
 import { Technology } from '@/types';
 import AppLayout from '@/components/AppLayout';
 import { useSettingsStore } from '@/features/progress/useSettingsStore';
-import { useProgressStore } from '@/features/progress/useProgressStore';
+import { useProgressStore } from '@/features/progress/useProgressStoreFirebase';
 import { ArchiveManager } from '@/utils/archiveManager';
 import gistStorageService from '@/utils/gistStorageService';
 

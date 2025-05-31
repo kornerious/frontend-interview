@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useProgressStore } from '@/features/progress/useProgressStore';
+import { useProgressStore } from '@/features/progress/useProgressStoreFirebase';
 import { useSettingsStore } from '@/features/progress/useSettingsStore';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import gistStorageService from "@/utils/gistStorageService";

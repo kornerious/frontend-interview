@@ -23,7 +23,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import AppLayout from '@/components/AppLayout';
-import { useProgressStore } from '@/features/progress/useProgressStore';
+import { useProgressStore } from '@/features/progress/useProgressStoreFirebase';
 import { useSettingsStore } from '@/features/progress/useSettingsStore';
 
 interface TabPanelProps {

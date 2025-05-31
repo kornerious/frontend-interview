@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, CircularProgress, Snackbar, Alert } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
-import { useProgressStore } from '@/features/progress/useProgressStore';
+import { useProgressStore } from '@/features/progress/useProgressStoreFirebase';
 import { saveProgram } from '@/utils/emergencySave';
 
 /**

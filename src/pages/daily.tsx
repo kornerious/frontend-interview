@@ -9,7 +9,7 @@ import {
 import { useRouter } from 'next/router';
 import AppLayout from '@/components/AppLayout';
 import DailyPlanComponent from '@/components/DailyPlan';
-import { useProgressStore } from '@/features/progress/useProgressStore';
+import { useProgressStore } from '@/features/progress/useProgressStoreFirebase';
 import { adaptLearningProgram } from '@/features/learning/planner';
 import { sampleTheoryBlocks } from '@/data/sampleTheory';
 import { sampleQuestions } from '@/data/sampleQuestions';

@@ -27,7 +27,7 @@ import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import AppLayout from '@/components/AppLayout';
 import QuestionCard from '@/components/QuestionCard';
 import { sampleQuestions } from '@/data/sampleQuestions';
-import { useProgressStore } from '@/features/progress/useProgressStore';
+import { useProgressStore } from '@/features/progress/useProgressStoreFirebase';
 import { Question, Difficulty, QuestionType } from '@/types';
 import PersonalizedRecommendations from '@/components/PersonalizedRecommendations';
 
