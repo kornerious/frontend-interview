@@ -67,10 +67,13 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
     
     set(state => {
       const newProgress = [...state.progress, progress];
-      const newCompletedQuestionIds = isComplete 
-        ? [...state.completedQuestionIds, questionId]
-        : state.completedQuestionIds;
       
+      // Use Set to prevent duplicates when adding completed question IDs
+      let newCompletedQuestionIds = [...state.completedQuestionIds];
+      if (isComplete && !newCompletedQuestionIds.includes(questionId)) {
+        newCompletedQuestionIds = [...newCompletedQuestionIds, questionId];
+      }
+
       // Save progress to Gist storage
       gistStorageService.saveProgress(progress).catch(err => {
         console.error('Failed to save progress to Gist storage:', err);
@@ -221,7 +224,7 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
   },
 
   createProgram: async (topics, duration) => {
-    console.log('🚀 Creating new program with emergency save...');
+
     try {
       // Use the emergency save function to create and save the program
       // This ensures the program is saved directly to GitHub Gist with retries
@@ -229,7 +232,6 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
       const newProgram = await createAndSaveProgram(topics, duration);
       
       if (newProgram) {
-        console.log('✅ Program created and saved successfully');
         set({ currentProgram: newProgram });
         return newProgram;
       } else {
@@ -331,47 +333,46 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
       }
       
       // Load all programs from Gist storage with improved logging
-      console.log('🔄 Initializing programs from Gist storage...');
       const programs = await gistStorageService.getAllPrograms();
-      console.log(`📊 Found ${programs?.length || 0} total programs in Gist`);
       
       if (programs && programs.length > 0) {
         // Log the IDs of available programs
-        console.log('📋 Available program IDs:', programs.map(p => p.id).join(', '));
-        
         // Find current (non-archived) program
         const current = programs.find(p => !p.archived);
         const archived = programs.filter(p => p.archived);
-        
-        console.log(`🔍 Current program: ${current?.id || 'none'}, archived: ${archived.length}`);
-        
-        // Verify program structure before setting
-        if (current) {
-          console.log(`✅ Current program has ${current.dailyPlans?.length || 0} daily plans`);
-          console.log(`📚 Topics: ${current.topics?.join(', ') || 'none'}`);
-        }
-        
+
         // Set the programs in the store
         set({ 
           currentProgram: current || null, 
           archivedPrograms: archived || [] 
         });
-        
-        console.log('✅ Programs successfully loaded and set in store');
+
       } else {
         console.warn('⚠️ No programs found in Gist storage');
       }
       
-      // Load all progress records
+      // Load all progress records with improved handling
       const progressRecords = await gistStorageService.getAllProgress();
+      
       if (progressRecords && progressRecords.length > 0) {
+        // Find all correctly answered question IDs
         const completedQuestionIds = progressRecords
           .filter(p => p.isCorrect)
           .map(p => p.questionId);
-          
+
+        // Make sure we use a Set to remove duplicates
+        const uniqueCompletedIds = Array.from(new Set(completedQuestionIds));
+
+        // Store in state
         set({ 
           progress: progressRecords,
-          completedQuestionIds: Array.from(new Set(completedQuestionIds))
+          completedQuestionIds: uniqueCompletedIds
+        });
+      } else {
+        // Reset completed questions if no progress records
+        set({
+          progress: [],
+          completedQuestionIds: []
         });
       }
       

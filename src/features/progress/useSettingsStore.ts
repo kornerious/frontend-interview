@@ -76,7 +76,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   
   setLearningDuration: (duration) => {
     set(state => {
-      console.log('🔄 Setting learning duration to', duration);
+
       // Important: Force duration to be a number
       const numericDuration = typeof duration === 'string' ? parseInt(duration, 10) : duration;
       
@@ -86,7 +86,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       const saveToGist = async () => {
         if (state.settings.useGistStorage && state.settings.githubGistToken) {
           try {
-            console.log('🔄 Directly saving learning duration to Gist', numericDuration);
+
             // Initialize Gist storage to ensure it's ready
             await gistStorageService.initialize(state.settings.githubGistToken);
             
@@ -103,7 +103,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
             
             // Save directly to Gist
             await gistStorageService.saveSettings(mergedSettings);
-            console.log('✅ Successfully saved learning duration to Gist', numericDuration);
+
           } catch (error) {
             console.error('❌ Error saving learning duration to Gist:', error);
           }
@@ -142,7 +142,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
             
             // Save directly to Gist
             const saved = await gistStorageService.saveSettings(newSettings);
-            console.log("Saved dark mode settings to Gist:", saved ? "SUCCESS" : "FAILED");
+
             
             // Update lastSaved timestamp if successful
             if (saved) {
@@ -193,7 +193,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
             if (state.settings.claudeApiKey) {
               try {
                 await aiService.initialize({ apiKey: state.settings.claudeApiKey });
-                console.log('Claude service initialized successfully');
+
               } catch (error) {
                 console.error('Error initializing Claude service:', error);
               }
@@ -203,7 +203,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
             if (state.settings.geminiApiKey) {
               try {
                 await aiService.initialize({ apiKey: state.settings.geminiApiKey });
-                console.log('Gemini service initialized');
+
               } catch (error) {
                 console.error('Error initializing Gemini service:', error);
               }
@@ -243,26 +243,21 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     set(state => {
       const newSettings = { ...state.settings, claudeApiKey: apiKey };
       gistStorageService.saveSettings(newSettings).catch(console.error);
-      
-      console.log('Claude API Key set:', apiKey ? 'API key provided' : 'No API key');
-      
+
       // Initialize Claude if it's the selected provider
       if (apiKey && state.settings.aiProvider === 'claude') {
-        console.log('Attempting to initialize Claude service with provided key...');
-        
+
         // Use the AI service factory - must be done asynchronously
         (async () => {
           try {
             const service = await getAIService('claude');
-            console.log('Claude service retrieved from factory');
+
             
             const result = await service.initialize({ apiKey });
-            console.log('Claude service initialized result:', result);
+
             
             if (!result) {
               console.error('Claude service initialization returned false');
-            } else {
-              console.log('Claude API key set and service initialized successfully');
             }
           } catch (error) {
             console.error('Error initializing Claude service:', error);
@@ -290,7 +285,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
           const aiService = await getAIService("gemini");
           try {
             await aiService.initialize({ apiKey });
-            console.log("Gemini service initialized successfully");
           } catch (error) {
             console.error("Error initializing Gemini service:", error);
           }
@@ -315,7 +309,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         const initializeGistStorage = async () => {
           try {
             await gistStorageService.initialize(apiKey);
-            console.log("GitHub Gist storage initialized successfully");
             
             // If initialization was successful, also save settings to gist
             await gistStorageService.saveSettings(newSettings);
@@ -338,19 +331,14 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         ...state.settings,
         useGistStorage: !state.settings.useGistStorage
       };
-      
-      console.log('Toggling Gist storage to:', newSettings.useGistStorage);
-      console.log('Has Gist token:', !!newSettings.githubGistToken);
-      
+
       // Save new settings to database
       gistStorageService.saveSettings(newSettings)
-        .then(() => console.log('Settings saved to local database'))
-        .catch(err => console.error('Error saving to local database:', err));
+        .then().catch(err => console.error('Error saving to local database:', err));
       
       // If enabling Gist storage, ensure it's initialized
       if (newSettings.useGistStorage) {
-        console.log('Enabling Gist storage, starting initialization');
-        
+
         // Get token from settings or environment
         const token = newSettings.githubGistToken || process.env.NEXT_PUBLIC_GITHUB_GIST_TOKEN;
         
@@ -361,16 +349,13 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         
         const initializeGistStorage = async () => {
           try {
-            console.log('Initializing Gist storage with token:', token.substring(0, 5) + '...');
             const success = await gistStorageService.initialize(token);
             
             if (success) {
-              console.log('GitHub Gist storage initialized successfully');
-              
+
               // Get settings from Gist
               const gistSettings = await gistStorageService.getSettings();
-              console.log('Retrieved settings from Gist:', gistSettings);
-              
+
               if (gistSettings && Object.keys(gistSettings).length > 0) {
                 // Keep the token and useGistStorage settings from current settings
                 const mergedSettings = {
@@ -378,22 +363,16 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
                   githubGistToken: token,
                   useGistStorage: true
                 };
-                
-                console.log('Merging Gist settings with local settings');
-                
+
                 // Save merged settings back to database
                 // Save directly to Gist storage
                 await gistStorageService.saveSettings(mergedSettings);
                 
                 // Update state with merged settings
-                console.log('Settings updated with Gist data');
                 set({ settings: mergedSettings });
               }
               else {
-                // No settings in Gist yet, save current settings to Gist
-                console.log('No settings found in Gist, saving current settings');
                 await gistStorageService.saveSettings(newSettings);
-                console.log('Current settings saved to Gist');
               }
             }
             else {
@@ -406,8 +385,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         
         // Start the initialization process
         initializeGistStorage();
-      } else {
-        console.log('Gist storage disabled');
       }
       
       return { settings: newSettings };
@@ -433,7 +410,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       const success = await gistStorageService.importFromGistUrl(url);
       
       if (success) {
-        console.log("Successfully imported data from Gist URL");
         return true;
       }
       
@@ -547,8 +523,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
   _initializeFromDatabase: async () => {
     try {
-      console.log('🔄 Starting settings initialization');
-      
+
       // CRITICAL FIX: Always get the direct Gist data first when Gist token is available
       // This ensures we don't overwrite any previously saved values
       const gistToken = process.env.NEXT_PUBLIC_GITHUB_GIST_TOKEN;
@@ -557,21 +532,14 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       // First try to get settings directly from Gist if a token exists
       if (gistToken) {
         try {
-          console.log('🔍 Gist token exists, initializing Gist storage first');
           await gistStorageService.initialize(gistToken);
           currentSettings = await gistStorageService.getSettings();
-          console.log('📦 Retrieved settings directly from Gist', {
-            learningDuration: currentSettings?.learningDuration,
-            darkMode: currentSettings?.darkMode,
-            hasToken: !!currentSettings?.githubGistToken
-          });
         } catch (gistError) {
           console.error('❌ Error getting settings from Gist:', gistError);
         }
       }
 
       if (!currentSettings) {
-        console.log('🔍 No settings found in Gist, using defaults');
         currentSettings = {};
       }
       
@@ -589,17 +557,9 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
           githubGistToken: currentSettings.githubGistToken || "",
           useGistStorage: currentSettings.githubGistToken ? true : (currentSettings.useGistStorage || false)
         };
-        
-        console.log('✅ Applying normalized settings with learning duration:', normalizedSettings.learningDuration);
+
         set({ settings: normalizedSettings });
-        
-        // Only save back if we need to normalize
-        if (JSON.stringify(normalizedSettings) !== JSON.stringify(currentSettings)) {
-          console.log('⚠️ Settings needed normalization, but NOT saving during initialization');
-          // Don't save during initialization - this wastes API calls
-          // Just use the normalized settings in memory
-        }
-        
+
         // Initialize appropriate AI service based on selected provider
         const aiProvider = normalizedSettings.aiProvider;
         const aiService = await getAIService(aiProvider);
@@ -620,16 +580,12 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         if (apiKey) {
           try {
             await aiService.initialize({ apiKey });
-            console.log(`✅ ${aiProvider} service initialized successfully`);
           } catch (error) {
             console.error(`❌ Error initializing ${aiProvider} service:`, error);
           }
-        } else {
-          console.log(`ℹ️ No API key found for ${aiProvider}`);
         }
       } else {
         // No settings found anywhere, save default settings
-        console.log('⚠️ No settings found, saving defaults');
         set({ settings: defaultSettings });
         
         // Save directly to Gist if we have a token

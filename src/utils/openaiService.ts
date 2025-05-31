@@ -17,7 +17,6 @@ class OpenAIService implements AIService {
   async initialize(config: OpenAIConfig) {
     // Prevent multiple parallel initialization attempts
     if (this.isInitializingClient) {
-      console.log('Already initializing OpenAI client, waiting...');
       // Wait for current initialization to complete
       while (this.isInitializingClient) {
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -33,7 +32,6 @@ class OpenAIService implements AIService {
         this.client !== null &&
         this.config?.apiKey === config.apiKey
       ) {
-        console.log('OpenAI client already initialized with the same API key');
         this.isInitializingClient = false;
         return true;
       }
@@ -57,7 +55,6 @@ class OpenAIService implements AIService {
       // Load conversation history from the database
       await this.loadConversationHistory();
 
-      console.log('OpenAI client initialized');
       this.isInitializingClient = false;
       this.initialized = true;
       return true;
@@ -249,7 +246,6 @@ Provide an improved version of their answer that is well-structured, technically
       const history = await gistStorageService.getConversationHistory(this.sessionId);
       if (history && history.length > 0) {
         this.conversationHistory = history;
-        console.log('Loaded conversation history:', history.length, 'messages');
       }
     } catch (error) {
       console.error('Error loading conversation history:', error);
@@ -265,7 +261,6 @@ Provide an improved version of their answer that is well-structured, technically
       const { default: gistStorageService } = await import('./gistStorageService');
       // Save an empty array instead of using a delete method
       await gistStorageService.saveConversationHistory([], this.sessionId);
-      console.log('Conversation history cleared');
     } catch (error) {
       console.error('Error clearing conversation history:', error);
     }
@@ -277,7 +272,6 @@ Provide an improved version of their answer that is well-structured, technically
   async startConversation(): Promise<void> {
     // Clear existing conversation history
     await this.clearConversationHistory();
-    console.log('Started new conversation');
   }
 
   /**

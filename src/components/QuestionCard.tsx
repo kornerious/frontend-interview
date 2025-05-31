@@ -90,14 +90,40 @@ export default function QuestionCard({
         return question.options;
       }
       
-      // Generate options for React hooks question
+      // Use question ID to determine which React Hooks question we're dealing with
       if (question.topic === 'React Hooks') {
-        return [
-          'const [state, setState] = useState(initialValue);',
-          'const state = useState(initialValue); setState(newValue);',
-          'this.state = { value: initialValue }; this.setState({ value: newValue });',
-          'let [state, setState] = this.useState(initialValue);'
-        ].sort(() => Math.random() - 0.5);
+
+        // Check the specific question ID to provide the correct options
+        if (question.id === 'react_hooks_1') {
+          // First question: declaring state
+
+          return [
+            'const [state, setState] = useState(initialValue);',
+            'const state = useState(initialValue); setState(newValue);',
+            'this.state = { value: initialValue }; this.setState({ value: newValue });',
+            'let [state, setState] = this.useState(initialValue);'
+          ].sort(() => Math.random() - 0.5);
+        } 
+        else if (question.id === 'react_hooks_2') {
+          // Second question: side effects
+
+          return [
+            'useEffect',
+            'useState',
+            'useMemo',
+            'useRef'
+          ].sort(() => Math.random() - 0.5);
+        }
+        else if (question.id === 'react_hooks_3') {
+          // Third question: context
+
+          return [
+            'useContext',
+            'useReducer',
+            'createContext',
+            'useContextProvider'
+          ].sort(() => Math.random() - 0.5);
+        }
       }
       
       // Default options
@@ -182,8 +208,7 @@ export default function QuestionCard({
     // Check if the answer is correct
     let correct = false;
     let problemAreas: string[] = [];
-    let analysis = null;
-    
+
     if (question.type === 'mcq') {
       try {
         // Try to parse answer as JSON for MCQ with detailed options
@@ -204,46 +229,8 @@ export default function QuestionCard({
         // Not JSON, do direct comparison
         correct = userAnswer === question.answer;
       }
-    } else {
-      // For open-ended questions, use our sophisticated analyzer
-      if (question.topic === 'React Hooks' && question.question.includes('useMemo') && question.question.includes('useCallback')) {
-        // Special handling for the useMemo vs useCallback question
-        analysis = analyzeHooksAnswer(question, userAnswer);
-        correct = analysis.isCorrect;
-        problemAreas = analysis.missingConcepts;
-      } else if (question.type === 'open') {
-        // General open-ended question analysis
-        analysis = analyzeOpenAnswer(question, userAnswer);
-        correct = analysis.isCorrect;
-        problemAreas = analysis.missingConcepts;
-      } else {
-        // For code questions or other types without specialized analyzers
-        const keyPhrases = question.answer.toLowerCase().split(/[.,;]/).map(s => s.trim());
-        const lowerAnswer = userAnswer.toLowerCase();
-        
-        // Check if at least 70% of key phrases are included
-        const matchedPhrases = keyPhrases.filter(phrase => 
-          phrase.length > 3 && lowerAnswer.includes(phrase)
-        );
-        
-        correct = matchedPhrases.length >= Math.ceil(keyPhrases.length * 0.7);
-        
-        // Identify problem areas
-        const missingPhrases = keyPhrases.filter(phrase => 
-          phrase.length > 3 && !lowerAnswer.includes(phrase)
-        );
-        
-        if (missingPhrases.length > 0) {
-          problemAreas = missingPhrases.slice(0, 3);
-        }
-      }
     }
-    
-    // Save the analysis result
-    if (analysis) {
-      setAnswerAnalysis(analysis);
-    }
-    
+
     setIsCorrect(correct);
     setAnswered(true);
     
@@ -262,13 +249,7 @@ export default function QuestionCard({
     
     // If answer is correct, wait a moment and then move to next question or coding task
     if (correct) {
-      setTimeout(() => {
-        const navigated = moveToNextQuestion();
-        if (!navigated) {
-          // If we couldn't navigate, at least show a success message
-          console.log('Could not navigate to next question or task');
-        }
-      }, 1500);
+      moveToNextQuestion();
     }
   };
   
@@ -279,6 +260,7 @@ export default function QuestionCard({
   
   // Handle submitting for AI evaluation only
   const handleAIEvaluationSubmit = () => {
+    debugger;
     // Calculate time spent on the question
     const endTime = Date.now();
     const timeSpentMs = endTime - startTime;

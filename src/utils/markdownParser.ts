@@ -25,7 +25,6 @@ export class MarkdownParser {
         }
       } catch (error) {
         console.error('Error parsing question section:', error);
-        console.log('Problematic section:', section);
       }
     }
     

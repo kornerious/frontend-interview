@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { 
   Box, 
   Typography, 
@@ -33,8 +34,28 @@ import { Question, Difficulty, QuestionType } from '@/types';
 import PersonalizedRecommendations from '@/components/PersonalizedRecommendations';
 
 export default function QuestionsPage() {
-  const [questions, setQuestions] = useState(sampleQuestions);
-  const [filteredQuestions, setFilteredQuestions] = useState(sampleQuestions);
+  const router = useRouter();
+  
+  // Get completed question IDs and progress functions from the store
+  const { addProgress, completedQuestionIds, _initializeFromDatabase } = useProgressStore();
+  
+  // Initialize data from Gist database on mount
+  useEffect(() => {
+    const loadData = async () => {
+      await _initializeFromDatabase();
+    };
+    loadData();
+  }, [_initializeFromDatabase]);
+  
+  // Filter out all completed questions from the initial state
+  const filteredInitialQuestions = useMemo(() => {
+    return sampleQuestions.filter(q => !completedQuestionIds.includes(q.id));
+  }, [completedQuestionIds]);
+  
+  // We'll add an effect to update filtered questions after filterQuestions is defined
+  
+  const [questions, setQuestions] = useState(filteredInitialQuestions);
+  const [filteredQuestions, setFilteredQuestions] = useState(filteredInitialQuestions);
   const [activeQuestion, setActiveQuestion] = useState<Question | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState<Difficulty | 'all'>('all');
@@ -42,16 +63,30 @@ export default function QuestionsPage() {
   const [topicFilter, setTopicFilter] = useState('all');
   const [bookmarkedQuestions, setBookmarkedQuestions] = useState<string[]>([]);
   const [page, setPage] = useState(1);
-  const { addProgress } = useProgressStore();
-  
+
   const questionsPerPage = 10;
   
   // Get all unique topics
   const topics = Array.from(new Set(questions.map(q => q.topic)));
   
-  // Filter questions when any filter changes
-  useEffect(() => {
+  // Create a memoized function to filter questions
+  const filterQuestions = () => {
+    // Start with all questions
     let filtered = [...questions];
+    const initialCount = filtered.length;
+    
+    // CRITICAL: Filter out completed questions first
+    if (completedQuestionIds && completedQuestionIds.length > 0) {
+      filtered = filtered.filter(question => {
+        const isCompleted = completedQuestionIds.includes(question.id);
+        return !isCompleted;
+      });
+
+      // Extra check for react_hooks_1
+      if (completedQuestionIds.includes('react_hooks_1')) {
+        const stillIncluded = filtered.some(q => q.id === 'react_hooks_1');
+      }
+    }
     
     // Apply search
     if (searchTerm.trim() !== '') {
@@ -77,9 +112,37 @@ export default function QuestionsPage() {
       filtered = filtered.filter(q => q.topic === topicFilter);
     }
     
-    setFilteredQuestions(filtered);
+    return filtered;
+  };
+  
+  // Apply filters whenever any filter criteria changes
+  useEffect(() => {
+    const newFilteredQuestions = filterQuestions();
+    setFilteredQuestions(newFilteredQuestions);
     setPage(1); // Reset to first page when filters change
-  }, [searchTerm, difficultyFilter, typeFilter, topicFilter, questions]);
+  }, [searchTerm, difficultyFilter, typeFilter, topicFilter, questions, completedQuestionIds]);
+  
+  // Force refresh whenever completedQuestionIds changes
+  useEffect(() => {
+    // When completed questions change, update both questions and filtered questions
+    // First, update the base questions to exclude completed ones
+    setQuestions(sampleQuestions.filter(q => !completedQuestionIds.includes(q.id)));
+    
+    // Then refresh the filtered questions with all current filters
+    const refreshed = filterQuestions();
+    setFilteredQuestions(refreshed);
+    
+    // If the active question has been completed, clear it
+    if (activeQuestion && completedQuestionIds.includes(activeQuestion.id)) {
+      setActiveQuestion(null);
+    }
+    
+    // Reset to first page if the current page would be empty
+    const currentPageStart = (page - 1) * questionsPerPage;
+    if (currentPageStart >= refreshed.length && page > 1) {
+      setPage(1);
+    }
+  }, [completedQuestionIds]);
   
   // Get current page questions
   const currentQuestions = filteredQuestions.slice(
@@ -91,18 +154,51 @@ export default function QuestionsPage() {
   const getNextQuestion = () => {
     if (!activeQuestion) return null;
     
-    const currentIndex = currentQuestions.findIndex(q => q.id === activeQuestion.id);
-    if (currentIndex === -1 || currentIndex >= currentQuestions.length - 1) {
-      // If we're on the last question of the page, go to next page if available
-      if (page < Math.ceil(filteredQuestions.length / questionsPerPage)) {
-        setPage(page + 1);
-        return filteredQuestions[(page * questionsPerPage)];
-      }
-      return null; // No next question available
+    // Get currently completed questions
+    const completed = [...completedQuestionIds];
+    
+    // Find all questions that haven't been completed yet
+    const remainingQuestions = filteredQuestions.filter(q => 
+      !completed.includes(q.id) && q.id !== activeQuestion.id
+    );
+    
+    if (remainingQuestions.length === 0) {
+      return null; // No unanswered questions left
     }
     
-    // Return the next question in the current page
-    return currentQuestions[currentIndex + 1];
+    const currentIndex = currentQuestions.findIndex(q => q.id === activeQuestion.id);
+    
+    // First check if there's a next question on the current page
+    if (currentIndex !== -1 && currentIndex < currentQuestions.length - 1) {
+      // Find the next uncompleted question on this page
+      const remainingOnPage = currentQuestions
+        .slice(currentIndex + 1)
+        .filter(q => !completed.includes(q.id));
+      
+      if (remainingOnPage.length > 0) {
+        return remainingOnPage[0];
+      }
+    }
+    
+    // If no next question on this page, check next pages
+    if (page < Math.ceil(filteredQuestions.length / questionsPerPage)) {
+      const nextPageIndex = page * questionsPerPage;
+      if (nextPageIndex < filteredQuestions.length) {
+        // Find the first uncompleted question on the next page
+        const nextPageQuestions = filteredQuestions
+          .slice(nextPageIndex)
+          .filter(q => !completed.includes(q.id));
+        
+        if (nextPageQuestions.length > 0) {
+          setPage(page + 1);
+          return nextPageQuestions[0];
+        }
+      }
+    }
+    
+    // If we've checked all pages in order but found nothing,
+    // just return the first uncompleted question from anywhere
+    return remainingQuestions[0];
   };
   
   // Handle filter changes
@@ -139,7 +235,7 @@ export default function QuestionsPage() {
   };
   
   // Handle question answer
-  const handleQuestionAnswer = (
+  const handleQuestionAnswer = async (
     questionId: string, 
     answer: string, 
     isCorrect: boolean, 
@@ -153,8 +249,8 @@ export default function QuestionsPage() {
     // Find the question for additional metadata
     const question = questions.find(q => q.id === questionId);
     
-    // Add to progress with analytics data
-    addProgress({
+    // Create progress data object
+    const progressData = {
       date: new Date().toISOString(),
       questionId,
       isCorrect,
@@ -163,27 +259,44 @@ export default function QuestionsPage() {
       topic: analytics?.topic || question?.topic,
       difficulty: analytics?.difficulty || question?.level,
       problemAreas: analytics?.problemAreas || [],
-    });
+    };
     
-    console.log('Performance data saved:', {
-      questionId,
-      isCorrect,
-      timeTaken: analytics?.timeTaken || 0,
-      problemAreas: analytics?.problemAreas || []
-    });
+    // Add to progress - this will save to store and attempt gist save
+    addProgress(progressData);
     
     // Auto-navigation based on correctness
     if (isCorrect) {
-      // If answer is correct, navigate to the next question after a brief delay
+      // Make sure the completed state is updated in our local state
+      const updatedCompletedIds = [...completedQuestionIds];
+      if (!updatedCompletedIds.includes(questionId)) {
+        updatedCompletedIds.push(questionId);
+      }
+      
+      // Short delay to show the correct answer feedback
       setTimeout(() => {
-        const nextQuestion = getNextQuestion();
-        if (nextQuestion) {
-          setActiveQuestion(nextQuestion);
+        // Get next question, excluding the one we just completed
+        const nextQuestions = filteredQuestions.filter(q => 
+          !updatedCompletedIds.includes(q.id) && q.id !== questionId
+        );
+        
+        if (nextQuestions.length > 0) {
+          // Navigate to the next available question
+          setActiveQuestion(nextQuestions[0]);
         } else {
-          // If there's no next question, close the active question to show the list
+          // If there are no more questions in the current filter view
           setActiveQuestion(null);
+          
+          // Check if all questions have been completed
+          const remainingCount = questions.filter(q => 
+            !updatedCompletedIds.includes(q.id)
+          ).length;
+          
+          if (remainingCount === 0) {
+            // All questions completed, redirect to tasks page
+            router.push('/tasks');
+          }
         }
-      }, 1500); // Short delay to show the correct answer feedback
+      }, 500);
     }
     // If incorrect, the QuestionCard will automatically show the answer section
   };

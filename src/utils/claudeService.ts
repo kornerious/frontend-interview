@@ -21,8 +21,6 @@ class ClaudeService {
    */
   async initialize(config: AIConfig): Promise<boolean> {
     try {
-      console.log('Initializing Claude service...');
-      
       if (!config.apiKey) {
         console.error('Claude API key is required');
         return false;
@@ -35,7 +33,6 @@ class ClaudeService {
       });
       
       this.config = config;
-      console.log('Claude client initialized successfully');
       return true;
     } catch (error) {
       console.error('Error initializing Claude client:', error);
@@ -61,16 +58,10 @@ class ClaudeService {
     }
 
     try {
-      console.log('Starting Claude evaluation with model:', this.model);
-      
+
       // Break down API call into steps with separate try/catch for better error detection
       let response;
       try {
-        console.log('Making API call to Claude with model:', this.model);
-        console.log('Question length:', question?.length || 0);
-        console.log('User answer length:', userAnswer?.length || 0);
-        console.log('Model answer length:', modelAnswer?.length || 0);
-        
         // Create a timeout promise to handle potential silent failures
         const timeoutPromise = new Promise((_, reject) => {
           setTimeout(() => {
@@ -108,14 +99,11 @@ Respond with ONLY a JSON object in this format:
           }),
           timeoutPromise
         ]);
-        
-        console.log('API call completed successfully');
+
       } catch (apiError) {
         console.error('Error during Claude API call:', apiError);
         throw apiError;
       }
-
-      console.log('Received Claude response:', response);
 
       // Parse JSON from the response content
       const contentBlock = response.content[0];
@@ -126,8 +114,7 @@ Respond with ONLY a JSON object in this format:
 
       // Extract the text content
       const responseText = contentBlock.text;
-      console.log('Claude response text:', responseText);
-      
+
       // Attempt to find JSON in the response
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       
@@ -135,7 +122,6 @@ Respond with ONLY a JSON object in this format:
         try {
           // Try to parse the JSON
           const jsonText = jsonMatch[0];
-          console.log('Found JSON in response:', jsonText);
           const result = JSON.parse(jsonText) as AnalysisResult;
           
           // Validate result has required fields
@@ -158,7 +144,6 @@ Respond with ONLY a JSON object in this format:
           return result;
         } catch (parseError) {
           console.error('Failed to parse JSON from Claude response:', parseError);
-          console.log('Problematic text:', jsonMatch[0]);
           throw new Error('Invalid JSON in Claude response');
         }
       } else {
@@ -273,7 +258,6 @@ Provide an improved version that is well-structured, technically accurate, and d
    */
   async clearConversationHistory(): Promise<void> {
     this.conversationHistory = [];
-    console.log('Conversation history cleared');
   }
 
   /**
@@ -294,7 +278,6 @@ Provide an improved version that is well-structured, technically accurate, and d
    */
   async startConversation(): Promise<void> {
     this.clearConversationHistory();
-    console.log('Started new Claude conversation');
   }
 
   /**

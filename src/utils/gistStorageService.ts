@@ -32,7 +32,6 @@ class RateLimitManager {
     // Reset counter every hour
     setInterval(() => {
       this.requestCount = 0;
-      console.log('🔄 Rate limit counter reset');
     }, 60 * 60 * 1000);
   }
 
@@ -50,7 +49,6 @@ class RateLimitManager {
       // Log when we're getting low on remaining calls
       if (this.remainingCalls < 100) {
         console.warn(`⚠️ GitHub API rate limit running low: ${this.remainingCalls} remaining calls`);
-        console.log(`Reset time: ${new Date(this.resetTime).toLocaleTimeString()}`);
       }
     }
   }
@@ -90,7 +88,6 @@ class RateLimitManager {
     const now = Date.now();
 
     if (cachedItem && (now - cachedItem.timestamp) < this.cacheTTL) {
-      console.log(`🔍 Using cached data for: ${cacheKey}`);
       return cachedItem.data;
     }
 
@@ -136,12 +133,7 @@ class GistStorageService {
    * Initialize GitHub Gist storage with provided token
    */
   async initialize(token?: string): Promise<boolean> {
-    console.log("🔄 Initializing GitHub Gist storage...");
-    console.log("📋 Previously initialized:", this.isInitialized);
-    console.log("📋 Previous Gist ID:", this.gistId);
-
     if (this.isInitialized && this.octokit && this.gistId) {
-      console.log("✅ Gist storage already initialized - reusing existing connection");
       return true;
     }
 
@@ -149,25 +141,18 @@ class GistStorageService {
       // Get token from provided token or environment variables
       const authToken = token || process.env.NEXT_PUBLIC_GITHUB_GIST_TOKEN;
 
-      console.log("🔑 Using GitHub token:", authToken ? `${authToken.substring(0, 5)}...` : "None");
-
       if (!authToken) {
         console.error("❌ No GitHub token provided for Gist initialization");
         return false;
       }
 
-      // Initialize Octokit
-      console.log("🔄 Creating Octokit instance...");
       this.octokit = new Octokit({
         auth: authToken
       });
 
       // Get Gist filename from environment variables or use default
       this.fileName = process.env.NEXT_PUBLIC_GIST_FILENAME || "FrontendDevInterview.json";
-      console.log("📄 Using filename:", this.fileName);
 
-      // Find or create the Gist using findOrCreateGist method
-      console.log("🔍 Finding or creating Gist...");
       await this.findOrCreateGist();
 
       // Verify we have a Gist ID after findOrCreateGist
@@ -176,16 +161,9 @@ class GistStorageService {
         return false;
       }
 
-      console.log("✅ Using Gist ID:", this.gistId);
-
-      // Load initial data from Gist
-      console.log("🔄 Loading initial data from Gist...");
       await this.loadFromGist();
 
       this.isInitialized = true;
-      console.log("✅ GitHub Gist storage initialized successfully");
-      console.log("📋 Final Gist ID:", this.gistId);
-      console.log("📋 Final filename:", this.fileName);
       return true;
     } catch (error) {
       console.error("❌ Error initializing GitHub Gist storage:", error);
@@ -204,8 +182,6 @@ class GistStorageService {
       // If we have a specific Gist ID from environment variables, use that directly
       if (this.envGistId) {
         this.gistId = this.envGistId;
-        console.log("Using gist ID from environment variables:", this.gistId);
-
         // Initialize the Gist with default data if it's empty
         try {
           const gist = await this.octokit.gists.get({ gist_id: this.gistId });
@@ -213,7 +189,6 @@ class GistStorageService {
               !gist.data.files[this.fileName] ||
               !gist.data.files[this.fileName]?.content ||
               gist.data.files[this.fileName]?.content === "{}") {
-            console.log("Gist exists but is empty, initializing with default data");
             await this.octokit.gists.update({
               gist_id: this.gistId,
               files: {
@@ -222,7 +197,6 @@ class GistStorageService {
                 }
               }
             });
-            console.log("Gist initialized with default data");
           }
         } catch (error) {
           console.error("Error checking or initializing existing Gist:", error);
@@ -240,7 +214,6 @@ class GistStorageService {
 
       if (existingGist) {
         this.gistId = existingGist.id;
-        console.log('Found existing gist:', this.gistId);
         return;
       }
 
@@ -256,7 +229,6 @@ class GistStorageService {
       });
 
       this.gistId = newGist.data.id || null;
-      console.log('Created new gist:', this.gistId);
     } catch (error) {
       console.error('Error finding/creating gist:', error);
       throw error;
@@ -270,7 +242,6 @@ class GistStorageService {
     // If there's an existing load operation in progress, return that promise
     // This prevents multiple simultaneous loads which could lead to data race conditions
     if (this.loadPromise) {
-      console.log('Reusing existing load promise');
       return this.loadPromise;
     }
 
@@ -296,7 +267,6 @@ class GistStorageService {
     }
 
     try {
-      console.log('Loading data from Gist ID:', this.gistId || 'unknown');
       const gistId = this.gistId as string;
 
       const response = await this.octokit.gists.get({
@@ -316,7 +286,6 @@ class GistStorageService {
 
           // Store a deep clone of the data to prevent accidental mutations
           this.cachedData = JSON.parse(JSON.stringify(structuredData));
-          console.log('Loaded data keys:', Object.keys(this.cachedData));
           return this.cachedData;
         } catch (jsonError) {
           console.error('Error parsing Gist JSON:', jsonError);
@@ -365,16 +334,6 @@ class GistStorageService {
         // This helps prevent race conditions with other components saving
         await this.loadFromGist();
 
-        // Log what we're updating
-        Object.keys(data).forEach(key => {
-          console.log(`🔄 DIRECT SAVE: Updating field: ${key}`);
-        });
-        
-        // For programs specifically, we need to be careful
-        if (data.programs) {
-          console.log(`📊 DIRECT SAVE: Programs count: ${data.programs.length}`);
-        }
-
         // Merge the data to ensure we don't lose anything
         const mergedData = this.deepMerge(this.cachedData, data);
         this.cachedData = mergedData;
@@ -410,7 +369,6 @@ class GistStorageService {
         );
 
         if (success) {
-          console.log('✅ DIRECT SAVE: Successfully saved data to Gist');
           return true;
         }
 
@@ -525,91 +483,10 @@ class GistStorageService {
    * Save data to Gist with locking to prevent race conditions
    */
   async saveToGist(data: Partial<GistData>): Promise<boolean> {
-    console.log('saveToGist called with data:', Object.keys(data));
-
     if (!this.isInitialized || !this.octokit || !this.gistId) {
       console.error('Gist storage not initialized - cannot save');
       return false;
     }
-
-    // Deep clone the data to ensure we don't have any reference issues
-    const clonedData = JSON.parse(JSON.stringify(data));
-
-    // Create a save function to add to queue
-    const saveFunction = async (): Promise<boolean> => {
-      try {
-        // First, get the latest data from Gist to avoid overwrites
-        const latestData = await this.loadFromGist();
-
-        // Make a copy of the latest data before merging
-        const baseData = JSON.parse(JSON.stringify(latestData));
-
-        // Log what we're about to merge for debugging purposes
-        console.log('Base data keys:', Object.keys(baseData));
-        console.log('New data keys:', Object.keys(clonedData));
-
-        // Deep merge the new data with existing data
-        const mergedData = this.deepMerge(baseData, clonedData);
-
-        // Store the merged data in cache
-        this.cachedData = mergedData;
-
-        console.log('Updating Gist with ID:', this.gistId || 'unknown');
-        console.log('Saving data keys:', Object.keys(this.cachedData));
-
-        if (clonedData.programs) {
-          console.log('Saving programs count:', (clonedData.programs || []).length);
-          console.log('Total programs in merged data:', (mergedData.programs || []).length);
-        }
-
-        console.log('Creating direct URL for', this.gistId);
-        const gistId = this.gistId as string;
-        const fileName = this.fileName || "FrontendDevInterview.json";
-
-        if (!this.octokit) {
-          console.error('Cannot update Gist: Octokit is not initialized');
-          return false;
-        }
-
-        const response = await this.octokit.gists.update({
-          gist_id: gistId,
-          files: {
-            [fileName]: {
-              content: JSON.stringify(this.cachedData, null, 2)
-            }
-          }
-        });
-
-        const status = response?.status || 0;
-        console.log(`Gist update response status: ${status} (${status === 200 ? 'success' : 'error'})`);
-
-        if (status === 200) {
-          // Verify the data was saved correctly by comparing key structures
-          // This is an extra safety check against data loss
-          try {
-            // Re-fetch immediately to check if our save was successful
-            const verifyData = await this._loadFromGist();
-            const savedProgramsCount = (verifyData.programs || []).length;
-            const expectedProgramsCount = (mergedData.programs || []).length;
-
-            if (savedProgramsCount < expectedProgramsCount) {
-              console.error(`Data integrity check failed! Expected ${expectedProgramsCount} programs but found ${savedProgramsCount}. Will retry save.`);
-              return false; // Will cause a retry if error recovery is enabled
-            }
-          } catch (verifyError) {
-            console.error('Error verifying save:', verifyError);
-          }
-        }
-
-        return status === 200;
-      } catch (error) {
-        console.error('Error saving data to Gist:', error);
-        return false;
-      }
-    };
-
-    // Add save function to queue
-    this.saveQueue.push(saveFunction);
 
     // If no save is in progress, start processing the queue
     if (!this.saveLock) {
@@ -640,8 +517,6 @@ class GistStorageService {
         if (gistId && gistId.includes('#')) {
           gistId = gistId.split('#')[0]; // Remove fragment identifier
         }
-
-        console.log('🔍 Extracted Gist ID from URL:', gistId);
 
         if (gistId) {
           // Use the Octokit API to get the raw content
@@ -683,7 +558,6 @@ class GistStorageService {
       // Previously this method was unnecessarily saving the data back to the same Gist
       // during initialization, which was causing rate limit errors
 
-      console.log('✅ Successfully imported data from Gist to memory');
       return true;
     } catch (error) {
       console.error('❌ Error importing data from Gist URL:', error);
@@ -701,13 +575,6 @@ class GistStorageService {
   private settingsLock = false;
 
   async saveSettings(settings: any): Promise<boolean> {
-    console.log('📣 DIRECT DEBUG: saveSettings called with:', {
-      darkMode: settings.darkMode,
-      codeEditorTheme: settings.codeEditorTheme,
-      learningDuration: settings.learningDuration,
-      githubGistToken: settings.githubGistToken ? '[TOKEN EXISTS]' : '[NO TOKEN]'
-    });
-
     if (!this.isInitialized || !this.octokit || !this.gistId) {
       console.error('❌ GIST ERROR: Not initialized, missing octokit or gistId');
       return false;
@@ -715,7 +582,6 @@ class GistStorageService {
 
     // Prevent multiple simultaneous settings updates
     if (this.settingsLock) {
-      console.log('⚠️ Settings update already in progress, waiting...');
       // Wait for the lock to be released, with a timeout
       let waitTime = 0;
       while (this.settingsLock && waitTime < 5000) {
@@ -740,8 +606,6 @@ class GistStorageService {
       // Direct approach using Octokit
       const gistId = this.gistId;
       const fileName = this.fileName;
-
-      console.log(`📣 Using Gist ID: ${gistId}, filename: ${fileName}`);
 
       // Get current Gist content
       const gistResponse = await this.octokit.gists.get({ gist_id: gistId });
@@ -787,14 +651,10 @@ class GistStorageService {
         githubGistToken: finalGithubToken
       };
 
-      console.log("📣 Updating Gist with settings:", {
-        ...typedGistContent.settings,
-        githubGistToken: typedGistContent.settings?.githubGistToken ? '[TOKEN EXISTS]' : '[NO TOKEN]'
-      });
+
 
       // Double check that we're still the most recent save operation
       if (currentSaveTime !== this.lastSettingsSaveTime) {
-        console.log('⚠️ A newer settings save operation has started, aborting this one');
         return false;
       }
 
@@ -809,7 +669,6 @@ class GistStorageService {
       });
 
       const success = updateResponse.status === 200;
-      console.log(`📣 GIST UPDATE: ${success ? "✅ SUCCESS" : "❌ FAILED"}`);
 
       // Cache the updated data locally
       this.cachedData = typedGistContent as GistData;
@@ -893,7 +752,6 @@ class GistStorageService {
 
   // Programs
   async saveProgram(program: LearningProgram): Promise<boolean> {
-    console.log('💾 Saving program with ID:', program?.id);
     if (!this.isInitialized || !program?.id) return false;
 
     // For programs, we need to merge with existing programs array carefully
@@ -923,15 +781,10 @@ class GistStorageService {
 
       // Get programs from cached data and ensure it's properly formatted
       const programs = this.cachedData.programs || [];
-      
-      // Enhanced logging
-      console.log(`🔍 getAllPrograms found ${programs.length} programs in cached data`);
+
       if (programs.length > 0) {
-        console.log(`📋 Program data: First ID=${programs[0]?.id}, Topics=${programs[0]?.topics?.join(',')}`);
-        console.log(`📋 First program has ${programs[0]?.dailyPlans?.length || 0} daily plans`);
       } else {
         console.warn('⚠️ No programs found in Gist data');
-        console.log('Available data keys:', Object.keys(this.cachedData));
       }
 
       return programs;
@@ -954,26 +807,16 @@ class GistStorageService {
    */
   async getProgram(programId: string): Promise<LearningProgram | undefined> {
     try {
-      console.log(`🔍 Looking for program with ID: ${programId}`);
-      
       // First try to load fresh data from Gist
       await this.loadFromGist();
       
       // Get all programs directly from cached data for efficiency
       const programs = this.cachedData.programs || [];
-      console.log(`📑 Found ${programs.length} total programs in cache`);
-      
-      // List available program IDs for debugging
-      if (programs.length > 0) {
-        console.log(`📑 Available program IDs: ${programs.map(p => p.id).join(', ')}`);
-      }
       
       // Find the specific program by ID
       const program = programs.find(p => p.id === programId);
 
       if (program) {
-        console.log(`✅ Found program with ID: ${programId}`);
-        console.log(`📚 Program details: ${program.topics.length} topics, ${program.dailyPlans.length} days`);
         return program;
       } else {
         console.warn(`⚠️ No program found with ID: ${programId}`);
@@ -990,8 +833,6 @@ class GistStorageService {
 
   // Progress
   async saveProgress(progressItem: any): Promise<boolean> {
-    console.log('💾 Saving progress item:', progressItem?.questionId || 'unknown');
-
     // For progress, we need to merge with existing progress array carefully
     await this.loadFromGist();
     let progress = [...(this.cachedData.progress || [])];
@@ -1014,9 +855,6 @@ class GistStorageService {
       // Get progress from cached data
       const progress = this.cachedData.progress || [];
 
-      // Log for debugging
-      console.log(`🔍 getAllProgress found ${progress.length} progress records`);
-
       return progress;
     } catch (error) {
       // If we hit an error (like rate limit), return whatever is in cache
@@ -1033,7 +871,6 @@ class GistStorageService {
 
   // Analysis
   async saveAnalysis(analysis: Record<string, any>): Promise<boolean> {
-    console.log('💾 Saving analysis data');
     // Use direct save for analysis as it contains critical user data
     return this.directSaveToGist({ analysis });
   }
@@ -1045,7 +882,6 @@ class GistStorageService {
 
   // User Answers
   async saveUserAnswers(userAnswers: Record<string, string>): Promise<boolean> {
-    console.log('💾 Saving user answers');
     // Use direct save for user answers as they are important user data
     return this.directSaveToGist({ userAnswers });
   }
@@ -1057,7 +893,6 @@ class GistStorageService {
 
   // Bookmarks
   async saveBookmarks(bookmarks: { questions: string[], tasks: string[], theory: string[] }): Promise<boolean> {
-    console.log('💾 Saving bookmarks');
     // Use direct save for bookmarks as they are important user data
     return this.directSaveToGist({ bookmarks });
   }

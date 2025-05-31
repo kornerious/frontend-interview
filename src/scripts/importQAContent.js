@@ -181,8 +181,7 @@ function extractTags(section) {
 // Main execution
 async function main() {
   try {
-    console.log('Starting import of React Q&A content...');
-    
+
     // Create output directory if it doesn't exist
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
@@ -200,10 +199,8 @@ async function main() {
     for (const file of targetFiles) {
       const filePath = path.join(structuredDir, file);
       if (fs.existsSync(filePath)) {
-        console.log(`Processing ${file}...`);
         const content = fs.readFileSync(filePath, 'utf8');
         const questions = parseReactQA(content);
-        console.log(`Extracted ${questions.length} questions from ${file}`);
         allQuestions = [...allQuestions, ...questions];
       } else {
         console.warn(`File not found: ${filePath}`);
@@ -212,13 +209,11 @@ async function main() {
     
     // Remove duplicates based on similar questions
     const uniqueQuestions = removeDuplicates(allQuestions);
-    console.log(`Filtered to ${uniqueQuestions.length} unique questions`);
-    
+
     // Save to JSON file
     const outputPath = path.join(outputDir, 'reactQuestions.json');
     fs.writeFileSync(outputPath, JSON.stringify(uniqueQuestions, null, 2), 'utf8');
-    console.log(`Questions saved to ${outputPath}`);
-    
+
     // Create a TypeScript module to access the data
     const tsModulePath = path.join(outputDir, 'reactQuestionsData.ts');
     const tsContent = `
@@ -228,9 +223,7 @@ import { Question } from '@/types';
 export const reactQuestions: Question[] = ${JSON.stringify(uniqueQuestions, null, 2)};
 `;
     fs.writeFileSync(tsModulePath, tsContent, 'utf8');
-    console.log(`TypeScript module created at ${tsModulePath}`);
-    
-    console.log('Import completed successfully!');
+
   } catch (error) {
     console.error('Error during import:', error);
   }

@@ -38,8 +38,7 @@ export class ArchiveManager {
           
           return;
         } catch (err) {
-          // User canceled or other error, fall back to download method
-          console.log('File System Access API failed, falling back to download', err);
+
         }
       }
       

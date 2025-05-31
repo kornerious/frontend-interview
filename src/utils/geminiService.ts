@@ -27,7 +27,6 @@ class GeminiService implements AIService {
     // Reset conversation history on initialization
     this.conversationHistory = [];
     this.initialized = true;
-    console.log('Gemini service initialized');
     return true;
   }
 
@@ -37,8 +36,7 @@ class GeminiService implements AIService {
     }
 
     try {
-      console.log('Evaluating answer with Gemini...');
-      
+
       // This is a placeholder for the actual Gemini API implementation
       // In a real implementation, we would use the Gemini SDK here
       
@@ -79,8 +77,7 @@ class GeminiService implements AIService {
     }
 
     try {
-      console.log('Generating improved answer with Gemini...');
-      
+
       // Mock implementation - would use actual Gemini API in production
       await new Promise(resolve => setTimeout(resolve, 1000));
       
@@ -116,8 +113,6 @@ class GeminiService implements AIService {
         content: message
       });
 
-      console.log('Sending message to Gemini...');
-      
       // Mock implementation - would use actual Gemini API in production
       await new Promise(resolve => setTimeout(resolve, 800));
       

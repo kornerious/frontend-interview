@@ -43,8 +43,7 @@ class EvaluationStorageService {
       
       // Update user progress
       await this.updateProgress(result);
-      
-      console.log('Evaluation stored successfully in Gist');
+
     } catch (error) {
       console.error('Error storing evaluation in Gist:', error);
       throw error;

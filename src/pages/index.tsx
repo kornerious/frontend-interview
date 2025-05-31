@@ -67,12 +67,10 @@ export default function Dashboard() {
       try {
         // Create program and wait for it to be saved
         await createProgramAndSave();
-        console.log('✅ Program created and saved, navigating to daily plan');
-        
+
         // Navigate to daily plan
         router.push('/daily');
       } catch (error) {
-        console.error('❌ Error creating program:', error);
         setError('Failed to create program. Please try again.');
       } finally {
         setLoading(false);
@@ -111,7 +109,6 @@ export default function Dashboard() {
     try {
       const { saveProgram } = await import('@/utils/emergencySave');
       await saveProgram(newProgram);
-      console.log('🚀 Program created and emergency saved:', newProgram.id);
     } catch (error) {
       console.error('Emergency save failed, but program is created:', error);
     }

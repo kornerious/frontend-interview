@@ -67,8 +67,6 @@ export default function TheoryPage() {
   
   // Handle saving example code
   const handleSaveExample = (exampleId: string, code: string) => {
-    console.log(`Saved example ${exampleId} with code: ${code}`);
-    
     // In a real app, we would save this to the user's progress
     // For demo purposes, we'll just create a backup file
     if (currentProgram) {

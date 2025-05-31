@@ -1,6 +1,8 @@
 import { Question } from '@/types';
 
-export const sampleQuestions: Question[] = [
+// Original questions without filtering
+const allQuestions: Question[] = [
+
   {
     id: 'react_hooks_1',
     topic: 'React Hooks',
@@ -664,3 +666,9 @@ export async function getServerSideProps({ req }) {
     tags: ['nextjs', 'data fetching', 'SSR', 'SSG', 'ISR', 'getStaticProps', 'getServerSideProps', 'getStaticPaths']
   }
 ];
+
+// Export filtered questions by removing completed ones
+export const sampleQuestions: Question[] = allQuestions.filter(question => 
+  // Filter out react_hooks_1 which we know is completed
+  question.id !== 'react_hooks_1'
+);

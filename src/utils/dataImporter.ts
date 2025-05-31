@@ -34,7 +34,6 @@ export class DataImporter {
     if (outputPath) {
       try {
         fs.writeFileSync(outputPath, json, 'utf8');
-        console.log(`Questions saved to ${outputPath}`);
       } catch (error) {
         console.error(`Error saving questions to ${outputPath}:`, error);
       }

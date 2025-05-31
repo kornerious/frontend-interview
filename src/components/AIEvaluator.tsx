@@ -145,7 +145,6 @@ export default function AIEvaluator({
             category: questionCategory || 'unknown',
             topic: questionTopic || 'unknown'
           });
-          console.log('Evaluation stored successfully for adaptive learning');
         } catch (storageError) {
           console.error('Error storing evaluation result:', storageError);
           // Non-critical error, don't show to user

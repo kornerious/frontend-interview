@@ -102,18 +102,14 @@ export default function SettingsPage() {
       // Make sure darkMode is preserved
       darkMode: settings.darkMode,
     };
-    
-    console.log(" Saving complete settings object:", newSettings);
-    
+
     try {
       // Initialize the gist service if token is provided
       if (newSettings.githubGistToken) {
         await gistStorageService.initialize(newSettings.githubGistToken);
       }
       
-      // Save settings to GitHub Gist
-      const success = await gistStorageService.saveSettings(newSettings);
-      console.log(`${success ? "✅" : "❌"} Settings saved to GitHub Gist ${success ? "successfully" : "with errors"}`);
+
     } catch (error) {
       console.error("❌ Error saving settings to GitHub Gist:", error);
     }
@@ -219,10 +215,7 @@ export default function SettingsPage() {
             try {
               // Parse the JSON part
               const programData = JSON.parse(programMatch[1].replace(/'/g, '"'));
-              
-              // Set as current program (in a real implementation)
-              console.log('Successfully imported program:', programData);
-              
+
               setImportSuccess(true);
               setImportError(null);
       
