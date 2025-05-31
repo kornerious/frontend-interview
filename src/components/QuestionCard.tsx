@@ -35,7 +35,7 @@ import ReactMarkdown from 'react-markdown';
 import AIEvaluator from './AIEvaluator';
 import AIConversation from './AIConversation';
 import { useProgressStore } from '@/features/progress/useProgressStoreFirebase';
-import { useSettingsStore } from '@/features/progress/useSettingsStore';
+import { useSettingsStore } from '@/features/progress/useSettingsStoreFirebase';
 import Editor from '@monaco-editor/react';
 
 interface QuestionCardProps {

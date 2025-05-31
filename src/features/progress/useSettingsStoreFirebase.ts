@@ -2,8 +2,6 @@ import { create } from 'zustand';
 import { UserSettings, Technology, AIProvider } from '@/types';
 import firebaseService from '@/utils/firebaseService';
 import { getAIService } from '@/utils/aiService';
-import localCacheService, { CACHE_KEYS } from '@/utils/localCacheService';
-
 interface SettingsState {
   settings: UserSettings;
   isInitialized: boolean;
@@ -57,9 +55,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       // Save to Firebase
       firebaseService.saveSettings(newSettings).catch(console.error);
       
-      // Update local cache
-      localCacheService.set(CACHE_KEYS.SETTINGS, newSettings);
-      
+
       return { 
         settings: newSettings,
         lastSaved: new Date() 
@@ -73,10 +69,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       
       // Save to Firebase
       firebaseService.saveSettings(newSettings).catch(console.error);
-      
-      // Update local cache
-      localCacheService.set(CACHE_KEYS.SETTINGS, newSettings);
-      
+
       return { 
         settings: newSettings,
         lastSaved: new Date() 
@@ -105,10 +98,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
           
           // Save directly to Firebase
           await firebaseService.saveSettings(mergedSettings);
-          
-          // Update local cache
-          localCacheService.set(CACHE_KEYS.SETTINGS, mergedSettings);
-          
+
           // Update last saved date
           set({ lastSaved: new Date() });
         } catch (error) {
@@ -136,10 +126,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       
       // Save to Firebase
       firebaseService.saveSettings(newSettings).catch(console.error);
-      
-      // Update local cache
-      localCacheService.set(CACHE_KEYS.SETTINGS, newSettings);
-      
+
       return { 
         settings: newSettings,
         lastSaved: new Date() 
@@ -153,10 +140,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       
       // Save to Firebase
       firebaseService.saveSettings(newSettings).catch(console.error);
-      
-      // Update local cache
-      localCacheService.set(CACHE_KEYS.SETTINGS, newSettings);
-      
+
       return { 
         settings: newSettings,
         lastSaved: new Date() 
@@ -204,10 +188,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       
       // Save to Firebase
       firebaseService.saveSettings(newSettings).catch(console.error);
-      
-      // Update local cache
-      localCacheService.set(CACHE_KEYS.SETTINGS, newSettings);
-      
+
       return { 
         settings: newSettings,
         lastSaved: new Date() 
@@ -221,10 +202,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       
       // Save to Firebase
       firebaseService.saveSettings(newSettings).catch(console.error);
-      
-      // Update local cache
-      localCacheService.set(CACHE_KEYS.SETTINGS, newSettings);
-      
+
       return { 
         settings: newSettings,
         lastSaved: new Date() 
@@ -246,10 +224,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       
       // Save to Firebase
       firebaseService.saveSettings(newSettings).catch(console.error);
-      
-      // Update local cache
-      localCacheService.set(CACHE_KEYS.SETTINGS, newSettings);
-      
+
       return { 
         settings: newSettings,
         lastSaved: new Date() 
@@ -279,10 +254,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       
       // Save to Firebase
       firebaseService.saveSettings(newSettings).catch(console.error);
-      
-      // Update local cache
-      localCacheService.set(CACHE_KEYS.SETTINGS, newSettings);
-      
+
       return { 
         settings: newSettings,
         lastSaved: new Date() 
@@ -296,10 +268,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       
       // Save to Firebase
       firebaseService.saveSettings(newSettings).catch(console.error);
-      
-      // Update local cache
-      localCacheService.set(CACHE_KEYS.SETTINGS, newSettings);
-      
+
       return { 
         settings: newSettings,
         lastSaved: new Date() 
@@ -321,10 +290,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       
       // Save to Firebase
       firebaseService.saveSettings(newSettings).catch(console.error);
-      
-      // Update local cache
-      localCacheService.set(CACHE_KEYS.SETTINGS, newSettings);
-      
+
       return { 
         settings: newSettings,
         lastSaved: new Date() 
@@ -385,10 +351,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       
       // Save to Firebase
       await firebaseService.saveSettings(mergedSettings);
-      
-      // Update local cache
-      await localCacheService.set(CACHE_KEYS.SETTINGS, mergedSettings);
-      
+
       // Update state
       set({ 
         settings: mergedSettings,
@@ -404,23 +367,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   
   _initializeFromDatabase: async () => {
     try {
-      console.log('Initializing Firebase settings store...');
-      
-      // Try loading from cache first for faster startup
-      const cachedSettings = await localCacheService.get<UserSettings>(CACHE_KEYS.SETTINGS);
-      if (cachedSettings) {
-        console.log('Using cached settings for initial render...');
-        set({ 
-          settings: {
-            ...defaultSettings,
-            ...cachedSettings,
-            // Always use Firebase in this implementation, so useGistStorage is false
-            useGistStorage: false
-          },
-          isInitialized: true 
-        });
-      }
-      
       // Initialize Firebase and get settings
       await firebaseService.initialize();
       
@@ -441,9 +387,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
           settings: normalizedSettings,
           isInitialized: true 
         });
-        
-        // Update cache
-        await localCacheService.set(CACHE_KEYS.SETTINGS, normalizedSettings);
         
         // Initialize appropriate AI service based on selected provider
         const aiProvider = normalizedSettings.aiProvider;
@@ -482,9 +425,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
           settings: { ...defaultSettings },
           isInitialized: true 
         });
-        
-        // Update cache
-        await localCacheService.set(CACHE_KEYS.SETTINGS, defaultSettings);
       }
     } catch (error) {
       console.error('❌ Error during settings initialization:', error);

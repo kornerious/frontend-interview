@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
-import { useSettingsStore } from '@/features/progress/useSettingsStore';
+import { useSettingsStore } from '@/features/progress/useSettingsStoreFirebase';
 import DatabaseInitializer from '@/components/DatabaseInitializer';
 
 // No need to import CSS for react-markdown in newer versions

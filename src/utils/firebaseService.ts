@@ -5,15 +5,11 @@ import {
   getDoc, 
   setDoc, 
   updateDoc, 
-  collection, 
-  query, 
-  where, 
-  getDocs, 
-  arrayUnion, 
+  collection,
+  getDocs,
   runTransaction,
   Timestamp,
   serverTimestamp,
-  DocumentReference,
   Firestore
 } from 'firebase/firestore';
 import { getAuth, signInAnonymously, onAuthStateChanged, User, Auth } from 'firebase/auth';
@@ -197,6 +193,19 @@ class FirebaseStorageService {
   /**
    * Get the user document reference
    */
+  /**
+   * Get the current user ID
+   * @returns The current authenticated user ID
+   */
+  async getUserId(): Promise<string> {
+    await this.ensureInitialized();
+    if (!this.userId) throw new Error('Not authenticated');
+    return this.userId;
+  }
+
+  /**
+   * Get the user document reference
+   */
   private getUserDocRef() {
     if (!this.userId) throw new Error('Not initialized');
     return doc(db, 'users', this.userId);
@@ -290,17 +299,17 @@ class FirebaseStorageService {
   /**
    * Save a progress record
    */
-  async saveProgress(progressItem: UserProgress): Promise<boolean> {
+  async saveProgress(progressItem: UserProgress & { id?: string }): Promise<boolean> {
     await this.ensureInitialized();
     
     return this.withRetry(async () => {
       // Generate a unique ID for the progress item if one doesn't exist
-      const progressId = progressItem.id || `progress_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const progressWithId = { ...progressItem, id: progressId };
+      const progressId = (progressItem as any).id || `progress_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
-      // Add timestamp
+      // Add timestamp and ID
       const progressData = {
-        ...progressWithId,
+        ...progressItem,
+        id: progressId,  // Ensure ID is included in the data
         timestamp: Timestamp.now()
       };
       
@@ -317,16 +326,29 @@ class FirebaseStorageService {
   /**
    * Get all progress records for the user
    */
-  async getAllProgress(): Promise<UserProgress[]> {
+  async getAllProgress(): Promise<(UserProgress & { id: string })[]> {
     await this.ensureInitialized();
     
     return this.withRetry(async () => {
       const progressCollection = collection(db, 'users', this.userId!, 'progress');
       const progressSnapshot = await getDocs(progressCollection);
       
-      const progressItems: UserProgress[] = [];
+      const progressItems: (UserProgress & { id: string })[] = [];
       progressSnapshot.forEach(doc => {
-        progressItems.push({ id: doc.id, ...doc.data() } as UserProgress);
+        // Extract required UserProgress fields and add id from the document
+        const data = doc.data();
+        progressItems.push({ 
+          id: doc.id,
+          date: data.date,
+          questionId: data.questionId,
+          isCorrect: data.isCorrect,
+          attempts: data.attempts,
+          timeTaken: data.timeTaken,
+          notes: data.notes,
+          topic: data.topic,
+          difficulty: data.difficulty,
+          problemAreas: data.problemAreas
+        } as UserProgress & { id: string });
       });
       
       return progressItems;
@@ -521,7 +543,7 @@ class FirebaseStorageService {
   /**
    * Save user settings
    */
-  async saveSettings(settings: any): Promise<boolean> {
+  async saveSettings(settings: Record<string, any>): Promise<boolean> {
     return this.withRetry(async () => {
       await this.ensureInitialized();
       

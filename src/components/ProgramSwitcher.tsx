@@ -21,7 +21,7 @@ import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DownloadIcon from '@mui/icons-material/Download';
 import { useProgressStore } from '@/features/progress/useProgressStoreFirebase';
-import { useSettingsStore } from '@/features/progress/useSettingsStore';
+import { useSettingsStore } from '@/features/progress/useSettingsStoreFirebase';
 import { LearningProgram } from '@/types';
 import { useRouter } from 'next/router';
 

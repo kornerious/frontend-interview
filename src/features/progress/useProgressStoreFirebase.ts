@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { UserProgress, LearningProgram, Technology } from '@/types';
 import firebaseService from '@/utils/firebaseService';
-import { useSettingsStore } from './useSettingsStore';
+import { useSettingsStore } from './useSettingsStoreFirebase';
 
 interface ProgressState {
   currentProgram: LearningProgram | null;

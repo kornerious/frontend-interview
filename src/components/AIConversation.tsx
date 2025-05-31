@@ -16,7 +16,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import { getAIService } from '@/utils/aiService';
 import { AIProvider } from '@/types';
-import { useSettingsStore } from '@/features/progress/useSettingsStore';
+import { useSettingsStore } from '@/features/progress/useSettingsStoreFirebase';
 import { useProgressStore } from '@/features/progress/useProgressStoreFirebase';
 import ReactMarkdown from 'react-markdown';
 

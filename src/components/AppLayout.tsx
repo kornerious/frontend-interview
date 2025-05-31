@@ -25,7 +25,7 @@ import AssessmentIcon from '@mui/icons-material/Assessment';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { useSettingsStore } from '@/features/progress/useSettingsStore';
+import { useSettingsStore } from '@/features/progress/useSettingsStoreFirebase';
 
 const drawerWidth = 240;
 

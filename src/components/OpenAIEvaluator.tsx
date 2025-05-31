@@ -16,7 +16,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import TipsAndUpdatesIcon from '@mui/icons-material/TipsAndUpdates';
 import openAIService from '@/utils/openaiService';
-import { useSettingsStore } from '@/features/progress/useSettingsStore';
+import { useSettingsStore } from '@/features/progress/useSettingsStoreFirebase';
 
 interface OpenAIEvaluatorProps {
   question: string;

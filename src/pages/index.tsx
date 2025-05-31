@@ -23,7 +23,7 @@ import AppLayout from '@/components/AppLayout';
 import ProgramSwitcher from '@/components/ProgramSwitcher';
 import { Technology, LearningProgram } from '@/types';
 import { useProgressStore } from '@/features/progress/useProgressStoreFirebase';
-import { useSettingsStore } from '@/features/progress/useSettingsStore';
+import { useSettingsStore } from '@/features/progress/useSettingsStoreFirebase';
 import { generateLearningProgram } from '@/features/learning/planner';
 import { sampleTheoryBlocks } from '@/data/sampleTheory';
 import { sampleQuestions } from '@/data/sampleQuestions';

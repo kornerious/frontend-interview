@@ -16,7 +16,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import TipsAndUpdatesIcon from '@mui/icons-material/TipsAndUpdates';
 import { getAIService } from '@/utils/aiService';
-import { useSettingsStore } from '@/features/progress/useSettingsStore';
+import { useSettingsStore } from '@/features/progress/useSettingsStoreFirebase';
 import { AIProvider } from '@/types';
 import { evaluationStorageService } from '../utils/evaluationStorageService';
 

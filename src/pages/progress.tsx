@@ -24,7 +24,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import AppLayout from '@/components/AppLayout';
 import { useProgressStore } from '@/features/progress/useProgressStoreFirebase';
-import { useSettingsStore } from '@/features/progress/useSettingsStore';
+import { useSettingsStore } from '@/features/progress/useSettingsStoreFirebase';
 
 interface TabPanelProps {
   children?: React.ReactNode;

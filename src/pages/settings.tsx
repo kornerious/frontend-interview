@@ -20,7 +20,7 @@ import {
 } from '@mui/material';
 import { Technology } from '@/types';
 import AppLayout from '@/components/AppLayout';
-import { useSettingsStore } from '@/features/progress/useSettingsStore';
+import { useSettingsStore } from '@/features/progress/useSettingsStoreFirebase';
 import { useProgressStore } from '@/features/progress/useProgressStoreFirebase';
 import { ArchiveManager } from '@/utils/archiveManager';
 import gistStorageService from '@/utils/gistStorageService';

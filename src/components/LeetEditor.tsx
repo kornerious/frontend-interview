@@ -18,7 +18,7 @@ import {
 } from '@mui/material';
 import Editor from '@monaco-editor/react';
 import { CodeTask } from '@/types';
-import { useSettingsStore } from '@/features/progress/useSettingsStore';
+import { useSettingsStore } from '@/features/progress/useSettingsStoreFirebase';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
