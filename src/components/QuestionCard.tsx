@@ -32,11 +32,11 @@ import CloseIcon from '@mui/icons-material/Close';
 import TipsAndUpdatesIcon from '@mui/icons-material/TipsAndUpdates';
 import ChatIcon from '@mui/icons-material/Chat';
 import ReactMarkdown from 'react-markdown';
-import { analyzeOpenAnswer, analyzeHooksAnswer } from '@/utils/answerAnalyzer';
 import AIEvaluator from './AIEvaluator';
 import AIConversation from './AIConversation';
 import { useProgressStore } from '@/features/progress/useProgressStore';
 import { useSettingsStore } from '@/features/progress/useSettingsStore';
+import Editor from '@monaco-editor/react';
 
 interface QuestionCardProps {
   question: Question;
@@ -217,7 +217,6 @@ export default function QuestionCard({
   
   // Handle submitting for AI evaluation only
   const handleAIEvaluationSubmit = () => {
-    debugger;
     // Calculate time spent on the question
     const endTime = Date.now();
     const timeSpentMs = endTime - startTime;
@@ -351,16 +350,27 @@ export default function QuestionCard({
               </Box>
             ) : (
               <Box>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={6}
-                  placeholder="Type your answer here..."
-                  value={userAnswer}
-                  onChange={(e) => setUserAnswer(e.target.value)}
-                  variant="outlined"
-                  sx={{ mt: 2 }}
-                />
+                <Box sx={{ height: 200, mt: 2 }}>
+                  <Editor
+                    height="100%"
+                    language="javascript"
+                    value={userAnswer}
+                    onChange={(value) => setUserAnswer(value || '')}
+                    theme="vs-dark"
+                    options={{
+                      minimap: { enabled: true },
+                      scrollBeyondLastLine: false,
+                      fontSize: 14,
+                      wordWrap: 'on',
+                      lineNumbers: 'on',
+                      automaticLayout: true,
+                      rulers: [80],
+                      bracketPairColorization: { enabled: true },
+                      formatOnPaste: true,
+                      formatOnType: true
+                    }}
+                  />
+                </Box>
                 
                 {userAnswer.length > 0 && (
                   <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
@@ -429,15 +439,27 @@ export default function QuestionCard({
                     "Improve your answer:" : 
                     "Try again with a different answer:"}
                 </Typography>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={6}
-                  placeholder="Type your revised answer here..."
-                  value={userAnswer}
-                  onChange={(e) => setUserAnswer(e.target.value)}
-                  variant="outlined"
-                />
+                <Box sx={{ height: 200, mb: 2 }}>
+                  <Editor
+                    height="100%"
+                    language="javascript"
+                    value={userAnswer}
+                    onChange={(value) => setUserAnswer(value || '')}
+                    theme="vs-dark"
+                    options={{
+                      minimap: { enabled: true },
+                      scrollBeyondLastLine: false,
+                      fontSize: 14,
+                      wordWrap: 'on',
+                      lineNumbers: 'on',
+                      automaticLayout: true,
+                      rulers: [80],
+                      bracketPairColorization: { enabled: true },
+                      formatOnPaste: true,
+                      formatOnType: true
+                    }}
+                  />
+                </Box>
                 
                 <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
                   <Button 

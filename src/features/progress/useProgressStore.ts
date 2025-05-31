@@ -75,10 +75,6 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
       // Only add to completed if it's correct and not already in the array
       if (isComplete && !newCompletedQuestionIds.includes(questionId)) {
         newCompletedQuestionIds.push(questionId);
-        
-        // Log for debugging
-        console.log(`Question ${questionId} marked as completed`);
-        console.log(`Updated completed IDs: ${newCompletedQuestionIds.join(', ')}`);
       }
 
       // Attempt to save progress to Gist with retry mechanism

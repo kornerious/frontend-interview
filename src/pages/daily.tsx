@@ -60,9 +60,14 @@ export default function DailyPage() {
     theory => currentDayPlan.theoryBlockIds.includes(theory.id)
   );
   
-  // Get questions for current day
-  const dayQuestions = sampleQuestions.filter(
-    question => currentDayPlan.questionIds.includes(question.id)
+  // Get completed question IDs from the progress store
+  const { completedQuestionIds } = useProgressStore();
+  
+  // Get questions for current day, excluding already completed questions
+  const dayQuestions = sampleQuestions.filter(question => 
+    // Include the question if it's in the day plan AND hasn't been completed yet
+    currentDayPlan.questionIds.includes(question.id) && 
+    !completedQuestionIds.includes(question.id)
   );
   
   // Get code task for current day

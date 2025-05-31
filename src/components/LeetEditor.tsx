@@ -15,14 +15,10 @@ import {
   Collapse,
   Tab,
   Tabs,
-  Switch,
-  FormControlLabel
 } from '@mui/material';
 import Editor from '@monaco-editor/react';
-import CodesandboxEditor from './CodesandboxEditor';
 import { CodeTask } from '@/types';
 import { useSettingsStore } from '@/features/progress/useSettingsStore';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -47,12 +43,10 @@ export default function LeetEditor({ task, onComplete }: LeetEditorProps) {
   const [showSolution, setShowSolution] = useState(false);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [timeSpent, setTimeSpent] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
   const [tabValue, setTabValue] = useState(0);
   const [showAIFeedback, setShowAIFeedback] = useState(false);
   const [allTestsPassed, setAllTestsPassed] = useState(false);
-  const [useCodesandbox, setUseCodesandbox] = useState(true);
-  
+
   // Start timer when component mounts
   useEffect(() => {
     setStartTime(Date.now());
@@ -73,55 +67,7 @@ export default function LeetEditor({ task, onComplete }: LeetEditorProps) {
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
-  
-  // Function to evaluate code against test cases
-  const runTests = () => {
-    setIsRunning(true);
-    
-    // In a real implementation, this would execute the code against test cases
-    // For now, we'll simulate test results with a timeout
-    setTimeout(() => {
-      try {
-        // Mock test evaluation
-        // In a real app, we would run the user's code against test cases
-        const results = task.testCases.map((testCase, index) => {
-          // Random success/failure for demo purposes
-          // In a real app, this would be based on actual code execution
-          const passed = Math.random() > 0.3;
-          return {
-            passed,
-            message: passed 
-              ? `Test ${index + 1} passed: ${testCase}`
-              : `Test ${index + 1} failed: ${testCase}`
-          };
-        });
-        
-        setTestResults(results);
-        
-        // Check if all tests passed
-        const allPassed = results.every(r => r.passed);
-        setAllTestsPassed(allPassed);
-        
-        if (allPassed) {
-          // If all tests passed, update progress
-          onComplete(task.id, code, true, timeSpent);
-          // Show the AI feedback tab when tests pass
-          setShowAIFeedback(true);
-          // Switch to the feedback tab
-          setTabValue(1);
-        }
-        
-        setIsRunning(false);
-      } catch (error) {
-        setTestResults([{ 
-          passed: false, 
-          message: `Error: ${(error as Error).message}` 
-        }]);
-        setIsRunning(false);
-      }
-    }, 1500);
-  };
-  
+
   // Handle code changes
   const handleCodeChange = (value: string | undefined) => {
     if (value !== undefined) {
@@ -230,16 +176,6 @@ export default function LeetEditor({ task, onComplete }: LeetEditorProps) {
       <Divider />
       
       <Box sx={{ height: 500 }}>
-        {useCodesandbox ? (
-          // Codesandbox Editor (new)
-          <CodesandboxEditor
-            code={code}
-            language={getLanguage()}
-            onChange={handleCodeChange}
-            theme={settings.codeEditorTheme === 'dark' ? 'dark' : 'light'}
-          />
-        ) : (
-          // Monaco Editor (original)
           <Editor
             height="100%"
             language={getLanguage()}
@@ -247,44 +183,25 @@ export default function LeetEditor({ task, onComplete }: LeetEditorProps) {
             onChange={handleCodeChange}
             theme={settings.codeEditorTheme}
             options={{
-              minimap: { enabled: false },
+              minimap: { enabled: true },
               scrollBeyondLastLine: false,
               fontSize: 14,
               wordWrap: 'on',
               lineNumbers: 'on',
-              automaticLayout: true
+              automaticLayout: true,
+              rulers: [80],
+              bracketPairColorization: { enabled: true },
+              formatOnPaste: true,
+              formatOnType: true,
+              suggestOnTriggerCharacters: true,
+              snippetSuggestions: 'on'
             }}
           />
-        )}
       </Box>
       
       <Divider />
-      
+
       <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<PlayArrowIcon />}
-            onClick={runTests}
-            disabled={isRunning}
-            sx={{ mr: 2 }}
-          >
-            {isRunning ? 'Running Tests...' : 'Run Tests'}
-          </Button>
-          
-          <FormControlLabel
-            control={
-              <Switch
-                checked={useCodesandbox}
-                onChange={(e) => setUseCodesandbox(e.target.checked)}
-                color="primary"
-              />
-            }
-            label="Use Codesandbox Editor"
-          />
-        </Box>
-        
         <Box>
           <Button
             variant="outlined"

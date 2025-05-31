@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Paper, Typography, Box, Chip, Divider, Button, CircularProgress } from '@mui/material';
 import { TheoryBlock as TheoryBlockType, CodeExample } from '@/types';
-import CodesandboxEditor from '@/components/CodesandboxEditor';
+import Editor from '@monaco-editor/react';
 import ReactMarkdown from 'react-markdown';
 import gistStorageService from '../utils/gistStorageService';
 
@@ -107,11 +107,24 @@ export default function TheoryBlock({ theory, onSaveExample }: TheoryBlockProps)
               )}
               
               <Box sx={{ height: 500, mb: 2 }}>
-                <CodesandboxEditor
-                  code={savedCodes[example.id] || example.code}
+                <Editor
+                  height="100%"
                   language={example.language}
-                  onChange={(code) => setSavedCodes(prev => ({ ...prev, [example.id]: code }))}
-                  theme="dark"
+                  value={savedCodes[example.id] || example.code}
+                  onChange={(value) => setSavedCodes(prev => ({ ...prev, [example.id]: value || '' }))}
+                  theme="vs-dark"
+                  options={{
+                    minimap: { enabled: true },
+                    scrollBeyondLastLine: false,
+                    fontSize: 14,
+                    wordWrap: 'on',
+                    lineNumbers: 'on',
+                    automaticLayout: true,
+                    rulers: [80],
+                    bracketPairColorization: { enabled: true },
+                    formatOnPaste: true,
+                    formatOnType: true
+                  }}
                 />
               </Box>
               

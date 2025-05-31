@@ -984,11 +984,6 @@ class GistStorageService {
     const codeExamples = this.cachedData.codeExamples || this.getDefaultData().codeExamples || {};
     return codeExamples[contextId] || {};
   }
-
-  // Get current Gist ID (for testing/debugging)
-  getCurrentGistId(): string | null | undefined {
-    return this.gistId;
-  }
 }
 
 // Create a singleton instance
