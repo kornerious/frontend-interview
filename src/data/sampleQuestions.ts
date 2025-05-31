@@ -10,6 +10,12 @@ const allQuestions: Question[] = [
     type: 'mcq',
     question: 'What is the correct way to declare state in a functional component using hooks?',
     answer: 'const [state, setState] = useState(initialValue);',
+    options: [
+      'const [state, setState] = useState(initialValue);',
+      'const state = useState(initialValue);',
+      'const {state, setState} = useState(initialValue);',
+      'useState(initialValue, state, setState);'
+    ],
     example: `
 \`\`\`jsx
 import React, { useState } from 'react';
@@ -165,6 +171,12 @@ const TodoList = React.memo(({ todos, addTodo }) => {
     type: 'mcq',
     question: 'What is the main difference between an interface and a type alias in TypeScript?',
     answer: 'Interfaces can be extended or implemented and support declaration merging, while type aliases are more flexible for representing unions, intersections, and primitive types.',
+    options: [
+      'Interfaces can be extended or implemented and support declaration merging, while type aliases are more flexible for representing unions, intersections, and primitive types.',
+      'Type aliases are faster at compile time than interfaces.',
+      'Interfaces can only define object shapes while type aliases can only define primitive types.',
+      'There is no difference; they can be used interchangeably in all cases.'
+    ],
     example: `
 \`\`\`typescript
 // Interface
@@ -270,6 +282,12 @@ console.log(getNestedValue(user, 'profile', 'settings', 'darkMode')); // undefin
     type: 'mcq',
     question: 'Which array method would you use to create a new array containing only elements that pass a specified condition?',
     answer: 'filter()',
+    options: [
+      'filter()',
+      'map()',
+      'reduce()',
+      'forEach()'
+    ],
     example: `
 \`\`\`javascript
 const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -514,6 +532,12 @@ function fetchSearchResults(term) {
     type: 'mcq',
     question: 'Which Next.js data fetching method would you use for a page that needs to be generated on each request with user-specific data?',
     answer: 'getServerSideProps',
+    options: [
+      'getServerSideProps',
+      'getStaticProps',
+      'getStaticPaths',
+      'getInitialProps'
+    ],
     example: `
 \`\`\`jsx
 // pages/dashboard.js

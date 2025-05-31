@@ -85,54 +85,11 @@ export default function QuestionCard({
         // Not JSON, continue with normal processing
       }
       
-      // If we have specific options in the question object
+      // If we have specific options in the question object, use them
       if (question.options && Array.isArray(question.options) && question.options.length > 0) {
-        return question.options;
+        // Return a shuffled copy of the options
+        return [...question.options].sort(() => Math.random() - 0.5);
       }
-      
-      // Use question ID to determine which React Hooks question we're dealing with
-      if (question.topic === 'React Hooks') {
-
-        // Check the specific question ID to provide the correct options
-        if (question.id === 'react_hooks_1') {
-          // First question: declaring state
-
-          return [
-            'const [state, setState] = useState(initialValue);',
-            'const state = useState(initialValue); setState(newValue);',
-            'this.state = { value: initialValue }; this.setState({ value: newValue });',
-            'let [state, setState] = this.useState(initialValue);'
-          ].sort(() => Math.random() - 0.5);
-        } 
-        else if (question.id === 'react_hooks_2') {
-          // Second question: side effects
-
-          return [
-            'useEffect',
-            'useState',
-            'useMemo',
-            'useRef'
-          ].sort(() => Math.random() - 0.5);
-        }
-        else if (question.id === 'react_hooks_3') {
-          // Third question: context
-
-          return [
-            'useContext',
-            'useReducer',
-            'createContext',
-            'useContextProvider'
-          ].sort(() => Math.random() - 0.5);
-        }
-      }
-      
-      // Default options
-      return [
-        'useState',
-        'useEffect',
-        'useContext',
-        'useReducer'
-      ];
     }
     return [];
   });
