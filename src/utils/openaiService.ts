@@ -27,6 +27,13 @@ class OpenAIService implements AIService {
     this.isInitializingClient = true;
 
     try {
+      // Validate API key format - basic validation only
+      if (!config.apiKey || typeof config.apiKey !== 'string' || config.apiKey.trim().length < 30) {
+        console.error('Invalid OpenAI API key format');
+        this.isInitializingClient = false;
+        return false;
+      }
+
       // Exit early if we already have a client with the same API key
       if (
         this.client !== null &&
@@ -36,23 +43,35 @@ class OpenAIService implements AIService {
         return true;
       }
 
-      if (!config.apiKey) {
-        console.error('OpenAI API key is required');
-        this.isInitializingClient = false;
-        return false;
-      }
+      // Clean the API key by trimming whitespace
+      const sanitizedApiKey = config.apiKey.trim();
 
-      // Set the config
-      this.config = config;
+      // Set the config with sanitized API key
+      this.config = {
+        ...config,
+        apiKey: sanitizedApiKey
+      };
 
       // Create the client
       this.client = new OpenAI({
-        apiKey: config.apiKey,
+        apiKey: sanitizedApiKey,
         organization: config.organization,
         dangerouslyAllowBrowser: true
       });
 
-      // Load conversation history from the database
+      // Test the API key with a minimal request
+      try {
+        // Small request to verify API key works - just get the models list without params
+        await this.client.models.list();
+      } catch (apiError) {
+        console.error('API key validation failed:', apiError);
+        this.client = null;
+        this.config = null;
+        this.isInitializingClient = false;
+        return false;
+      }
+
+      // Load conversation history from Firebase
       await this.loadConversationHistory();
 
       this.isInitializingClient = false;
@@ -60,6 +79,8 @@ class OpenAIService implements AIService {
       return true;
     } catch (error) {
       console.error('Error initializing OpenAI client:', error);
+      this.client = null;
+      this.config = null;
       this.isInitializingClient = false;
       return false;
     }
@@ -228,11 +249,11 @@ Provide an improved version of their answer that is well-structured, technically
    */
   private async saveConversationHistory(): Promise<void> {
     try {
-      // Import here to avoid circular dependency issues
-      const { default: gistStorageService } = await import('./gistStorageService');
-      await gistStorageService.saveConversationHistory(this.conversationHistory, this.sessionId);
+      // Import Firebase service instead of GitHub Gist storage
+      const { default: firebaseService } = await import('./firebaseService');
+      await firebaseService.saveConversationHistory(this.conversationHistory, this.sessionId);
     } catch (error) {
-      console.error('Error saving conversation history:', error);
+      console.error('Error saving conversation history to Firebase:', error);
     }
   }
   
@@ -241,14 +262,14 @@ Provide an improved version of their answer that is well-structured, technically
    */
   private async loadConversationHistory(): Promise<void> {
     try {
-      // Import here to avoid circular dependency issues
-      const { default: gistStorageService } = await import('./gistStorageService');
-      const history = await gistStorageService.getConversationHistory(this.sessionId);
+      // Import Firebase service instead of GitHub Gist storage
+      const { default: firebaseService } = await import('./firebaseService');
+      const history = await firebaseService.getConversationHistory(this.sessionId);
       if (history && history.length > 0) {
         this.conversationHistory = history;
       }
     } catch (error) {
-      console.error('Error loading conversation history:', error);
+      console.error('Error loading conversation history from Firebase:', error);
     }
   }
   
@@ -258,11 +279,11 @@ Provide an improved version of their answer that is well-structured, technically
   async clearConversationHistory(): Promise<void> {
     this.conversationHistory = [];
     try {
-      const { default: gistStorageService } = await import('./gistStorageService');
-      // Save an empty array instead of using a delete method
-      await gistStorageService.saveConversationHistory([], this.sessionId);
+      const { default: firebaseService } = await import('./firebaseService');
+      // Save an empty array to Firebase
+      await firebaseService.saveConversationHistory([], this.sessionId);
     } catch (error) {
-      console.error('Error clearing conversation history:', error);
+      console.error('Error clearing conversation history from Firebase:', error);
     }
   }
 

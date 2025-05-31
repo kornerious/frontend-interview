@@ -44,7 +44,14 @@ export default function DailyPlan({
   onAnswerQuestion,
   onCompleteTask
 }: DailyPlanProps) {
-  const [activeStep, setActiveStep] = useState(0);
+  // Initialize activeStep to skip Questions if none available
+  const [activeStep, setActiveStep] = useState(() => {
+    // If no questions available, start at theory (0) or coding task (2) based on preference
+    if (questions.length === 0 && codeTask) {
+      return 2; // Start at coding task if no questions but coding task exists
+    }
+    return 0; // Otherwise start at theory
+  });
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answeredQuestions, setAnsweredQuestions] = useState<Record<string, boolean>>({});
   const [taskCompleted, setTaskCompleted] = useState(false);
@@ -90,11 +97,21 @@ export default function DailyPlan({
   
   // Handle step navigation
   const handleNext = () => {
-    setActiveStep(prevStep => Math.min(prevStep + 1, steps.length - 1));
+    // If moving to questions tab but no questions, skip to coding task
+    if (activeStep === 0 && questions.length === 0) {
+      setActiveStep(2); // Skip to coding task (index 2)
+    } else {
+      setActiveStep(prevStep => Math.min(prevStep + 1, steps.length - 1));
+    }
   };
   
   const handleBack = () => {
-    setActiveStep(prevStep => Math.max(prevStep - 1, 0));
+    // If on coding task (step 2) and no questions, skip back to theory
+    if (activeStep === 2 && questions.length === 0) {
+      setActiveStep(0); // Skip back to theory (index 0)
+    } else {
+      setActiveStep(prevStep => Math.max(prevStep - 1, 0));
+    }
   };
   
   // Handle day completion

@@ -21,7 +21,7 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { useRouter } from 'next/router';
 import AppLayout from '@/components/AppLayout';
 import ProgramSwitcher from '@/components/ProgramSwitcher';
-import { Technology, LearningProgram } from '@/types';
+import { Technology } from '@/types';
 import { useProgressStore } from '@/features/progress/useProgressStoreFirebase';
 import { useSettingsStore } from '@/features/progress/useSettingsStoreFirebase';
 import { generateLearningProgram } from '@/features/learning/planner';
@@ -105,14 +105,6 @@ export default function Dashboard() {
     setCurrentProgram(newProgram);
     saveCurrentProgram(); // Ensure it's saved using the normal mechanism too
 
-    // Also trigger the emergency save for extra reliability
-    try {
-      const { saveProgram } = await import('@/utils/emergencySave');
-      await saveProgram(newProgram);
-    } catch (error) {
-      console.error('Emergency save failed, but program is created:', error);
-    }
-    
     return newProgram;
   };
   

@@ -1,5 +1,5 @@
 import { LearningProgram } from '@/types';
-import gistStorageService from '../utils/gistStorageService';
+import firebaseService from '../utils/firebaseService';
 
 /**
  * Archive Manager for handling program backups and storage using GitHub Gists
@@ -8,7 +8,7 @@ export class ArchiveManager {
   private static instance: ArchiveManager;
   
   private constructor() {
-    // No need for initialization - gistStorageService handles Gist initialization
+    // No need for initialization - firebaseService handles Gist initialization
   }
   
   /**
@@ -37,9 +37,9 @@ export class ArchiveManager {
         programs.push(program);
       }
       
-      // Save using gistStorageService for Gist storage
+      // Save using firebaseService for Gist storage
       for (const prog of programs) {
-        await gistStorageService.saveProgram(prog);
+        await firebaseService.saveProgram(prog);
       }
       
       // Export as file
@@ -55,8 +55,8 @@ export class ArchiveManager {
    */
   public async getAllPrograms(): Promise<LearningProgram[]> {
     try {
-      // Use gistStorageService to get programs from Gist
-      const programs = await gistStorageService.getAllPrograms();
+      // Use firebaseService to get programs from Gist
+      const programs = await firebaseService.getAllPrograms();
       return programs || [];
     } catch (error) {
       console.error('Error getting programs from Gist:', error);
@@ -89,14 +89,14 @@ export class ArchiveManager {
       
       // We need to recreate the entire programs list in Gist storage
       // First, clear current programs by overwriting with empty array
-      await gistStorageService.saveSettings({
-        ...await gistStorageService.getSettings() || {},
+      await firebaseService.saveSettings({
+        ...await firebaseService.getSettings() || {},
         programs: [] 
       } as any); // Type assertion to handle programs property
       
       // Then save each remaining program
       for (const prog of updatedPrograms) {
-        await gistStorageService.saveProgram(prog);
+        await firebaseService.saveProgram(prog);
       }
     } catch (error) {
       console.error('Error deleting program from Gist:', error);

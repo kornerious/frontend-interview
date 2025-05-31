@@ -69,12 +69,23 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
       // Add the new progress item to the array
       const newProgress = [...state.progress, progress];
       
-      // Create a new set of completed question IDs to avoid duplications
+      // Create a new set of completed question IDs and task IDs to avoid duplications
       let newCompletedQuestionIds = [...state.completedQuestionIds];
+      let newCompletedTaskIds = [...state.completedTaskIds];
+      
+      // Check if this is a task or a question based on the notes
+      const isTask = progress.notes?.includes('Completed successfully');
       
       // Only add to completed if it's correct and not already in the array
-      if (isComplete && !newCompletedQuestionIds.includes(questionId)) {
-        newCompletedQuestionIds.push(questionId);
+      if (isComplete) {
+        if (isTask && !newCompletedTaskIds.includes(questionId)) {
+          // This is a completed task
+          console.log('Adding task to completed tasks:', questionId);
+          newCompletedTaskIds.push(questionId);
+        } else if (!isTask && !newCompletedQuestionIds.includes(questionId)) {
+          // This is a completed question
+          newCompletedQuestionIds.push(questionId);
+        }
       }
 
       // Attempt to save progress to Firebase with built-in retry mechanism
@@ -102,7 +113,8 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
       // Return updated state
       return { 
         progress: newProgress, 
-        completedQuestionIds: newCompletedQuestionIds
+        completedQuestionIds: newCompletedQuestionIds,
+        completedTaskIds: newCompletedTaskIds
       };
     });
   },
@@ -345,14 +357,21 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
       if (progressRecords && progressRecords.length > 0) {
         console.log(`Loading ${progressRecords.length} progress records to analyze...`);
         
-        // Create a Set of completed question IDs to avoid duplicates
+        // Create Sets of completed question IDs and task IDs to avoid duplicates
         const completedQuestionIdsSet = new Set<string>();
+        const completedTaskIdsSet = new Set<string>();
         
-        // Process all progress records to find which questions have been correctly answered
+        // Process all progress records to find which questions/tasks have been correctly answered
         progressRecords.forEach(record => {
           // Check if this record indicates a correct answer
           if (record.isCorrect && record.questionId) {
-            completedQuestionIdsSet.add(record.questionId);
+            // Determine if this is a task or a question based on the notes
+            const isTask = record.notes?.includes('Completed successfully');
+            if (isTask) {
+              completedTaskIdsSet.add(record.questionId);
+            } else {
+              completedQuestionIdsSet.add(record.questionId);
+            }
           }
         });
         
@@ -366,15 +385,17 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
           }
         });
         
-        // Create array of completed question IDs
+        // Create arrays of completed question IDs and task IDs
         const completedQuestionIds = Array.from(completedQuestionIdsSet);
+        const updatedCompletedTaskIds = Array.from(completedTaskIdsSet);
         
-        console.log(`FINAL: ${completedQuestionIds.length} completed questions`);
+        console.log(`FINAL: ${completedQuestionIds.length} completed questions, ${updatedCompletedTaskIds.length} completed tasks`);
         
         // Store in state
         set({ 
           progress: progressRecords,
-          completedQuestionIds: completedQuestionIds
+          completedQuestionIds: completedQuestionIds,
+          completedTaskIds: updatedCompletedTaskIds
         });
       } else {
         // Reset completed questions if no progress records

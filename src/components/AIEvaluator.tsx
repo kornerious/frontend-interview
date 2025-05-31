@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Button,
@@ -15,41 +15,24 @@ import {
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import TipsAndUpdatesIcon from '@mui/icons-material/TipsAndUpdates';
-import { getAIService } from '@/utils/aiService';
+import claudeService from '@/utils/claudeService';
 import { useSettingsStore } from '@/features/progress/useSettingsStoreFirebase';
-import { AIProvider } from '@/types';
-import { evaluationStorageService } from '../utils/evaluationStorageService';
-
-interface AnalysisResult {
-  score: number;
-  feedback: string;
-  strengths: string[];
-  improvementAreas: string[];
-}
 
 interface AIEvaluatorProps {
   question: string;
   userAnswer: string;
   modelAnswer: string;
-  onEvaluationComplete?: (result: AnalysisResult) => void;
-  onImproveComplete?: (improvedAnswer: string) => void;
-  questionCategory?: string;
-  questionTopic?: string;
-  questionId?: string;
+  onEvaluationComplete?: (evaluation: any) => void;
 }
 
 /**
- * Component to evaluate answers using the selected AI provider
+ * Component to evaluate answers using Claude
  */
 export default function AIEvaluator({
   question,
   userAnswer,
   modelAnswer,
-  onEvaluationComplete,
-  onImproveComplete,
-  questionCategory,
-  questionTopic,
-  questionId
+  onEvaluationComplete
 }: AIEvaluatorProps) {
   const [loading, setLoading] = useState(false);
   const [evaluation, setEvaluation] = useState<any>(null);
@@ -59,45 +42,17 @@ export default function AIEvaluator({
   
   // Get settings to check if API key is available
   const settings = useSettingsStore(state => state.settings);
-  const aiProvider: AIProvider = settings.aiProvider;
-  const [providerName, setProviderName] = useState<string>('AI');
-  
-  // Determine if an API key is available for the selected provider
-  const getApiKeyAvailable = () => {
-    switch (aiProvider) {
-      case 'openai':
-        return !!settings.openAIApiKey;
-      case 'claude':
-        return !!settings.claudeApiKey;
-      case 'gemini':
-        return !!settings.geminiApiKey;
-      default:
-        return false;
-    }
-  };
-
-  const apiKeyAvailable = getApiKeyAvailable();
-  
-  // Update the provider name display when the AI provider changes
-  useEffect(() => {
-    switch (aiProvider) {
-      case 'openai':
-        setProviderName('OpenAI');
-        break;
-      case 'claude':
-        setProviderName('Claude');
-        break;
-      case 'gemini':
-        setProviderName('Gemini');
-        break;
-      default:
-        setProviderName('AI');
-    }
-  }, [aiProvider]);
+  const apiKeyAvailable = !!settings.claudeApiKey;
 
   const handleEvaluate = async () => {
+    // Validate API key
     if (!apiKeyAvailable) {
-      setError(`${providerName} API key not found. Please add your API key in the settings.`);
+      setError('Claude API key not found. Please add your API key in the settings page.');
+      return;
+    }
+
+    if (settings.claudeApiKey && settings.claudeApiKey.trim().length < 30) {
+      setError('The Claude API key appears to be invalid. Please check your settings.');
       return;
     }
 
@@ -105,54 +60,50 @@ export default function AIEvaluator({
     setError(null);
     
     try {
-      // Get the appropriate AI service based on the selected provider
-      const aiService = await getAIService(aiProvider);
+      // Wait for initialization to complete with improved error handling
+      const initSuccess = await claudeService.initialize({ apiKey: settings.claudeApiKey });
       
-      // Always reinitialize the AI service to ensure we're using the current API key
-      // This helps fix issues where settings were changed but service wasn't updated
-      let apiKey = '';
-      switch (aiProvider) {
-        case 'openai':
-          apiKey = settings.openAIApiKey;
-          break;
-        case 'claude':
-          apiKey = settings.claudeApiKey;
-          break;
-        case 'gemini':
-          apiKey = settings.geminiApiKey;
-          break;
+      if (!initSuccess) {
+        throw new Error('Failed to initialize Claude service. Please check your API key.');
       }
       
-      await aiService.initialize({ apiKey });
+      // Add a timeout to prevent hanging requests
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timed out. Please try again later.')), 20000);
+      });
       
-      const result = await aiService.evaluateAnswer(question, userAnswer, modelAnswer);
+      // Race the evaluation request against the timeout
+      const result = await Promise.race([
+        claudeService.evaluateAnswer(question, userAnswer, modelAnswer),
+        timeoutPromise
+      ]) as any;
+      
+      // Validate the returned result has the expected format
+      if (!result || typeof result.score !== 'number') {
+        throw new Error('Invalid response format from Claude. Please try again.');
+      }
       
       setEvaluation(result);
       if (onEvaluationComplete) {
         onEvaluationComplete(result);
       }
-      
-      // Store the evaluation result in the database
-      if (result && questionId) {
-        try {
-          await evaluationStorageService.storeEvaluation({
-            questionId,
-            score: result.score,
-            feedback: result.feedback,
-            strengths: result.strengths || [],
-            improvementAreas: result.improvementAreas || [],
-            timestamp: Date.now(),
-            category: questionCategory || 'unknown',
-            topic: questionTopic || 'unknown'
-          });
-        } catch (storageError) {
-          console.error('Error storing evaluation result:', storageError);
-          // Non-critical error, don't show to user
-        }
-      }
     } catch (error) {
       console.error('Error evaluating answer:', error);
-      setError(error instanceof Error ? error.message : `An error occurred evaluating your answer with ${providerName}`);
+      
+      // Provide more specific error messages based on error type
+      if (error instanceof Error) {
+        if (error.message.includes('API key')) {
+          setError('Invalid API key. Please check your Claude API key in settings.');
+        } else if (error.message.includes('timeout')) {
+          setError('Request timed out. The Claude service might be experiencing high load.');
+        } else if (error.message.includes('rate limit')) {
+          setError('Claude rate limit exceeded. Please try again in a few minutes.');
+        } else {
+          setError(`Error: ${error.message}`);
+        }
+      } else {
+        setError('An unexpected error occurred. Please try again later.');
+      }
     } finally {
       setLoading(false);
     }
@@ -160,7 +111,7 @@ export default function AIEvaluator({
   
   const handleImprove = async () => {
     if (!apiKeyAvailable) {
-      setError(`${providerName} API key not found. Please add your API key in the settings.`);
+      setError('Claude API key not found. Please add your API key in the settings.');
       return;
     }
     
@@ -168,31 +119,16 @@ export default function AIEvaluator({
     setError(null);
     
     try {
-      // Get the appropriate AI service based on the selected provider
-      const aiService = await getAIService(aiProvider);
-      
-      // Always reinitialize the AI service to ensure we're using the current API key
-      // This helps fix issues where settings were changed but service wasn't updated
-      let apiKey = '';
-      switch (aiProvider) {
-        case 'openai':
-          apiKey = settings.openAIApiKey;
-          break;
-        case 'claude':
-          apiKey = settings.claudeApiKey;
-          break;
-        case 'gemini':
-          apiKey = settings.geminiApiKey;
-          break;
+      // Initialize Claude service with the API key if not already initialized
+      if (!claudeService.isInitialized()) {
+        claudeService.initialize({ apiKey: settings.claudeApiKey });
       }
       
-      await aiService.initialize({ apiKey });
-      
-      const improvement = await aiService.getImprovedAnswer(question, userAnswer);
+      const improvement = await claudeService.getImprovedAnswer(question, userAnswer);
       setImprovedAnswer(improvement);
     } catch (error) {
       console.error('Error improving answer:', error);
-      setError(error instanceof Error ? error.message : `An error occurred improving your answer with ${providerName}`);
+      setError(error instanceof Error ? error.message : 'An error occurred improving your answer');
     } finally {
       setLoadingImprovement(false);
     }
@@ -201,12 +137,12 @@ export default function AIEvaluator({
   return (
     <Box sx={{ mt: 3 }}>
       <Typography variant="h6" gutterBottom>
-        {providerName}-Powered Answer Analysis
+        AI-Powered Answer Analysis
       </Typography>
       
       {!apiKeyAvailable ? (
         <Alert severity="info" sx={{ mb: 2 }}>
-          Add your {providerName} API key in the settings to enable AI analysis of your answers.
+          Add your OpenAI API key in the settings to enable AI analysis of your answers.
         </Alert>
       ) : (
         <>
@@ -217,7 +153,7 @@ export default function AIEvaluator({
               startIcon={<TipsAndUpdatesIcon />}
               fullWidth
             >
-              Evaluate My Answer with {providerName}
+              Evaluate My Answer with AI
             </Button>
           )}
           
@@ -237,7 +173,7 @@ export default function AIEvaluator({
           {evaluation && (
             <Paper variant="outlined" sx={{ p: 2, my: 2 }}>
               <Typography variant="subtitle1" gutterBottom fontWeight="bold">
-                {providerName} Evaluation Results
+                AI Evaluation Results
               </Typography>
               
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>

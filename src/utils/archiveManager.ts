@@ -1,5 +1,5 @@
 import { LearningProgram } from '@/types';
-import gistStorageService from './gistStorageService';
+import firebaseService from './firebaseService';
 
 /**
  * ArchiveManager handles the saving and loading of program archives as TypeScript files
@@ -93,12 +93,12 @@ export const program: LearningProgram = ${JSON.stringify(program, null, 2)};
    */
   static async archiveProgram(program: LearningProgram): Promise<void> {
     try {
-      // Use gistStorageService to save the program
+      // Use firebaseService to save the program
       // Each program is saved individually in the Gist
-      await gistStorageService.saveProgram(program);
+      await firebaseService.saveProgram(program);
       
       // Get the existing settings
-      const settings = await gistStorageService.getSettings() || {};
+      const settings = await firebaseService.getSettings() || {};
       
       // Update the archived programs list in the settings
       // Type assertion to handle custom fields
@@ -107,7 +107,7 @@ export const program: LearningProgram = ${JSON.stringify(program, null, 2)};
         archivedIds.push(program.id);
         
         // Save the updated settings with the new archived program ID
-        await gistStorageService.saveSettings({
+        await firebaseService.saveSettings({
           ...settings,
           archivedProgramIds: archivedIds
         } as any);
@@ -124,11 +124,11 @@ export const program: LearningProgram = ${JSON.stringify(program, null, 2)};
    */
   static async getArchivedPrograms(): Promise<LearningProgram[]> {
     try {
-      // Get all programs from gistStorageService
-      const allPrograms = await gistStorageService.getAllPrograms() || [];
+      // Get all programs from firebaseService
+      const allPrograms = await firebaseService.getAllPrograms() || [];
       
       // Get the list of archived program IDs
-      const settings = await gistStorageService.getSettings() || {};
+      const settings = await firebaseService.getSettings() || {};
       // Type assertion to handle custom fields
       const archivedIds = (settings as any).archivedProgramIds || [];
       
@@ -147,7 +147,7 @@ export const program: LearningProgram = ${JSON.stringify(program, null, 2)};
   static async deleteArchivedProgram(programId: string): Promise<void> {
     try {
       // Get current settings
-      const settings = await gistStorageService.getSettings() || {};
+      const settings = await firebaseService.getSettings() || {};
       
       // Remove the program ID from the archived list
       // Type assertion to handle custom fields
@@ -155,7 +155,7 @@ export const program: LearningProgram = ${JSON.stringify(program, null, 2)};
       const updatedArchivedIds = archivedIds.filter((id: string) => id !== programId);
       
       // Update settings with the new archived IDs list
-      await gistStorageService.saveSettings({
+      await firebaseService.saveSettings({
         ...settings,
         archivedProgramIds: updatedArchivedIds
       } as any);

@@ -15,6 +15,8 @@ class ClaudeService {
   private config: AIConfig | null = null;
   private conversationHistory: Array<{role: 'user' | 'assistant' | 'system', content: string}> = [];
   private model = CLAUDE_MODELS.SONNET_4; // Use Claude 4 Sonnet - the most advanced model
+  private sessionId: string = 'default-session';
+  private initialized: boolean = false;
 
   /**
    * Initialize the Claude client with the provided configuration
@@ -26,23 +28,41 @@ class ClaudeService {
         return false;
       }
       
+      // Basic validation for API key format
+      if (typeof config.apiKey !== 'string' || config.apiKey.trim().length < 30) {
+        console.error('Invalid Claude API key format');
+        return false;
+      }
+
+      // Use a cleaned version of the API key
+      const sanitizedApiKey = config.apiKey.trim();
+      
       // Create Anthropic client with the dangerouslyAllowBrowser option
       this.client = new Anthropic({
-        apiKey: config.apiKey,
+        apiKey: sanitizedApiKey,
         dangerouslyAllowBrowser: true // Required for browser environments
       });
       
-      this.config = config;
+      this.config = {
+        ...config,
+        apiKey: sanitizedApiKey
+      };
+
+      // Load conversation history from Firebase
+      await this.loadConversationHistory();
+      
+      this.initialized = true;
       return true;
     } catch (error) {
       console.error('Error initializing Claude client:', error);
       this.client = null;
+      this.config = null;
       return false;
     }
   }
 
   isInitialized(): boolean {
-    return !!this.client;
+    return this.initialized && !!this.client;
   }
 
   /**
@@ -246,6 +266,9 @@ Provide an improved version that is well-structured, technically accurate, and d
         content
       });
 
+      // Save the updated conversation history to Firebase
+      await this.saveConversationHistory();
+
       return content;
     } catch (error) {
       console.error('Error getting conversation response from Claude:', error);
@@ -258,6 +281,43 @@ Provide an improved version that is well-structured, technically accurate, and d
    */
   async clearConversationHistory(): Promise<void> {
     this.conversationHistory = [];
+    try {
+      // Import Firebase service to avoid circular dependencies
+      const { default: firebaseService } = await import('./firebaseService');
+      // Save an empty array to Firebase
+      await firebaseService.saveConversationHistory([], this.sessionId);
+    } catch (error) {
+      console.error('Error clearing conversation history from Firebase:', error);
+    }
+  }
+
+  /**
+   * Save conversation history to Firebase
+   */
+  private async saveConversationHistory(): Promise<void> {
+    try {
+      // Import Firebase service to avoid circular dependencies
+      const { default: firebaseService } = await import('./firebaseService');
+      await firebaseService.saveConversationHistory(this.conversationHistory, this.sessionId);
+    } catch (error) {
+      console.error('Error saving conversation history to Firebase:', error);
+    }
+  }
+
+  /**
+   * Load conversation history from Firebase
+   */
+  private async loadConversationHistory(): Promise<void> {
+    try {
+      // Import Firebase service to avoid circular dependencies
+      const { default: firebaseService } = await import('./firebaseService');
+      const history = await firebaseService.getConversationHistory(this.sessionId);
+      if (history && history.length > 0) {
+        this.conversationHistory = history;
+      }
+    } catch (error) {
+      console.error('Error loading conversation history from Firebase:', error);
+    }
   }
 
   /**

@@ -17,7 +17,16 @@ import { codeTasks } from '@/data/sampleTasks';
 import { ArchiveManager } from '@/editor/ArchiveManager';
 
 export default function DailyPage() {
-  const { currentProgram, setCurrentProgram, updateDayCompletion, addProgress } = useProgressStore();
+  // Get all required states and actions from progress store
+  const { 
+    currentProgram, 
+    setCurrentProgram, 
+    updateDayCompletion, 
+    addProgress, 
+    // Important: use the state directly to ensure we always have the latest values
+    completedQuestionIds, 
+    completedTaskIds 
+  } = useProgressStore();
   const router = useRouter();
   
   // If no current program, redirect to home
@@ -60,9 +69,6 @@ export default function DailyPage() {
     theory => currentDayPlan.theoryBlockIds.includes(theory.id)
   );
   
-  // Get completed question IDs from the progress store
-  const { completedQuestionIds } = useProgressStore();
-  
   // Get questions for current day, excluding already completed questions
   const dayQuestions = sampleQuestions.filter(question => 
     // Include the question if it's in the day plan AND hasn't been completed yet
@@ -70,10 +76,12 @@ export default function DailyPage() {
     !completedQuestionIds.includes(question.id)
   );
   
-  // Get code task for current day
-  const dayCodeTask = codeTasks.find(
-    task => task.id === currentDayPlan.codeTaskId
-  ) || null;
+  // Get code task for current day if it hasn't been completed yet
+  const dayCodeTask = (currentDayPlan.codeTaskId && !completedTaskIds.includes(currentDayPlan.codeTaskId)) ?
+    (codeTasks.find(task => task.id === currentDayPlan.codeTaskId) || null) : null;
+    
+  console.log('Completed task IDs:', completedTaskIds);
+  console.log('Current day code task:', currentDayPlan.codeTaskId, 'is completed:', completedTaskIds.includes(currentDayPlan.codeTaskId));
   
   // Handle day completion
   const handleDayComplete = (day: number) => {

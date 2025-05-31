@@ -27,7 +27,7 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import TipsAndUpdatesIcon from '@mui/icons-material/TipsAndUpdates';
 import ChatIcon from '@mui/icons-material/Chat';
 import ReactMarkdown from 'react-markdown';
-import OpenAIEvaluator from './OpenAIEvaluator';
+import AIEvaluator from './AIEvaluator';
 import AIConversation from './AIConversation';
 
 interface LeetEditorProps {
@@ -89,6 +89,53 @@ export default function LeetEditor({ task, onComplete }: LeetEditorProps) {
     setShowSolution(true);
     // Mark as incomplete
     onComplete(task.id, code, false, timeSpent);
+  };
+  
+  // Handle running tests against user's code
+  const handleRunCode = () => {
+    try {
+      // Reset results
+      setTestResults([]);
+      
+      // Parse test cases and evaluate the code
+      const results = task.testCases.map(testCase => {
+        try {
+          // This is a simplified approach - in a real app, you'd use a sandbox
+          // to safely evaluate the code against test cases
+          const testFunction = new Function('code', `
+            try {
+              ${code}
+              return { passed: ${testCase}, message: 'Test passed: ${testCase}' };
+            } catch (error) {
+              return { passed: false, message: 'Error: ' + error.message };
+            }
+          `);
+          
+          return testFunction();
+        } catch (error) {
+          return { 
+            passed: false, 
+            message: `Error in test case ${testCase}: ${error instanceof Error ? error.message : String(error)}` 
+          };
+        }
+      });
+      
+      setTestResults(results);
+      
+      // Check if all tests passed
+      const allPassed = results.every(result => result.passed);
+      setAllTestsPassed(allPassed);
+      
+      // If all passed, mark as complete
+      if (allPassed) {
+        onComplete(task.id, code, true, timeSpent);
+      }
+    } catch (error) {
+      setTestResults([{
+        passed: false,
+        message: `Failed to run tests: ${error instanceof Error ? error.message : String(error)}`
+      }]);
+    }
   };
   
   return (
@@ -200,29 +247,41 @@ export default function LeetEditor({ task, onComplete }: LeetEditorProps) {
       </Box>
       
       <Divider />
-
-      <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
         <Box>
-          <Button
-            variant="outlined"
+          <Button 
+            variant="outlined" 
+            color="warning"
             startIcon={<LightbulbIcon />}
-            onClick={() => setShowHints(!showHints)}
-            sx={{ mr: 2 }}
-          >
-            {showHints ? 'Hide Hints' : 'Show Hints'}
-          </Button>
-          
-          <Button
-            variant="outlined"
-            color="secondary"
             onClick={handleShowSolution}
+            sx={{ mr: 1 }}
           >
             Show Solution
           </Button>
+          
+          <Button 
+            variant="outlined" 
+            color="info"
+            startIcon={<ChatIcon />}
+            onClick={() => {
+              setShowAIFeedback(true);
+              setTabValue(2); // Set to AI Chat tab
+            }}
+          >
+            AI Assistant
+          </Button>
         </Box>
+        
+        <Button 
+          variant="contained" 
+          onClick={handleRunCode}
+        >
+          Run Tests
+        </Button>
       </Box>
       
-      {testResults.length > 0 && (
+      {(testResults.length > 0 || showAIFeedback) && (
         <Box sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
             <Tabs 
@@ -235,13 +294,13 @@ export default function LeetEditor({ task, onComplete }: LeetEditorProps) {
                 label="AI Evaluation" 
                 icon={<TipsAndUpdatesIcon />} 
                 iconPosition="start"
-                disabled={!allTestsPassed && !showAIFeedback} 
+                disabled={false} 
               />
               <Tab 
                 label="Chat with Coach" 
                 icon={<ChatIcon />} 
                 iconPosition="start"
-                disabled={!allTestsPassed && !showAIFeedback} 
+                disabled={false} 
               />
             </Tabs>
           </Box>
@@ -299,12 +358,19 @@ export default function LeetEditor({ task, onComplete }: LeetEditorProps) {
           {/* AI Evaluation Tab */}
           {tabValue === 1 && (
             <Box>
-              <OpenAIEvaluator
+              <AIEvaluator
                 question={`${task.title}\n${task.description}`}
                 userAnswer={code}
                 modelAnswer={task.solutionCode}
                 onEvaluationComplete={(evaluation) => {
-                  // Save evaluation to database if needed
+                  // Save evaluation to database and mark task as complete if score is high enough
+                  if (evaluation && evaluation.score >= 70) {
+                    console.log('AI evaluation passed with score:', evaluation.score);
+                    // Mark task as complete with success=true
+                    onComplete(task.id, code, true, timeSpent);
+                  } else if (evaluation) {
+                    console.log('AI evaluation score not sufficient:', evaluation.score);
+                  }
                 }}
               />
             </Box>

@@ -505,6 +505,30 @@ class FirebaseStorageService {
   }
 
   /**
+   * Save a single code example
+   * @param exampleId The ID of the example to save
+   * @param code The code content to save
+   * @param contextId The context ID for the example (default: 'global')
+   */
+  async saveCodeExample(exampleId: string, code: string, contextId = 'global'): Promise<boolean> {
+    return this.withRetry(async () => {
+      await this.ensureInitialized();
+      
+      // Get existing examples first
+      const existingExamples = await this.getCodeExamples(contextId);
+      
+      // Update the specific example
+      const updatedExamples = {
+        ...existingExamples,
+        [exampleId]: code
+      };
+      
+      // Save all examples with the updated one
+      return this.saveCodeExamples(updatedExamples, contextId);
+    });
+  }
+
+  /**
    * Save code examples
    */
   async saveCodeExamples(examples: Record<string, string>, contextId = 'global'): Promise<boolean> {
@@ -610,108 +634,45 @@ class FirebaseStorageService {
   }
 
   /**
-   * Migration utility: Import data from GitHub Gist
-   * This can be used as part of the migration process
+   * Emergency save method - previously saved to GitHub Gist, now saves directly to Firebase
+   * This is a compatibility method to replace the old Gist-based emergency save
+   * @param data Object containing programs and/or progress to save
+   * @returns Whether the save was successful
    */
-  async importFromGistData(gistData: any): Promise<boolean> {
-    await this.ensureInitialized();
-    
+  async directSaveToGist(data: { programs?: LearningProgram[], progress?: UserProgress[] }): Promise<boolean> {
     try {
-      // Begin transaction to ensure all data is imported atomically
-      await runTransaction(db, async (transaction) => {
-        const userDocRef = this.getUserDocRef();
-        
-        // Import programs if they exist
-        if (gistData.programs && Array.isArray(gistData.programs)) {
-          for (const program of gistData.programs) {
-            if (program && program.id) {
-              const programRef = doc(db, 'users', this.userId!, 'programs', program.id);
-              transaction.set(programRef, {
-                ...program,
-                importedAt: serverTimestamp(),
-                updatedAt: serverTimestamp()
-              });
-            }
-          }
-        }
-        
-        // Import user answers, bookmarks, analysis
-        const userDocData: any = {
-          importedAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        };
-        
-        if (gistData.userAnswers) {
-          userDocData.userAnswers = gistData.userAnswers;
-        }
-        
-        if (gistData.bookmarks) {
-          userDocData.bookmarked = gistData.bookmarks;
-        }
-        
-        if (gistData.analysis) {
-          userDocData.lastAnalysis = gistData.analysis;
-        }
-        
-        // Update user document with imported data
-        transaction.set(userDocRef, userDocData, { merge: true });
-        
-        // Import progress items if they exist
-        if (gistData.progress && Array.isArray(gistData.progress)) {
-          for (const progressItem of gistData.progress) {
-            if (progressItem) {
-              const progressId = progressItem.id || 
-                `imported_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                
-              const progressRef = doc(db, 'users', this.userId!, 'progress', progressId);
-              transaction.set(progressRef, {
-                ...progressItem,
-                id: progressId,
-                importedAt: serverTimestamp(),
-                timestamp: progressItem.timestamp ? 
-                  Timestamp.fromMillis(new Date(progressItem.timestamp).getTime()) : 
-                  Timestamp.now()
-              });
-            }
-          }
-        }
-        
-        // Import conversations if they exist
-        if (gistData.conversations) {
-          for (const [sessionId, history] of Object.entries(gistData.conversations)) {
-            if (history) {
-              const conversationRef = doc(db, 'users', this.userId!, 'conversations', sessionId);
-              transaction.set(conversationRef, {
-                history,
-                importedAt: serverTimestamp(),
-                updatedAt: serverTimestamp()
-              });
-            }
-          }
-        }
-        
-        // Import code examples if they exist
-        if (gistData.codeExamples) {
-          for (const [contextId, examples] of Object.entries(gistData.codeExamples)) {
-            if (examples) {
-              const codeExamplesRef = doc(db, 'users', this.userId!, 'codeExamples', contextId);
-              transaction.set(codeExamplesRef, {
-                examples,
-                importedAt: serverTimestamp(),
-                updatedAt: serverTimestamp()
-              });
-            }
-          }
-        }
-      });
+      await this.ensureInitialized();
+      console.log(' EMERGENCY FIREBASE SAVE: Starting emergency save operation');
       
-      console.log('Successfully imported data from Gist to Firebase');
+      // Save programs if provided
+      if (data.programs && data.programs.length > 0) {
+        console.log(`Saving ${data.programs.length} programs in emergency mode`);
+        
+        // Save each program individually to ensure maximum reliability
+        for (const program of data.programs) {
+          await this.saveProgram(program);
+        }
+      }
+      
+      // Save progress items if provided
+      if (data.progress && data.progress.length > 0) {
+        console.log(`Saving ${data.progress.length} progress items in emergency mode`);
+        
+        // Save each progress item individually for reliability
+        for (const progressItem of data.progress) {
+          // Ensure the progress item has the correct type expected by saveProgress
+          await this.saveProgress(progressItem as UserProgress & { id?: string });
+        }
+      }
+      
+      console.log(' EMERGENCY FIREBASE SAVE: Operation completed successfully');
       return true;
     } catch (error) {
-      console.error('Failed to import data from Gist:', error);
+      console.error(' EMERGENCY FIREBASE SAVE: Failed to save data:', error);
       return false;
     }
   }
+
 }
 
 // Create and export a singleton instance

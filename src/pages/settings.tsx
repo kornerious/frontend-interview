@@ -23,7 +23,7 @@ import AppLayout from '@/components/AppLayout';
 import { useSettingsStore } from '@/features/progress/useSettingsStoreFirebase';
 import { useProgressStore } from '@/features/progress/useProgressStoreFirebase';
 import { ArchiveManager } from '@/utils/archiveManager';
-import gistStorageService from '@/utils/gistStorageService';
+import firebaseService from '@/utils/firebaseService';
 
 export default function SettingsPage() {
   const {
@@ -39,7 +39,6 @@ export default function SettingsPage() {
     setGeminiApiKey,
     setGithubGistToken: updateGistToken,
     toggleUseGistStorage,
-    importFromGistUrl, 
     saveToFile, 
     loadFromFile 
   } = useSettingsStore();
@@ -106,7 +105,7 @@ export default function SettingsPage() {
     try {
       // Initialize the gist service if token is provided
       if (newSettings.githubGistToken) {
-        await gistStorageService.initialize(newSettings.githubGistToken);
+        await firebaseService.initialize(newSettings.githubGistToken);
       }
       
 
@@ -303,58 +302,6 @@ export default function SettingsPage() {
                           margin="normal"
                           helperText="Create a token with gist scope at github.com/settings/tokens"
                         />
-                        
-                        <Box mt={2}>
-                          <Grid container spacing={2}>
-                            <Grid item xs={12}>
-                              <Typography variant="subtitle2">Import from Existing Gist URL</Typography>
-                              <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
-                                <TextField
-                                  label="Gist URL"
-                                  fullWidth
-                                  value={gistUrl}
-                                  onChange={(e) => setGistUrl(e.target.value)}
-                                  size="small"
-                                  placeholder="https://gist.githubusercontent.com/..."
-                                />
-                                <Button
-                                  variant="contained"
-                                  color="primary"
-                                  onClick={async () => {
-                                    if (!githubGistToken) {
-                                      setImportError("GitHub token is required");
-                                      return;
-                                    }
-                                    
-                                    try {
-                                      setImportingGist(true);
-                                      setImportError(null);
-                                      const success = await importFromGistUrl(gistUrl);
-                                      if (success) {
-                                        setImportSuccess(true);
-                                        // Refresh the page to show updated data
-                                        setTimeout(() => {
-                                          window.location.reload();
-                                        }, 1500);
-                                      } else {
-                                        setImportError("Failed to import data from Gist URL. Invalid format or URL.");
-                                      }
-                                    } catch (error) {
-                                      console.error("Error importing from Gist URL:", error);
-                                      setImportError("Failed to import data from Gist URL.");
-                                    } finally {
-                                      setImportingGist(false);
-                                    }
-                                  }}
-                                  disabled={!gistUrl || !githubGistToken || importingGist}
-                                  sx={{ ml: 1, height: "40px" }}
-                                >
-                                  Import
-                                </Button>
-                              </Box>
-                            </Grid>
-                          </Grid>
-                        </Box>
                       </Grid>
                     </Grid>
                     <Typography variant="subtitle1" gutterBottom>

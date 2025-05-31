@@ -3,7 +3,7 @@ import { Paper, Typography, Box, Chip, Divider, Button, CircularProgress } from 
 import { TheoryBlock as TheoryBlockType, CodeExample } from '@/types';
 import Editor from '@monaco-editor/react';
 import ReactMarkdown from 'react-markdown';
-import gistStorageService from '../utils/gistStorageService';
+import firebaseService from '../utils/firebaseService';
 
 interface TheoryBlockProps {
   theory: TheoryBlockType;
@@ -22,8 +22,8 @@ export default function TheoryBlock({ theory, onSaveExample }: TheoryBlockProps)
   useEffect(() => {
     const loadSavedExamples = async () => {
       try {
-        // Use gistStorageService for Gist storage instead of localStorage
-        const savedExamples = await gistStorageService.getCodeExamples(theory.id);
+        // Use firebaseService for Firebase storage instead of localStorage
+        const savedExamples = await firebaseService.getCodeExamples(theory.id);
         if (savedExamples) {
           setSavedCodes(savedExamples);
         }
@@ -40,14 +40,14 @@ export default function TheoryBlock({ theory, onSaveExample }: TheoryBlockProps)
     // Set saving state to show loading indicator
     setSavingStates(prev => ({ ...prev, [example.id]: true }));
     
-    // Use async/await with gistStorageService
+    // Use async/await with firebaseService
     (async () => {
       try {
         // Update local state first for immediate feedback
         setSavedCodes(prev => ({ ...prev, [example.id]: newCode }));
         
-        // Save to Gist using gistStorageService
-        await gistStorageService.saveCodeExample(example.id, newCode, theory.id);
+        // Save to Firebase using firebaseService
+        await firebaseService.saveCodeExample(example.id, newCode, theory.id);
       } catch (error) {
         console.error('Failed to save example:', error);
       } finally {

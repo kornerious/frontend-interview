@@ -1,4 +1,4 @@
-import gistStorageService from './gistStorageService';
+import firebaseService from './firebaseService';
 
 export interface EvaluationResult {
   questionId: string;
@@ -32,8 +32,8 @@ class EvaluationStorageService {
       existingResults.push(result);
       
       // Store updated array in settings customData
-      const settings = await gistStorageService.getSettings() || {};
-      await gistStorageService.saveSettings({
+      const settings = await firebaseService.getSettings() || {};
+      await firebaseService.saveSettings({
         ...settings,
         customData: {
           ...(settings as any).customData || {},
@@ -45,25 +45,25 @@ class EvaluationStorageService {
       await this.updateProgress(result);
 
     } catch (error) {
-      console.error('Error storing evaluation in Gist:', error);
+      console.error('Error storing evaluation in Firebase:', error);
       throw error;
     }
   }
   
   async getEvaluations(): Promise<EvaluationResult[]> {
     try {
-      const settings = await gistStorageService.getSettings() || {};
+      const settings = await firebaseService.getSettings() || {};
       const results = (settings as any).customData?.[this.storageKey];
       return results || [];
     } catch (error) {
-      console.error('Error getting evaluations from Gist:', error);
+      console.error('Error getting evaluations from Firebase:', error);
       return [];
     }
   }
   
   async getUserProgress(): Promise<UserProgress> {
     try {
-      const settings = await gistStorageService.getSettings() || {};
+      const settings = await firebaseService.getSettings() || {};
       const progress = (settings as any).customData?.[this.progressKey];
       return progress || {
         weakTopics: {},
@@ -73,7 +73,7 @@ class EvaluationStorageService {
         lastActivityTimestamp: Date.now()
       };
     } catch (error) {
-      console.error('Error getting user progress from Gist:', error);
+      console.error('Error getting user progress from Firebase:', error);
       return {
         weakTopics: {},
         strongTopics: {},
@@ -121,9 +121,9 @@ class EvaluationStorageService {
       
       progress.lastActivityTimestamp = Date.now();
       
-      // Save updated progress to Gist
-      const settings = await gistStorageService.getSettings() || {};
-      await gistStorageService.saveSettings({
+      // Save updated progress to Firebase
+      const settings = await firebaseService.getSettings() || {};
+      await firebaseService.saveSettings({
         ...settings,
         customData: {
           ...(settings as any).customData || {},

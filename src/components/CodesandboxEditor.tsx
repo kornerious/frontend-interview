@@ -13,7 +13,7 @@ import { nightOwl } from "@codesandbox/sandpack-themes";
 import {
   SandpackFileExplorer,
 } from "sandpack-file-explorer";
-import gistStorageService from "@/utils/gistStorageService";
+import firebaseService from "@/utils/firebaseService";
 
 // Custom code change listener component
 const CodeChangeListener = ({ onChange, activeFile, contextId }: { onChange: (code: string) => void, activeFile: string, contextId: string }) => {
@@ -30,7 +30,7 @@ const CodeChangeListener = ({ onChange, activeFile, contextId }: { onChange: (co
         // Also save to database with file path as the ID
         // Make sure we have a valid string value for the database
         if (typeof currentCode === "string") {
-          gistStorageService.saveCodeExample(activeFile, currentCode, contextId)
+          firebaseService.saveCodeExample(activeFile, currentCode, contextId)
             .catch(err => console.error(`Error saving code for ${activeFile}:`, err));
         }
       }
@@ -93,7 +93,7 @@ const CodesandboxEditor: React.FC<CodesandboxEditorProps> = ({
       const loadSavedCode = async () => {
         try {
           // Try to load saved code examples for this context
-          const savedExamples = await gistStorageService.getCodeExamples(contextId);
+          const savedExamples = await firebaseService.getCodeExamples(contextId);
           
           // If we have saved code, use it
           if (savedExamples && Object.keys(savedExamples).length > 0) {
@@ -159,7 +159,7 @@ const CodesandboxEditor: React.FC<CodesandboxEditorProps> = ({
           }
         });
         
-        gistStorageService.saveCodeExamples(filesForDb, contextId)
+        firebaseService.saveCodeExamples(filesForDb, contextId)
           .catch(err => console.error("Error saving initial code examples:", err));
         
         setSandpackFiles(files);
