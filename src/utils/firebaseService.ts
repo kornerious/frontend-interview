@@ -486,12 +486,12 @@ class FirebaseStorageService {
    * Save code examples
    */
   async saveCodeExamples(examples: Record<string, string>, contextId = 'global'): Promise<boolean> {
-    await this.ensureInitialized();
-    
     return this.withRetry(async () => {
+      await this.ensureInitialized();
+      
       const codeExamplesRef = doc(db, 'users', this.userId!, 'codeExamples', contextId);
       
-      await setDoc(codeExamplesRef, { 
+      await setDoc(codeExamplesRef, {
         examples,
         updatedAt: serverTimestamp()
       });
@@ -504,9 +504,9 @@ class FirebaseStorageService {
    * Get code examples
    */
   async getCodeExamples(contextId = 'global'): Promise<Record<string, string>> {
-    await this.ensureInitialized();
-    
     return this.withRetry(async () => {
+      await this.ensureInitialized();
+      
       const codeExamplesRef = doc(db, 'users', this.userId!, 'codeExamples', contextId);
       const codeExamplesDoc = await getDoc(codeExamplesRef);
       
@@ -515,6 +515,75 @@ class FirebaseStorageService {
       }
       
       return {};
+    });
+  }
+  
+  /**
+   * Save user settings
+   */
+  async saveSettings(settings: any): Promise<boolean> {
+    return this.withRetry(async () => {
+      await this.ensureInitialized();
+      
+      console.log('Saving settings to Firebase:', settings);
+      
+      // Store settings in the user document
+      const userDocRef = this.getUserDocRef();
+      
+      // Make a deep copy of the settings to avoid reference issues
+      const sanitizedSettings = JSON.parse(JSON.stringify(settings));
+      
+      // Don't store API keys in raw form - consider implementing encryption
+      // For now, we'll preserve them if they exist but not overwrite with empty strings
+      const sensitiveFields = ['openAIApiKey', 'claudeApiKey', 'geminiApiKey', 'githubGistToken'];
+      
+      // First get existing settings
+      const existingDoc = await getDoc(userDocRef);
+      const existingSettings = existingDoc.exists() ? existingDoc.data()?.settings : {};
+      
+      // Merge settings carefully to preserve existing values
+      for (const field of sensitiveFields) {
+        // If the field is empty, but exists in existing settings, use the existing value
+        if (!sanitizedSettings[field] && existingSettings && existingSettings[field]) {
+          sanitizedSettings[field] = existingSettings[field];
+        }
+      }
+      
+      // Ensure all custom data is preserved
+      if (settings.customData) {
+        sanitizedSettings.customData = settings.customData;
+      }
+      
+      if (settings.testData) {
+        sanitizedSettings.testData = settings.testData;
+      }
+      
+      // Update the document with the settings
+      await setDoc(userDocRef, {
+        settings: sanitizedSettings,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+      
+      console.log('Settings successfully saved to Firebase');
+      return true;
+    });
+  }
+  
+  /**
+   * Get user settings
+   */
+  async getSettings(): Promise<any> {
+    return this.withRetry(async () => {
+      await this.ensureInitialized();
+      
+      const userDocRef = this.getUserDocRef();
+      const userDoc = await getDoc(userDocRef);
+      
+      if (userDoc.exists() && userDoc.data()?.settings) {
+        return userDoc.data().settings;
+      }
+      
+      return null;
     });
   }
 

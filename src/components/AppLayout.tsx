@@ -84,19 +84,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
           );
         })}
       </List>
-      <Divider />
-      <Box sx={{ p: 2 }}>
-        <FormControlLabel
-          control={
-            <Switch 
-              checked={settings.darkMode} 
-              onChange={toggleDarkMode}
-              color="primary"
-            />
-          }
-          label="Dark Mode"
-        />
-      </Box>
     </div>
   );
   
