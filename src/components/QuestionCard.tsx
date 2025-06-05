@@ -72,14 +72,18 @@ export default function QuestionCard({
   const [tabValue, setTabValue] = useState(0); // For switching between AI evaluation and chat
   
   // Options for MCQ questions
-  const [options, setOptions] = useState<string[]>(() => {
+  const [options, setOptions] = useState<string[]>([]);
+  
+  // Initialize options once when the question changes
+  useEffect(() => {
     if (question.type === 'mcq') {
       // Check if the answer contains JSON-formatted options
       try {
         const parsedOptions = JSON.parse(question.answer);
         if (Array.isArray(parsedOptions) && parsedOptions.every(o => o && typeof o === 'object' && 'text' in o && 'correct' in o)) {
           // Return formatted options directly from the answer
-          return parsedOptions.map(o => o.text);
+          setOptions(parsedOptions.map(o => o.text));
+          return;
         }
       } catch (e) {
         // Not JSON, continue with normal processing
@@ -87,12 +91,22 @@ export default function QuestionCard({
       
       // If we have specific options in the question object, use them
       if (question.options && Array.isArray(question.options) && question.options.length > 0) {
-        // Return a shuffled copy of the options
-        return [...question.options].sort(() => Math.random() - 0.5);
+        // Create a stable shuffle by using the question ID as a seed
+        const seed = question.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const shuffled = [...question.options].sort((a, b) => {
+          // Use a simple seeded random function
+          const hashA = a.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+          const hashB = b.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+          return (hashA + seed) % 1 - (hashB + seed) % 1;
+        });
+        setOptions(shuffled);
+      } else {
+        setOptions([]);
       }
+    } else {
+      setOptions([]);
     }
-    return [];
-  });
+  }, [question.id, question.type, question.options, question.answer]);
   
   // Timer state
   const [startTime, setStartTime] = useState<number>(Date.now());
