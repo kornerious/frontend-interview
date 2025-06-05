@@ -4,6 +4,12 @@ export const sampleTheoryBlocks: TheoryBlock[] = [
   {
     id: 'react_hooks_basics',
     title: 'React Hooks Fundamentals',
+    // Learning plan optimization fields
+    prerequisites: [],
+    complexity: 3,
+    interviewRelevance: 9,
+    learningPath: 'beginner',
+    requiredFor: ['react_hooks_3', 'react_hooks_4', 'react_performance_optimization'],
     content: `
 # React Hooks Fundamentals
 
@@ -68,6 +74,8 @@ function WindowSizeTracker() {
     return () => {
       window.removeEventListener('resize', handleResize);
     };
+
+
   }, []); // Empty array ensures effect runs only on mount and unmount
   
   return (
@@ -88,6 +96,12 @@ function WindowSizeTracker() {
   {
     id: 'typescript_interfaces_types',
     title: 'TypeScript Interfaces vs Types',
+    // Learning plan optimization fields
+    prerequisites: [],
+    complexity: 4,
+    interviewRelevance: 7,
+    learningPath: 'intermediate',
+    requiredFor: ['typescript_2', 'task_typescript_interfaces'],
     content: `
 # TypeScript: Interfaces vs Types
 
@@ -142,7 +156,9 @@ const employee: Employee = {
   department: 'Engineering',
   salary: 75000,
   createdAt: new Date()
-};`,
+};
+
+`,
         explanation: 'This example demonstrates interfaces in TypeScript, showing extension, optional properties, and declaration merging.',
         language: 'typescript'
       },
@@ -156,6 +172,8 @@ type User = {
   email?: string;
 };
 
+
+
 // Type alias with union
 type ID = number | string;
 
@@ -164,6 +182,8 @@ type Employee = User & {
   department: string;
   salary: number;
 };
+
+
 
 // Type with literals
 type Direction = 'north' | 'south' | 'east' | 'west';
@@ -174,6 +194,8 @@ const employee: Employee = {
   department: 'Engineering',
   salary: 75000
 };
+
+
 
 const userId: ID = 'abc-123'; // Can be string or number`,
         explanation: 'This example showcases type aliases in TypeScript, demonstrating unions, intersections, and literal types.',
@@ -188,6 +210,12 @@ const userId: ID = 'abc-123'; // Can be string or number`,
   {
     id: 'nextjs_data_fetching',
     title: 'Next.js Data Fetching Methods',
+    // Learning plan optimization fields
+    prerequisites: [],
+    complexity: 6,
+    interviewRelevance: 8,
+    learningPath: 'intermediate',
+    requiredFor: ['task_nextjs_isr'],
     content: `
 # Next.js Data Fetching Methods
 
@@ -225,6 +253,8 @@ export async function getServerSideProps(context) {
 
   // Pass data to the page via props
   return { props: { userData } };
+
+
 }
 
 export default function Dashboard({ userData }) {
@@ -256,6 +286,8 @@ export async function getStaticPaths() {
     paths,
     fallback: 'blocking' // Generate remaining pages on-demand
   };
+
+
 }
 
 export async function getStaticProps({ params }) {
@@ -267,6 +299,8 @@ export async function getStaticProps({ params }) {
     props: { product },
     revalidate: 60 // Regenerate page after 60 seconds
   };
+
+
 }
 
 export default function Product({ product }: { product: { name: string; description: string; price: number } }) {
@@ -289,9 +323,15 @@ export default function Product({ product }: { product: { name: string; descript
   },
   {
     id: 'javascript_array_methods',
-    title: 'JavaScript Array Methods Beyond Basics',
+    title: 'Advanced JavaScript Array Methods',
+    // Learning plan optimization fields
+    prerequisites: ['javascript_arrays_1'],
+    complexity: 5,
+    interviewRelevance: 8,
+    learningPath: 'intermediate',
+    requiredFor: ['javascript_arrays_2'],
     content: `
-# JavaScript Array Methods Beyond Basics
+# Advanced JavaScript Array Methods
 
 JavaScript provides numerous powerful array methods beyond the basics of push, pop, and forEach. These methods enable complex data transformations, filtering, and aggregation with clean, functional code.
 
@@ -397,6 +437,12 @@ const totalAge = users.reduce((sum, user) => sum + user.age, 0);`,
   {
     id: 'react_performance_optimization',
     title: 'React Performance Optimization Techniques',
+    // Learning plan optimization fields
+    prerequisites: ['react_hooks_basics', 'react_hooks_3'],
+    complexity: 7,
+    interviewRelevance: 7,
+    learningPath: 'advanced',
+    requiredFor: [],
     content: `
 # React Performance Optimization Techniques
 
@@ -520,6 +566,8 @@ function App() {
   const handleItemClick = (item) => {
     alert(\`You selected \${item.name}\`);
   };
+
+
   
   return (
     <div>
@@ -547,3 +595,96 @@ function App() {
     technology: 'React'
   }
 ];
+
+// Create a theory content index for fast learning plan generation
+export const theoryIndex = {
+  byLearningPath: {
+    beginner: sampleTheoryBlocks.filter(block => block.learningPath === 'beginner').map(block => block.id),
+    intermediate: sampleTheoryBlocks.filter(block => block.learningPath === 'intermediate').map(block => block.id),
+    advanced: sampleTheoryBlocks.filter(block => block.learningPath === 'advanced').map(block => block.id),
+    expert: sampleTheoryBlocks.filter(block => block.learningPath === 'expert').map(block => block.id)
+  },
+  byComplexity: {
+    low: sampleTheoryBlocks.filter(block => block.complexity && block.complexity <= 3).map(block => block.id),
+    medium: sampleTheoryBlocks.filter(block => block.complexity && block.complexity > 3 && block.complexity <= 6).map(block => block.id),
+    high: sampleTheoryBlocks.filter(block => block.complexity && block.complexity > 6).map(block => block.id)
+  },
+  byTopic: {} as Record<string, string[]>,
+  byPrerequisite: {} as Record<string, string[]>
+};
+
+// Populate topics index
+sampleTheoryBlocks.forEach(block => {
+  if (block.tags) {
+    block.tags.forEach(tag => {
+      if (!theoryIndex.byTopic[tag]) {
+        theoryIndex.byTopic[tag] = [];
+      }
+      theoryIndex.byTopic[tag].push(block.id);
+    });
+  }
+});
+
+// Populate prerequisite relationships
+sampleTheoryBlocks.forEach(block => {
+  if (block.prerequisites && block.prerequisites.length > 0) {
+    block.prerequisites.forEach(prereq => {
+      if (!theoryIndex.byPrerequisite[prereq]) {
+        theoryIndex.byPrerequisite[prereq] = [];
+      }
+      theoryIndex.byPrerequisite[prereq].push(block.id);
+    });
+  }
+});
+
+// Create a learning path template
+export const learningPathTemplates = {
+  beginnerPath: {
+    name: 'Frontend Developer Beginner Path',
+    estimatedHours: 20,
+    targetLevel: 'beginner',
+    requiredContent: [
+      'react_hooks_basics',
+      'javascript_arrays_1'
+    ],
+    optionalContent: [
+      'typescript_interfaces_types'
+    ],
+    progression: {
+      next: 'intermediatePath'
+    }
+  },
+  intermediatePath: {
+    name: 'Frontend Developer Intermediate Path',
+    estimatedHours: 40,
+    targetLevel: 'intermediate',
+    requiredContent: [
+      'javascript_array_methods',
+      'nextjs_data_fetching',
+      'typescript_interfaces_types'
+    ],
+    optionalContent: [
+      'task_custom_hook_1'
+    ],
+    progression: {
+      next: 'advancedPath',
+      previous: 'beginnerPath'
+    }
+  },
+  advancedPath: {
+    name: 'Frontend Developer Advanced Path',
+    estimatedHours: 60,
+    targetLevel: 'advanced',
+    requiredContent: [
+      'react_performance_optimization',
+      'task_typescript_interfaces',
+      'task_nextjs_isr'
+    ],
+    optionalContent: [
+      'react_hooks_4'
+    ],
+    progression: {
+      previous: 'intermediatePath'
+    }
+  }
+};

@@ -9,12 +9,18 @@ export type Question = {
   type: QuestionType;
   question: string;
   answer: string;
-  example?: string;
-  tags?: string[];
-  options?: string[];
-  analysisPoints?: string[];
-  keyConcepts?: string[];
-  evaluationCriteria?: string[];
+  example: string;
+  tags: string[];
+  options: string[];
+  analysisPoints: string[];
+  keyConcepts: string[];
+  evaluationCriteria: string[];
+  
+  // Fields for learning plan optimization
+  prerequisites?: string[]; // Essential for sequencing
+  complexity?: number; // 1-10 scale of conceptual difficulty
+  interviewFrequency?: number; // 1-10 scale of how often asked in interviews
+  learningPath?: 'beginner' | 'intermediate' | 'advanced' | 'expert';
 };
 
 export type CodeTask = {
@@ -28,6 +34,13 @@ export type CodeTask = {
   hints: string[];
   tags: string[];
   timeEstimate: number; // in minutes
+  
+  // Fields for learning plan optimization
+  prerequisites: string[]; // Essential for sequencing
+  complexity: number; // 1-10 scale of implementation difficulty
+  interviewRelevance: number; // 1-10 scale of relevance to interviews
+  learningPath: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+  relatedConcepts: string[]; // Links to theory concepts
 };
 
 export type TheoryBlock = {
@@ -39,6 +52,13 @@ export type TheoryBlock = {
   relatedTasks: string[]; // CodeTask IDs
   tags: string[];
   technology: Technology;
+  
+  // Fields for learning plan optimization
+  prerequisites: string[]; // Essential for sequencing
+  complexity: number; // 1-10 scale of conceptual difficulty
+  interviewRelevance: number; // 1-10 scale of relevance to interviews
+  learningPath: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+  requiredFor: string[]; // Content that depends on this theory
 };
 
 export type CodeExample = {
@@ -108,4 +128,31 @@ export type UserSettings = {
   githubGistToken: string; // GitHub Personal Access Token for Gist storage
   useGistStorage: boolean; // Whether to use GitHub Gist for cloud storage
   saveAnswers: boolean; // Whether to save answers between sessions
+};
+
+// Index structure for fast content lookup
+export type ContentIndex = {
+  byTopic: Record<string, {
+    theory: string[],
+    questions: string[],
+    tasks: string[]
+  }>;
+  byDifficulty: Record<Difficulty, string[]>;
+  byLearningPath: Record<string, string[]>;
+  byPrerequisites: Record<string, string[]>;
+};
+
+// Learning path template for generating interview plans
+export type LearningPathTemplate = {
+  id: string;
+  name: string;
+  description: string;
+  targetLevel: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+  estimatedHours: number;
+  topics: {
+    topicId: string;
+    requiredContentIds: string[];
+    optionalContentIds?: string[];
+  }[];
+  prerequisites?: Technology[];
 };

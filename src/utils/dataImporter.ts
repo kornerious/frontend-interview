@@ -112,7 +112,13 @@ export class DataImporter {
         relatedQuestions: topicQuestions.slice(0, 5).map(q => q.id),
         relatedTasks: [],
         tags: this.extractTopicTags(topicQuestions),
-        technology
+        technology,
+        // Adding required metadata fields for learning plan optimization
+        prerequisites: [],
+        complexity: 5, // Default medium complexity
+        interviewRelevance: 7, // Default high interview relevance
+        learningPath: 'intermediate', // Default to intermediate path
+        requiredFor: []
       };
       
       theoryBlocks.push(theoryBlock);

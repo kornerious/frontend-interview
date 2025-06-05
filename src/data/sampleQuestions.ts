@@ -16,6 +16,9 @@ const allQuestions: Question[] = [
       'const {state, setState} = useState(initialValue);',
       'useState(initialValue, state, setState);'
     ],
+    analysisPoints: ['react hooks', 'useState', 'state management', 'functional components'],
+    keyConcepts: ['useState hook', 'state in functional components', 'array destructuring', 'hook initialization'],
+    evaluationCriteria: ['correct syntax', 'understanding of React hooks', 'proper usage of useState'],
     example: `
 \`\`\`jsx
 import React, { useState } from 'react';
@@ -31,7 +34,12 @@ function Counter() {
   );
 }
 \`\`\``,
-    tags: ['react', 'hooks', 'useState']
+    tags: ['react', 'hooks', 'useState'],
+    // Learning plan optimization fields
+    prerequisites: [],
+    complexity: 2,
+    interviewFrequency: 9,
+    learningPath: 'beginner'
   },
   {
     id: 'react_hooks_2',
@@ -47,6 +55,11 @@ function Counter() {
       'useReducer'
     ],
     analysisPoints: ['side effects', 'data fetching', 'DOM manipulation', 'subscriptions'],
+    // Learning plan optimization fields
+    prerequisites: ['react_hooks_1'],
+    complexity: 4,
+    interviewFrequency: 8,
+    learningPath: 'beginner',
     example: `
 \`\`\`jsx
 import React, { useState, useEffect } from 'react';
@@ -83,7 +96,9 @@ function UserProfile({ userId }) {
   );
 }
 \`\`\``,
-    tags: ['react', 'hooks', 'useEffect', 'side effects']
+    tags: ['react', 'hooks', 'useEffect', 'side effects'],
+    keyConcepts: ['useEffect hook', 'side effects in React', 'component lifecycle', 'cleanup functions'],
+    evaluationCriteria: ['identifying correct hook for side effects', 'understanding hook purposes', 'recognizing use cases']
   },
   {
     id: 'react_hooks_3',
@@ -92,6 +107,7 @@ function UserProfile({ userId }) {
     type: 'open',
     question: 'Explain the difference between useMemo and useCallback hooks, and provide an example of when to use each.',
     answer: "useMemo is used to memoize computed values to prevent expensive recalculations on every render. It only recomputes the memoized value when one of the dependencies has changed. Example: `const memoizedValue = useMemo(() => computeExpensiveValue(a, b), [a, b]);`\n\nuseCallback is used to memoize callback functions to prevent unnecessary recreations of functions on every render. This is particularly useful when passing callbacks to optimized child components that rely on reference equality to prevent unnecessary renders. Example: `const memoizedCallback = useCallback(() => { doSomething(a, b); }, [a, b]);`",
+    options: [],
     keyConcepts: [
       "useMemo memoizes values", 
       "useCallback memoizes functions", 
@@ -102,6 +118,8 @@ function UserProfile({ userId }) {
       "expensive calculations", 
       "prevent recreating functions"
     ],
+    evaluationCriteria: ['understanding of useMemo and useCallback', 'correct usage of hooks', 'optimization techniques'],
+    analysisPoints: ['memoization', 'performance optimization', 'hooks usage'],
     example: `
 \`\`\`jsx
 import React, { useState, useMemo, useCallback } from 'react';
@@ -162,7 +180,12 @@ const TodoList = React.memo(({ todos, addTodo }) => {
   );
 });
 \`\`\``,
-    tags: ['react', 'hooks', 'useMemo', 'useCallback', 'performance', 'optimization']
+    tags: ['react', 'hooks', 'useMemo', 'useCallback', 'performance', 'optimization'],
+    // Learning plan optimization fields
+    prerequisites: ['react_hooks_1', 'react_hooks_2'],
+    complexity: 7,
+    interviewFrequency: 8,
+    learningPath: 'intermediate'
   },
   {
     id: 'typescript_1',
@@ -209,15 +232,28 @@ type EmployeeType = UserType & {
   department: string;
 };
 \`\`\``,
-    tags: ['typescript', 'interface', 'type alias']
+    tags: ['typescript', 'interface', 'type alias'],
+    analysisPoints: ['typescript type system', 'declaration merging', 'type definitions', 'interfaces vs types'],
+    keyConcepts: ['interface declaration', 'type aliases', 'type extensions', 'declaration merging'],
+    evaluationCriteria: ['understanding TypeScript type system', 'knowing difference between interfaces and types', 'identifying appropriate use cases'],
+    // Learning plan optimization fields
+    prerequisites: [],
+    complexity: 5,
+    interviewFrequency: 7,
+    learningPath: 'intermediate'
   },
   {
     id: 'typescript_2',
     topic: 'TypeScript',
     level: 'hard',
     type: 'code',
-    question: 'Implement a TypeScript generic function to safely access deeply nested properties in an object, returning undefined if any part of the path is undefined.',
-    answer: `
+    question: 'Implement a type-safe function in TypeScript that can access nested properties of an object without throwing errors if a property in the path does not exist.',
+    options: [],
+    analysisPoints: ['type safety', 'nested properties', 'optional chaining', 'generics'],
+    keyConcepts: ['generics', 'recursive types', 'optional property access', 'type safety'],
+    evaluationCriteria: ['handling edge cases', 'type safety implementation', 'proper recursion handling'],
+    answer: `Here's a solution using generics and recursive types:
+
 \`\`\`typescript
 function getNestedValue<T, K extends keyof T>(
   obj: T,
@@ -273,7 +309,12 @@ console.log(getNestedValue(user, 'name')); // 'John Doe'
 console.log(getNestedValue(user, 'address', 'city')); // 'Boston'
 console.log(getNestedValue(user, 'profile', 'settings', 'darkMode')); // undefined (safely)
 \`\`\``,
-    tags: ['typescript', 'generics', 'type safety', 'utility functions']
+    tags: ['typescript', 'generics', 'type safety', 'utility functions'],
+    // Learning plan optimization fields
+    prerequisites: ['typescript_1'],
+    complexity: 8,
+    interviewFrequency: 6,
+    learningPath: 'advanced'
   },
   {
     id: 'javascript_arrays_1',
@@ -312,7 +353,15 @@ console.log(highPaidEngineers);
 // [{ name: 'Alice', department: 'Engineering', salary: 85000 },
 //  { name: 'Charlie', department: 'Engineering', salary: 90000 }]
 \`\`\``,
-    tags: ['javascript', 'arrays', 'filter']
+    tags: ['javascript', 'arrays', 'filter'],
+    analysisPoints: ['array filtering', 'condition testing', 'predicate functions'],
+    keyConcepts: ['array methods', 'callback predicates', 'filtering collections', 'immutable operations'],
+    evaluationCriteria: ['correct filter condition', 'proper callback usage', 'understanding array methods'],
+    // Learning plan optimization fields
+    prerequisites: [],
+    complexity: 3,
+    interviewFrequency: 9,
+    learningPath: 'beginner'
   },
   {
     id: 'javascript_arrays_2',
@@ -320,6 +369,7 @@ console.log(highPaidEngineers);
     level: 'medium',
     type: 'code',
     question: 'Write a function that groups an array of objects by a specified property.',
+    options: [],
     answer: `
 \`\`\`javascript
 function groupBy(array, property) {
@@ -370,14 +420,23 @@ console.log(byAge);
 const byFirstLetter = groupBy(people, item => item.name[0]);
 console.log(byFirstLetter);
 \`\`\``,
-    tags: ['javascript', 'arrays', 'reduce', 'grouping']
+    tags: ['javascript', 'arrays', 'reduce', 'grouping'],
+    analysisPoints: ['array reduction', 'object transformation', 'accumulator pattern'],
+    keyConcepts: ['reduce method', 'object accumulation', 'array transformation', 'data grouping'],
+    evaluationCriteria: ['proper reducer implementation', 'handling initial value', 'object structure building'],
+    // Learning plan optimization fields
+    prerequisites: ['javascript_arrays_1'],
+    complexity: 5,
+    interviewFrequency: 7,
+    learningPath: 'intermediate'
   },
   {
     id: 'react_performance_1',
     topic: 'React Performance',
     level: 'medium',
     type: 'open',
-    question: 'Explain what "code splitting" is in React and how it improves performance.',
+    question: 'Explain what code splitting is in React and how it improves performance.',
+    options: [],
     answer: `
 Code splitting is a technique that allows you to split your JavaScript bundle into smaller chunks that can be loaded on demand, rather than loading the entire application upfront. This improves performance by:
 
@@ -431,7 +490,15 @@ function App() {
   );
 }
 \`\`\``,
-    tags: ['react', 'performance', 'code splitting', 'lazy loading']
+    tags: ['react', 'performance', 'code splitting', 'lazy loading'],
+    analysisPoints: ['code splitting', 'performance optimization', 'dynamic imports'],
+    keyConcepts: ['React.lazy', 'Suspense', 'async loading', 'bundle optimization'],
+    evaluationCriteria: ['implementation of code splitting', 'optimal chunking strategy', 'user experience during loading'],
+    // Learning plan optimization fields
+    prerequisites: ['react_hooks_1'],
+    complexity: 6,
+    interviewFrequency: 7,
+    learningPath: 'intermediate'
   },
   {
     id: 'react_performance_2',
@@ -439,6 +506,14 @@ function App() {
     level: 'hard',
     type: 'code',
     question: 'Implement a custom hook called useDebounce that delays the update of a value for a specified amount of time.',
+    options: [],
+    analysisPoints: ['custom hooks', 'debouncing', 'performance optimization'],
+    keyConcepts: ['useEffect', 'useState', 'cleanup functions', 'debounce pattern'],
+    evaluationCriteria: ['proper cleanup', 'generic typing', 'correct debounce implementation'],
+    prerequisites: ['react_hooks_2'],
+    complexity: 7,
+    interviewFrequency: 8,
+    learningPath: 'advanced',
     answer: `
 \`\`\`typescript
 import { useState, useEffect } from 'react';
@@ -580,7 +655,14 @@ export default function Dashboard({ user, dashboardData }) {
   );
 }
 \`\`\``,
-    tags: ['nextjs', 'data fetching', 'SSR', 'getServerSideProps']
+    tags: ['nextjs', 'data fetching', 'SSR', 'getServerSideProps'],
+    keyConcepts: ['getStaticProps', 'getServerSideProps', 'getStaticPaths', 'pre-rendering', 'static generation', 'server-side rendering'],
+    evaluationCriteria: ['understanding of Next.js rendering methods', 'appropriate use cases identification', 'performance optimization knowledge'],
+    analysisPoints: ['static vs server rendering', 'SEO considerations', 'caching strategies', 'performance optimization'],
+    prerequisites: ['nextjs_1'],
+    complexity: 8,
+    interviewFrequency: 7,
+    learningPath: 'advanced'
   },
   {
     id: 'nextjs_2',
@@ -588,6 +670,7 @@ export default function Dashboard({ user, dashboardData }) {
     level: 'hard',
     type: 'open',
     question: 'Compare and contrast the different data fetching methods in Next.js (getStaticProps, getServerSideProps, and getStaticPaths) and explain when to use each one.',
+    options: [],
     answer: `
 # Next.js Data Fetching Methods Comparison:
 
@@ -687,7 +770,14 @@ export async function getServerSideProps({ req }) {
   };
 }
 \`\`\``,
-    tags: ['nextjs', 'data fetching', 'SSR', 'SSG', 'ISR', 'getStaticProps', 'getServerSideProps', 'getStaticPaths']
+    tags: ['nextjs', 'data fetching', 'SSR', 'SSG', 'ISR', 'getStaticProps', 'getServerSideProps', 'getStaticPaths'],
+    analysisPoints: ['static generation', 'server-side rendering', 'incremental static regeneration', 'data fetching patterns'],
+    keyConcepts: ['getStaticProps', 'getServerSideProps', 'getStaticPaths', 'build-time vs request-time', 'caching strategies'],
+    evaluationCriteria: ['understanding differences between methods', 'selecting appropriate method for use case', 'implementation knowledge'],
+    prerequisites: ['javascript', 'react', 'basic nextjs'],
+    complexity: 8,
+    interviewFrequency: 9,
+    learningPath: 'intermediate'
   }
 ];
 

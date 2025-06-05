@@ -16,6 +16,12 @@ The hook should:
 This hook should be reusable across different components that need pagination functionality.
 `,
     difficulty: 'medium',
+    // Learning plan optimization fields
+    prerequisites: ['react_hooks_1', 'react_hooks_2'],
+    complexity: 5,
+    interviewRelevance: 8,
+    learningPath: 'intermediate',
+    relatedConcepts: ['react-hooks', 'pagination', 'custom-hooks'],
     startingCode: `
 import { useState } from 'react';
 
@@ -134,6 +140,12 @@ Your API client should:
 Focus on creating a clean, reusable client that could be used throughout an application.
 `,
     difficulty: 'hard',
+    // Learning plan optimization fields
+    prerequisites: ['typescript_1', 'typescript_2'],
+    complexity: 8, 
+    interviewRelevance: 9,
+    learningPath: 'advanced',
+    relatedConcepts: ['typescript', 'api-client', 'generics', 'interfaces'],
     startingCode: `
 // Define your types and interfaces here
 
@@ -309,6 +321,11 @@ Create a Next.js page that demonstrates multiple data fetching strategies:
 Focus on performance optimization and the user experience during data loading.
 `,
     difficulty: 'hard',
+    prerequisites: ['nextjs_1', 'nextjs_2'],
+    complexity: 8,
+    interviewRelevance: 9,
+    learningPath: 'advanced',
+    relatedConcepts: ['nextjs', 'data-fetching', 'ISR', 'SWR', 'loading-states'],
     startingCode: `
 // pages/posts/[slug].js
 import { useState } from 'react';
@@ -478,4 +495,32 @@ export default function BlogPost({ post }) {
   }
 ];
 
-export const codeTasks = [...sampleTasks, ...advancedTasks];
+// Create a content index for fast learning plan generation
+export const taskIndex = {
+  byLearningPath: {
+    beginner: sampleTasks.filter(task => task.learningPath === 'beginner').map(task => task.id),
+    intermediate: sampleTasks.filter(task => task.learningPath === 'intermediate').map(task => task.id),
+    advanced: sampleTasks.filter(task => task.learningPath === 'advanced').map(task => task.id),
+    expert: sampleTasks.filter(task => task.learningPath === 'expert').map(task => task.id)
+  },
+  byComplexity: {
+    low: sampleTasks.filter(task => task.complexity && task.complexity <= 3).map(task => task.id),
+    medium: sampleTasks.filter(task => task.complexity && task.complexity > 3 && task.complexity <= 6).map(task => task.id),
+    high: sampleTasks.filter(task => task.complexity && task.complexity > 6).map(task => task.id)
+  },
+  byTopic: {} as Record<string, string[]>
+};
+
+// Populate topics index
+sampleTasks.forEach(task => {
+  if (task.tags) {
+    task.tags.forEach(tag => {
+      if (!taskIndex.byTopic[tag]) {
+        taskIndex.byTopic[tag] = [];
+      }
+      taskIndex.byTopic[tag].push(task.id);
+    });
+  }
+});
+
+export const codeTasks = [...sampleTasks];
