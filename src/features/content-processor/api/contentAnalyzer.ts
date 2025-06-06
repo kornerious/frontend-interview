@@ -1,4 +1,4 @@
-import claudeService from '@/utils/claudeService';
+import claudeService from '../../../utils/claudeService';
 import { AIAnalysisResult } from '../types';
 import { buildAnalysisPrompt } from './promptBuilder';
 import { processResponse } from './responseProcessor';

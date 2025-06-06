@@ -4,6 +4,7 @@ import { useContentProcessorStore } from '../store/useContentProcessorStore';
 import TheoryList from './TheoryList';
 import QuestionList from './QuestionList';
 import TaskList from './TaskList';
+import { ContentProcessorStorage } from '../utils/storageService';
 
 /**
  * Main content processor panel component
@@ -79,6 +80,38 @@ const ContentProcessorPanel: React.FC = () => {
       setTabValue(0);
     } catch (err) {
       console.error('Error resetting processor:', err);
+    }
+  };
+  
+  // Handle export to JSON
+  const handleExportToJson = async () => {
+    try {
+      // Get all chunks from Firebase
+      const chunks = await ContentProcessorStorage.getAllProcessedChunks();
+      
+      // Convert to JSON string with pretty formatting
+      const jsonData = JSON.stringify(chunks, null, 2);
+      
+      // Create a blob with the JSON data
+      const blob = new Blob([jsonData], { type: 'application/json' });
+      
+      // Create a URL for the blob
+      const url = URL.createObjectURL(blob);
+      
+      // Create a temporary anchor element
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `content-chunks-${new Date().toISOString().split('T')[0]}.json`;
+      
+      // Append to body, click, and remove
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      // Release the URL object
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error exporting chunks to JSON:', err);
     }
   };
 
@@ -229,14 +262,26 @@ const ContentProcessorPanel: React.FC = () => {
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
           Admin Controls
         </Typography>
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={handleReset}
-          disabled={isLoading}
-        >
-          Reset Processor
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={handleReset}
+            disabled={isLoading}
+          >
+            Reset Processor
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            color="success"
+            onClick={handleExportToJson}
+            disabled={isLoading || allChunks.length === 0}
+            startIcon={<span role="img" aria-label="download">📥</span>}
+          >
+            Export to JSON
+          </Button>
+        </Box>
       </Box>
     </Paper>
   );

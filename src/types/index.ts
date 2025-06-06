@@ -17,10 +17,10 @@ export type Question = {
   evaluationCriteria: string[];
   
   // Fields for learning plan optimization
-  prerequisites?: string[]; // Essential for sequencing
-  complexity?: number; // 1-10 scale of conceptual difficulty
-  interviewFrequency?: number; // 1-10 scale of how often asked in interviews
-  learningPath?: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+  prerequisites: string[]; // Essential for sequencing
+  complexity: number; // 1-10 scale of conceptual difficulty
+  interviewFrequency: number; // 1-10 scale of how often asked in interviews
+  learningPath: 'beginner' | 'intermediate' | 'advanced' | 'expert';
 };
 
 export type CodeTask = {

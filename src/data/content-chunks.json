@@ -1,0 +1,200 @@
+[
+  {
+    "startLine": 0,
+    "questions": [
+      {
+        "id": "question_event_loop_1",
+        "topic": "JavaScript Event Loop",
+        "level": "medium",
+        "type": "mcq",
+        "question": "What is the correct order of execution for the following code?\n\n```javascript\nconsole.log('1');\nsetTimeout(() => console.log('2'), 0);\nPromise.resolve().then(() => console.log('3'));\nconsole.log('4');\n```",
+        "answer": "1, 4, 3, 2",
+        "options": [
+          "1, 4, 3, 2",
+          "1, 2, 3, 4",
+          "1, 4, 2, 3",
+          "1, 3, 4, 2"
+        ],
+        "analysisPoints": [
+          "Synchronous code executes first on the call stack",
+          "Microtasks (Promises) have higher priority than macrotasks",
+          "setTimeout callbacks go to the macrotask queue",
+          "Event loop processes microtasks before macrotasks"
+        ],
+        "keyConcepts": [
+          "Call stack execution order",
+          "Microtask vs macrotask priority",
+          "Event loop processing",
+          "Asynchronous JavaScript execution"
+        ],
+        "evaluationCriteria": [
+          "Understanding of synchronous vs asynchronous execution",
+          "Knowledge of microtask and macrotask queues",
+          "Comprehension of event loop mechanics",
+          "Ability to predict execution order"
+        ],
+        "example": "\n```javascript\n// Event Loop Example\nconsole.log('Start');\nsetTimeout(() => console.log('Timer'), 0);\nPromise.resolve().then(() => console.log('Promise'));\nconsole.log('End');\n// Output: Start, End, Promise, Timer\n```",
+        "tags": [
+          "event-loop",
+          "asynchronous",
+          "javascript",
+          "execution-order"
+        ],
+        "prerequisites": [
+          "javascript_basics",
+          "callbacks",
+          "promises"
+        ],
+        "complexity": 7,
+        "interviewFrequency": 9,
+        "learningPath": "intermediate"
+      },
+      {
+        "id": "question_design_patterns_1",
+        "topic": "JavaScript Design Patterns",
+        "level": "hard",
+        "type": "open",
+        "question": "Explain the differences between Constructor Pattern and Factory Pattern in JavaScript. When would you use each pattern and what are their advantages and disadvantages?",
+        "answer": "**Constructor Pattern:**\n- Uses the `new` keyword to create instances\n- Each instance has its own copy of methods (memory overhead)\n- Direct instantiation with `new ClassName()`\n- Prototype chain is automatically set up\n- Better for when you need inheritance and prototype methods\n\n**Factory Pattern:**\n- Returns objects without using `new`\n- Can return different types of objects based on parameters\n- More flexible object creation\n- Can implement object pooling\n- Better for complex object creation logic\n\n**When to use Constructor Pattern:**\n- When you need inheritance\n- When objects share common methods via prototype\n- When you want clear object instantiation\n\n**When to use Factory Pattern:**\n- When object creation is complex\n- When you need to create different types of objects\n- When you want to encapsulate object creation logic\n- When you need object pooling or caching",
+        "options": [],
+        "analysisPoints": [
+          "Understanding of object creation mechanisms",
+          "Knowledge of memory implications",
+          "Awareness of use cases for each pattern",
+          "Comprehension of prototype chain differences"
+        ],
+        "keyConcepts": [
+          "Constructor functions",
+          "Factory functions",
+          "Object instantiation",
+          "Prototype chain",
+          "Memory management"
+        ],
+        "evaluationCriteria": [
+          "Depth of pattern understanding",
+          "Ability to compare and contrast patterns",
+          "Knowledge of practical applications",
+          "Understanding of performance implications"
+        ],
+        "example": "\n```javascript\n// Constructor Pattern\nfunction Car(make, model) {\n  this.make = make;\n  this.model = model;\n}\nCar.prototype.start = function() { console.log('Engine started'); };\n\n// Factory Pattern\nfunction createVehicle(type, make, model) {\n  if (type === 'car') {\n    return { type: 'car', make, model, start: () => console.log('Car started') };\n  }\n  if (type === 'truck') {\n    return { type: 'truck', make, model, load: () => console.log('Truck loaded') };\n  }\n}\n```",
+        "tags": [
+          "design-patterns",
+          "constructor",
+          "factory",
+          "object-creation"
+        ],
+        "prerequisites": [
+          "javascript_objects",
+          "prototypes",
+          "functions"
+        ],
+        "complexity": 8,
+        "interviewFrequency": 7,
+        "learningPath": "advanced"
+      }
+    ],
+    "processedDate": "2025-06-06T16:56:20.998Z",
+    "completed": false,
+    "tasks": [
+      {
+        "id": "task_event_loop_implementation",
+        "title": "Implement Event Loop Simulation",
+        "description": "\nCreate a simplified Event Loop simulator that demonstrates how JavaScript handles asynchronous operations:\n\n1. Implement a CallStack class that manages function execution\n2. Create separate queues for microtasks and macrotasks\n3. Implement the event loop logic that processes tasks in correct priority order\n4. Add methods to simulate setTimeout, Promise.resolve, and synchronous operations\n5. Provide a way to visualize the execution order\n\nYour implementation should correctly handle the priority of microtasks over macrotasks and demonstrate non-blocking behavior.\n",
+        "difficulty": "hard",
+        "startingCode": "// Event Loop Simulator\nclass EventLoopSimulator {\n  constructor() {\n    this.callStack = [];\n    this.microtaskQueue = [];\n    this.macrotaskQueue = [];\n    this.isRunning = false;\n    this.executionLog = [];\n  }\n  \n  // TODO: Implement addToCallStack method\n  addToCallStack(task) {\n    // Add synchronous task to call stack\n  }\n  \n  // TODO: Implement addMicrotask method\n  addMicrotask(callback) {\n    // Add microtask (Promise) to microtask queue\n  }\n  \n  // TODO: Implement addMacrotask method\n  addMacrotask(callback, delay = 0) {\n    // Add macrotask (setTimeout) to macrotask queue\n  }\n  \n  // TODO: Implement event loop logic\n  runEventLoop() {\n    // Process call stack, then microtasks, then macrotasks\n  }\n  \n  // TODO: Implement execution visualization\n  getExecutionOrder() {\n    return this.executionLog;\n  }\n}\n\n// Example usage:\n// const simulator = new EventLoopSimulator();\n// simulator.addToCallStack(() => console.log('Sync 1'));\n// simulator.addMacrotask(() => console.log('Timeout'));\n// simulator.addMicrotask(() => console.log('Promise'));\n// simulator.runEventLoop();",
+        "solutionCode": "// Event Loop Simulator - Complete Implementation\nclass EventLoopSimulator {\n  constructor() {\n    this.callStack = [];\n    this.microtaskQueue = [];\n    this.macrotaskQueue = [];\n    this.isRunning = false;\n    this.executionLog = [];\n  }\n  \n  addToCallStack(task) {\n    this.callStack.push({\n      type: 'sync',\n      callback: task,\n      timestamp: Date.now()\n    });\n  }\n  \n  addMicrotask(callback) {\n    this.microtaskQueue.push({\n      type: 'microtask',\n      callback: callback,\n      timestamp: Date.now()\n    });\n  }\n  \n  addMacrotask(callback, delay = 0) {\n    setTimeout(() => {\n      this.macrotaskQueue.push({\n        type: 'macrotask',\n        callback: callback,\n        timestamp: Date.now()\n      });\n    }, delay);\n  }\n  \n  executeTask(task) {\n    try {\n      const result = task.callback();\n      this.executionLog.push({\n        type: task.type,\n        result: result,\n        timestamp: task.timestamp\n      });\n      return result;\n    } catch (error) {\n      this.executionLog.push({\n        type: task.type,\n        error: error.message,\n        timestamp: task.timestamp\n      });\n    }\n  }\n  \n  runEventLoop() {\n    this.isRunning = true;\n    \n    // Process call stack first (synchronous tasks)\n    while (this.callStack.length > 0) {\n      const task = this.callStack.shift();\n      this.executeTask(task);\n    }\n    \n    // Process all microtasks\n    while (this.microtaskQueue.length > 0) {\n      const task = this.microtaskQueue.shift();\n      this.executeTask(task);\n    }\n    \n    // Process one macrotask, then check for new microtasks\n    if (this.macrotaskQueue.length > 0) {\n      const task = this.macrotaskQueue.shift();\n      this.executeTask(task);\n      \n      // After processing a macrotask, process any new microtasks\n      if (this.microtaskQueue.length > 0) {\n        this.runEventLoop(); // Recursive call to handle new microtasks\n      }\n    }\n    \n    // Continue if there are more macrotasks\n    if (this.macrotaskQueue.length > 0) {\n      setTimeout(() => this.runEventLoop(), 0);\n    } else {\n      this.isRunning = false;\n    }\n  }\n  \n  getExecutionOrder() {\n    return this.executionLog.map((entry, index) => ({\n      order: index + 1,\n      type: entry.type,\n      result: entry.result || entry.error,\n      timestamp: entry.timestamp\n    }));\n  }\n  \n  reset() {\n    this.callStack = [];\n    this.microtaskQueue = [];\n    this.macrotaskQueue = [];\n    this.executionLog = [];\n    this.isRunning = false;\n  }\n}\n\n// Helper function to simulate real Event Loop behavior\nfunction simulateEventLoop() {\n  const simulator = new EventLoopSimulator();\n  \n  simulator.addToCallStack(() => 'Sync 1');\n  simulator.addMacrotask(() => 'Timeout 1');\n  simulator.addMicrotask(() => 'Promise 1');\n  simulator.addToCallStack(() => 'Sync 2');\n  simulator.addMicrotask(() => 'Promise 2');\n  \n  setTimeout(() => {\n    simulator.runEventLoop();\n    console.log('Execution Order:', simulator.getExecutionOrder());\n  }, 100);\n  \n  return simulator;\n}",
+        "testCases": [
+          "Test synchronous task execution: callStack tasks should execute immediately in FIFO order",
+          "Test microtask priority: microtasks should execute before macrotasks even if added later",
+          "Test macrotask execution: setTimeout callbacks should execute after all microtasks are processed",
+          "Test mixed execution order: complex scenario with multiple sync, micro, and macro tasks",
+          "Test error handling: simulator should handle exceptions in tasks gracefully without breaking the loop"
+        ],
+        "hints": [
+          "Remember that microtasks have higher priority than macrotasks",
+          "Process ALL microtasks before moving to the next macrotask",
+          "Use setTimeout to simulate the asynchronous nature of macrotasks"
+        ],
+        "tags": [
+          "event-loop",
+          "asynchronous",
+          "javascript",
+          "simulation",
+          "queues"
+        ],
+        "timeEstimate": 60,
+        "prerequisites": [
+          "javascript_basics",
+          "queues",
+          "asynchronous_programming"
+        ],
+        "complexity": 8,
+        "interviewRelevance": 9,
+        "learningPath": "advanced",
+        "relatedConcepts": [
+          "call_stack",
+          "microtasks",
+          "macrotasks",
+          "promises",
+          "setTimeout"
+        ]
+      }
+    ],
+    "logicalBlockInfo": {
+      "suggestedEndLine": 200
+    },
+    "theory": [
+      {
+        "id": "theory_js_engine_event_loop",
+        "title": "JavaScript Engine and Event Loop",
+        "content": "# JavaScript Engine and Event Loop\n\n## Execution Context\n\nThe environment where JavaScript code is evaluated and executed. Each context has its own variable environment, scope chain, and `this` value.\n\n## Event Loop and Asynchronous JavaScript\n\nThe Event Loop is a crucial concept in JavaScript that enables non-blocking, asynchronous behavior despite JavaScript being single-threaded. It continuously checks if there are any tasks in the task queue that need to be executed.\n\n### Key Components of JavaScript Runtime:\n\n1. **Call Stack**: Where function calls are stacked and executed (LIFO - Last In, First Out)\n2. **Web APIs**: Browser APIs (DOM, AJAX, setTimeout, etc.) that run operations asynchronously\n3. **Callback Queue**: Where callbacks from async operations wait to be executed\n4. **Microtask Queue**: Higher priority queue for Promises and mutation observers\n5. **Event Loop**: Constantly checks if the call stack is empty and moves callbacks to it\n\n### Event Loop Algorithm:\n\n1. Execute code in the call stack until it's empty\n2. Check the microtask queue and execute all tasks there\n3. Render UI updates if needed\n4. Check the callback queue and push the oldest task to the call stack\n5. Repeat\n\n## JavaScript Design Patterns\n\n### Creational Patterns\n\nPatterns that deal with object creation mechanisms, trying to create objects in a manner suitable to the situation.",
+        "prerequisites": [
+          "basic_javascript",
+          "functions",
+          "callbacks"
+        ],
+        "complexity": 8,
+        "interviewRelevance": 9,
+        "learningPath": "intermediate",
+        "requiredFor": [
+          "async_programming",
+          "node_js",
+          "react_lifecycle"
+        ],
+        "relatedQuestions": [
+          "question_event_loop_1",
+          "question_design_patterns_1"
+        ],
+        "relatedTasks": [
+          "task_event_loop_implementation"
+        ],
+        "tags": [
+          "javascript",
+          "event-loop",
+          "asynchronous",
+          "design-patterns",
+          "execution-context"
+        ],
+        "technology": "JavaScript",
+        "examples": [
+          {
+            "id": "example_event_loop_1",
+            "title": "Event Loop Execution Order",
+            "code": "console.log('Start'); // 1. Runs immediately\n\nsetTimeout(() => {\n  console.log('Timeout callback'); // 4. Runs after stack is empty and delay is complete\n}, 0);\n\nPromise.resolve().then(() => {\n  console.log('Promise callback'); // 3. Runs after stack is empty but before timeout\n});\n\nconsole.log('End'); // 2. Runs immediately\n\n// Output order:\n// 'Start'\n// 'End'\n// 'Promise callback' (microtask)\n// 'Timeout callback' (task queue)",
+            "explanation": "This example demonstrates the priority order of the Event Loop: synchronous code executes first, then microtasks (Promises), then macrotasks (setTimeout). The microtask queue has higher priority than the callback queue.",
+            "language": "javascript"
+          },
+          {
+            "id": "example_constructor_pattern_1",
+            "title": "Constructor Pattern Implementation",
+            "code": "// Constructor Pattern\nfunction Person(name, age) {\n  this.name = name;\n  this.age = age;\n  \n  this.sayHello = function() {\n    console.log(`Hello, my name is ${this.name}`);\n  };\n}\n\nconst john = new Person('John', 30);\njohn.sayHello(); // Hello, my name is John",
+            "explanation": "The Constructor Pattern creates objects using a constructor function. Each instance gets its own copy of properties and methods. This pattern is fundamental for object-oriented programming in JavaScript.",
+            "language": "javascript"
+          }
+        ]
+      }
+    ],
+    "endLine": 200,
+    "id": "chunk_0_1749228980998"
+  }
+]

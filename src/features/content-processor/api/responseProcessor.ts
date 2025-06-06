@@ -1,4 +1,5 @@
 import { AIAnalysisResult } from '../types';
+import { TheoryBlock, Question, CodeTask } from '../../../types';
 import { sanitizeTheoryBlock, sanitizeQuestion, sanitizeTask } from './sanitizers';
 
 /**
@@ -19,10 +20,18 @@ export function processResponse(response: string): AIAnalysisResult & {
     const parsedContent = JSON.parse(jsonContent);
     console.log('PARSED CONTENT:', JSON.stringify(parsedContent).substring(0, 200) + '...');
     
-    // Process each section
-    const theory = (parsedContent.theory || []).map(sanitizeTheoryBlock);
-    const questions = (parsedContent.questions || []).map(sanitizeQuestion);
-    const tasks = (parsedContent.tasks || []).map(sanitizeTask);
+    // Process each section with proper typing
+    const theory = Array.isArray(parsedContent.theory) 
+      ? parsedContent.theory.map((item: Partial<TheoryBlock>) => sanitizeTheoryBlock(item))
+      : [];
+    
+    const questions = Array.isArray(parsedContent.questions)
+      ? parsedContent.questions.map((item: Partial<Question>) => sanitizeQuestion(item))
+      : [];
+    
+    const tasks = Array.isArray(parsedContent.tasks)
+      ? parsedContent.tasks.map((item: Partial<CodeTask>) => sanitizeTask(item))
+      : [];
     
     // Extract logical block info if available
     const logicalBlockInfo = parsedContent.logicalBlockInfo || {
@@ -55,10 +64,12 @@ export function processResponse(response: string): AIAnalysisResult & {
 
 /**
  * Extracts JSON content from the AI response
+ * @param response Raw response string from the AI
+ * @returns JSON string extracted from the response
  */
 export function extractJsonFromResponse(response: string): string {
   // Log the raw response for debugging
-  console.log('CLAUDE RAW RESPONSE (first 500 chars):', response.substring(0, 500) + (response.length > 500 ? '...' : ''));
+  console.log('CLAUDE RAW RESPONSE: ', response);
   console.log('CLAUDE RESPONSE LENGTH:', response.length);
   
   // Try to extract JSON from the response
