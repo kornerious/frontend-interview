@@ -73,6 +73,20 @@ const TheoryList: React.FC<TheoryListProps> = ({ theory }) => {
             <Box sx={{ mt: 2 }}>
               <ReactMarkdown
                 components={{
+                  img: ({ node, src, alt, ...props }) => {
+                    // Handle paths correctly and avoid duplicates
+                    let imgSrc = src || '';
+                    
+                    // If it doesn't start with / or http, add /images/ prefix
+                    if (!imgSrc.startsWith('/') && !imgSrc.startsWith('http')) {
+                      imgSrc = `/images/${imgSrc}`;
+                    }
+                    
+                    // Fix duplicate /images/images/ issue
+                    imgSrc = imgSrc.replace('/images/images/', '/images/');
+                    
+                    return <img src={imgSrc} alt={alt || ''} {...props} style={{ maxWidth: '100%' }} />;
+                  },
                   code: ({ node, className, children, ...props }: any) => {
                     const inline = className?.indexOf('inline') !== -1;
                     const match = /language-([\w-]+)/.exec(className || '');
