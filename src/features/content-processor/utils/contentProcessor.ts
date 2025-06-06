@@ -2,7 +2,7 @@ import { ContentAnalyzer } from '../api/contentAnalyzer';
 import { FileProcessor } from './fileProcessor';
 import { ContentProcessorStorage } from './storageService';
 import { ProcessingState, ProcessedChunk } from '../types';
-export const CHUNK_SIZE = 200; // Keep chunk size at 200 as requested
+export const CHUNK_SIZE = 200; 
 
 /**
  * Main content processor service
