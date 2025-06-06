@@ -16,6 +16,7 @@ interface ContentProcessorStore {
   markCurrentChunkCompleted: () => Promise<void>;
   resetProcessing: () => Promise<void>;
   loadAllChunks: () => Promise<void>;
+  setCurrentChunk: (chunkId: string) => void;
 }
 
 export const useContentProcessorStore = create<ContentProcessorStore>((set, get) => ({
@@ -151,11 +152,21 @@ export const useContentProcessorStore = create<ContentProcessorStore>((set, get)
         isLoading: false
       });
     } catch (error) {
-      console.error('Error loading chunks:', error);
+      console.error('Error loading all chunks:', error);
       set({
-        error: error instanceof Error ? error.message : 'Failed to load chunks',
+        error: error instanceof Error ? error.message : 'Failed to load all chunks',
         isLoading: false
       });
     }
-  }
+  },
+  
+  // Set the current chunk by ID
+  setCurrentChunk: (chunkId: string) => {
+    const { allChunks } = get();
+    const chunk = allChunks.find(c => c.id === chunkId) || null;
+    
+    if (chunk) {
+      set({ currentChunk: chunk });
+    }
+  },
 }));

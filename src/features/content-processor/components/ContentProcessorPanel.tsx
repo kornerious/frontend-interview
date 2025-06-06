@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, CircularProgress, Typography, Alert, Paper, LinearProgress, Tabs, Tab } from '@mui/material';
+import { Box, Button, CircularProgress, Typography, Alert, Paper, LinearProgress, Tabs, Tab, Select, MenuItem, FormControl, InputLabel, SelectChangeEvent } from '@mui/material';
 import { useContentProcessorStore } from '../store/useContentProcessorStore';
 import TheoryList from './TheoryList';
 import QuestionList from './QuestionList';
@@ -14,12 +14,15 @@ const ContentProcessorPanel: React.FC = () => {
   const {
     processingState,
     currentChunk,
+    allChunks,
     isLoading,
     error,
     initialize,
     processNextChunk,
     markCurrentChunkCompleted,
-    resetProcessing
+    resetProcessing,
+    setCurrentChunk,
+    loadAllChunks
   } = useContentProcessorStore();
 
   // Tab state
@@ -27,14 +30,22 @@ const ContentProcessorPanel: React.FC = () => {
 
   // Initialize on mount
   useEffect(() => {
-    initialize().catch(err => {
-      console.error('Failed to initialize content processor:', err);
-    });
-  }, [initialize]);
+    initialize()
+      .then(() => loadAllChunks())
+      .catch(err => {
+        console.error('Failed to initialize content processor:', err);
+      });
+  }, [initialize, loadAllChunks]);
 
   // Handle tab change
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
+  };
+
+  // Handle chunk selection
+  const handleChunkChange = (event: SelectChangeEvent<string>) => {
+    const chunkId = event.target.value;
+    setCurrentChunk(chunkId);
   };
 
   // Handle process next chunk
@@ -110,9 +121,39 @@ const ContentProcessorPanel: React.FC = () => {
         </Alert>
       )}
       
+      {/* Chunk navigation */}
+      {allChunks.length > 0 && (
+        <Box sx={{ mb: 3 }}>
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel id="chunk-select-label">Select Chunk</InputLabel>
+            <Select
+              labelId="chunk-select-label"
+              id="chunk-select"
+              value={currentChunk?.id || ''}
+              label="Select Chunk"
+              onChange={handleChunkChange}
+            >
+              {allChunks.map(chunk => (
+                <MenuItem key={chunk.id} value={chunk.id}>
+                  Lines {chunk.startLine}-{chunk.endLine} {chunk.completed ? '(Completed)' : ''}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+      )}
+      
       {/* Content area */}
       {currentChunk ? (
         <>
+          {/* Chunk info */}
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              Viewing chunk: Lines {currentChunk.startLine}-{currentChunk.endLine}
+              {currentChunk.completed ? ' (Completed)' : ''}
+            </Typography>
+          </Box>
+          
           {/* Tabs for different content types */}
           <Box sx={{ borderBottom: 1, borderColor: 'divider', mt: 2 }}>
             <Tabs value={tabValue} onChange={handleTabChange}>
