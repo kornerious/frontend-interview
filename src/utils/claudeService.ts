@@ -93,7 +93,7 @@ class ClaudeService {
         response = await Promise.race<any>([
           this.client.messages.create({
             model: this.model,
-            max_tokens: 1000,
+            max_tokens: 4096, // Increased to match content analysis
             temperature: 0.5,
             system: "You are an expert frontend developer evaluating interview answers. Always respond with valid JSON.",
             messages: [
@@ -192,7 +192,7 @@ Respond with ONLY a JSON object in this format:
     try {
       const response = await this.client.messages.create({
         model: this.model,
-        max_tokens: 2000,
+        max_tokens: 4096, // Increased to match content analysis
         temperature: 0.7,
         system: "You are an expert frontend developer helping improve interview answers.",
         messages: [
@@ -247,7 +247,7 @@ Provide an improved version that is well-structured, technically accurate, and d
       // Call the Claude API
       const response = await this.client.messages.create({
         model: this.model,
-        max_tokens: 2000,
+        max_tokens: 4096, // Set to a high value (4K) to avoid truncation
         temperature: 0.7,
         system: "You are an expert coding instructor helping users practice for frontend interviews. Your goal is to provide helpful, accurate information in a supportive manner. If you're unable to answer a question, acknowledge that and suggest resources for further learning. Keep responses focused on the topic at hand and prioritize examples and clarity.",
         messages,
@@ -344,7 +344,15 @@ Provide an improved version that is well-structured, technically accurate, and d
    * Send a message and get a response
    */
   async sendMessage(message: string): Promise<string> {
-    return this.getConversationResponse(message);
+    console.log('SENDING TO CLAUDE:', message.substring(0, 500) + (message.length > 500 ? '...' : ''));
+    console.log('FULL MESSAGE LENGTH:', message.length);
+    
+    const response = await this.getConversationResponse(message);
+    
+    console.log('RECEIVED FROM CLAUDE (first 500 chars):', response.substring(0, 500) + (response.length > 500 ? '...' : ''));
+    console.log('FULL RESPONSE LENGTH:', response.length);
+    
+    return response;
   }
 }
 
