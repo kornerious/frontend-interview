@@ -1,0 +1,763 @@
+{
+  "questions": [
+    {
+      "id": "react_hooks_1",
+      "topic": "React Hooks",
+      "level": "easy",
+      "type": "mcq",
+      "question": "What is the correct way to declare state in a functional component using hooks?",
+      "answer": "const [state, setState] = useState(initialValue);",
+      "options": [
+        "const [state, setState] = useState(initialValue);",
+        "const state = useState(initialValue);",
+        "const {state, setState} = useState(initialValue);",
+        "useState(initialValue, state, setState);"
+      ],
+      "analysisPoints": [
+        "react hooks",
+        "useState",
+        "state management",
+        "functional components"
+      ],
+      "keyConcepts": [
+        "useState hook",
+        "state in functional components",
+        "array destructuring",
+        "hook initialization"
+      ],
+      "evaluationCriteria": [
+        "correct syntax",
+        "understanding of React hooks",
+        "proper usage of useState"
+      ],
+      "example": "\n```jsx\nimport React, { useState } from 'react';\n\nfunction Counter() {\n  const [count, setCount] = useState(0);\n  \n  return (\n    <div>\n      <p>Count: {count}</p>\n      <button onClick={() => setCount(count + 1)}>Increment</button>\n    </div>\n  );\n}\n```",
+      "tags": [
+        "react",
+        "hooks",
+        "useState"
+      ],
+      "prerequisites": [],
+      "complexity": 2,
+      "interviewFrequency": 9,
+      "learningPath": "beginner"
+    },
+    {
+      "id": "react_hooks_2",
+      "topic": "React Hooks",
+      "level": "medium",
+      "type": "mcq",
+      "question": "Which hook should be used for side effects in a functional component?",
+      "answer": "useEffect",
+      "options": [
+        "useEffect",
+        "useState",
+        "useContext",
+        "useReducer"
+      ],
+      "analysisPoints": [
+        "side effects",
+        "data fetching",
+        "DOM manipulation",
+        "subscriptions"
+      ],
+      "prerequisites": [
+        "react_hooks_1"
+      ],
+      "complexity": 4,
+      "interviewFrequency": 8,
+      "learningPath": "beginner",
+      "example": "\n```jsx\nimport React, { useState, useEffect } from 'react';\n\nfunction UserProfile({ userId }) {\n  const [user, setUser] = useState(null);\n  const [loading, setLoading] = useState(true);\n  \n  useEffect(() => {\n    async function fetchUser() {\n      setLoading(true);\n      try {\n        const response = await fetch(`/api/users/${userId}`);\n        const data = await response.json();\n        setUser(data);\n      } catch (error) {\n        console.error('Error fetching user:', error);\n      } finally {\n        setLoading(false);\n      }\n    }\n    \n    fetchUser();\n  }, [userId]); // Re-run when userId changes\n  \n  if (loading) return <div>Loading...</div>;\n  if (!user) return <div>User not found</div>;\n  \n  return (\n    <div>\n      <h1>{user.name}</h1>\n      <p>Email: {user.email}</p>\n    </div>\n  );\n}\n```",
+      "tags": [
+        "react",
+        "hooks",
+        "useEffect",
+        "side effects"
+      ],
+      "keyConcepts": [
+        "useEffect hook",
+        "side effects in React",
+        "component lifecycle",
+        "cleanup functions"
+      ],
+      "evaluationCriteria": [
+        "identifying correct hook for side effects",
+        "understanding hook purposes",
+        "recognizing use cases"
+      ]
+    },
+    {
+      "id": "react_hooks_3",
+      "topic": "React Hooks",
+      "level": "hard",
+      "type": "open",
+      "question": "Explain the difference between useMemo and useCallback hooks, and provide an example of when to use each.",
+      "answer": "useMemo is used to memoize computed values to prevent expensive recalculations on every render. It only recomputes the memoized value when one of the dependencies has changed. Example: `const memoizedValue = useMemo(() => computeExpensiveValue(a, b), [a, b]);`\n\nuseCallback is used to memoize callback functions to prevent unnecessary recreations of functions on every render. This is particularly useful when passing callbacks to optimized child components that rely on reference equality to prevent unnecessary renders. Example: `const memoizedCallback = useCallback(() => { doSomething(a, b); }, [a, b]);`",
+      "options": [],
+      "keyConcepts": [
+        "useMemo memoizes values",
+        "useCallback memoizes functions",
+        "prevent recalculation",
+        "dependency array",
+        "reference equality",
+        "performance optimization",
+        "expensive calculations",
+        "prevent recreating functions"
+      ],
+      "evaluationCriteria": [
+        "understanding of useMemo and useCallback",
+        "correct usage of hooks",
+        "optimization techniques"
+      ],
+      "analysisPoints": [
+        "memoization",
+        "performance optimization",
+        "hooks usage"
+      ],
+      "example": "\n```jsx\nimport React, { useState, useMemo, useCallback } from 'react';\n\nfunction ParentComponent() {\n  const [count, setCount] = useState(0);\n  const [todos, setTodos] = useState([]);\n  \n  // useMemo example: expensive computation\n  const expensiveCalculation = useMemo(() => {\n    console.log(\"Computing...\");\n    let result = 0;\n    for (let i = 0; i < 1000000000; i++) {\n      result += i;\n    }\n    return result;\n  }, []); // Empty array means it only calculates once\n  \n  // useCallback example: stable function reference\n  const addTodo = useCallback((text) => {\n    setTodos([...todos, text]);\n  }, [todos]);\n  \n  return (\n    <div>\n      <div>\n        <p>Count: {count}</p>\n        <button onClick={() => setCount(count + 1)}>Increment</button>\n      </div>\n      <div>\n        <p>Expensive calculation: {expensiveCalculation}</p>\n      </div>\n      <TodoList todos={todos} addTodo={addTodo} />\n    </div>\n  );\n}\n\n// This component uses React.memo to prevent unnecessary renders\nconst TodoList = React.memo(({ todos, addTodo }) => {\n  console.log(\"TodoList rendered\");\n  return (\n    <div>\n      <input \n        type=\"text\" \n        onKeyDown={(e) => {\n          if (e.key === 'Enter') {\n            addTodo(e.target.value);\n            e.target.value = '';\n          }\n        }} \n      />\n      <ul>\n        {todos.map((todo, index) => (\n          <li key={index}>{todo}</li>\n        ))}\n      </ul>\n    </div>\n  );\n});\n```",
+      "tags": [
+        "react",
+        "hooks",
+        "useMemo",
+        "useCallback",
+        "performance",
+        "optimization"
+      ],
+      "prerequisites": [
+        "react_hooks_1",
+        "react_hooks_2"
+      ],
+      "complexity": 7,
+      "interviewFrequency": 8,
+      "learningPath": "intermediate"
+    },
+    {
+      "id": "typescript_1",
+      "topic": "TypeScript",
+      "level": "medium",
+      "type": "mcq",
+      "question": "What is the main difference between an interface and a type alias in TypeScript?",
+      "answer": "Interfaces can be extended or implemented and support declaration merging, while type aliases are more flexible for representing unions, intersections, and primitive types.",
+      "options": [
+        "Interfaces can be extended or implemented and support declaration merging, while type aliases are more flexible for representing unions, intersections, and primitive types.",
+        "Type aliases are faster at compile time than interfaces.",
+        "Interfaces can only define object shapes while type aliases can only define primitive types.",
+        "There is no difference; they can be used interchangeably in all cases."
+      ],
+      "example": "\n```typescript\n// Interface\ninterface User {\n  id: number;\n  name: string;\n}\n\n// Interface extension\ninterface Employee extends User {\n  department: string;\n}\n\n// Declaration merging\ninterface User {\n  email: string; // Adds to existing User interface\n}\n\n// Type alias\ntype UserType = {\n  id: number;\n  name: string;\n}\n\n// Union type (can't do this with interface)\ntype ID = number | string;\n\n// Intersection type\ntype EmployeeType = UserType & {\n  department: string;\n};\n```",
+      "tags": [
+        "typescript",
+        "interface",
+        "type alias"
+      ],
+      "analysisPoints": [
+        "typescript type system",
+        "declaration merging",
+        "type definitions",
+        "interfaces vs types"
+      ],
+      "keyConcepts": [
+        "interface declaration",
+        "type aliases",
+        "type extensions",
+        "declaration merging"
+      ],
+      "evaluationCriteria": [
+        "understanding TypeScript type system",
+        "knowing difference between interfaces and types",
+        "identifying appropriate use cases"
+      ],
+      "prerequisites": [],
+      "complexity": 5,
+      "interviewFrequency": 7,
+      "learningPath": "intermediate"
+    },
+    {
+      "id": "typescript_2",
+      "topic": "TypeScript",
+      "level": "hard",
+      "type": "code",
+      "question": "Implement a type-safe function in TypeScript that can access nested properties of an object without throwing errors if a property in the path does not exist.",
+      "options": [],
+      "analysisPoints": [
+        "type safety",
+        "nested properties",
+        "optional chaining",
+        "generics"
+      ],
+      "keyConcepts": [
+        "generics",
+        "recursive types",
+        "optional property access",
+        "type safety"
+      ],
+      "evaluationCriteria": [
+        "handling edge cases",
+        "type safety implementation",
+        "proper recursion handling"
+      ],
+      "answer": "Here's a solution using generics and recursive types:\n\n```typescript\nfunction getNestedValue<T, K extends keyof T>(\n  obj: T,\n  key: K\n): T[K];\n\nfunction getNestedValue<T, K extends keyof T, L extends keyof T[K]>(\n  obj: T,\n  key: K,\n  key2: L\n): T[K][L];\n\nfunction getNestedValue<T, K extends keyof T, L extends keyof T[K], M extends keyof T[K][L]>(\n  obj: T,\n  key: K,\n  key2: L,\n  key3: M\n): T[K][L][M];\n\nfunction getNestedValue(obj: any, ...keys: string[]): any {\n  return keys.reduce((acc, key) => {\n    return acc === undefined ? undefined : acc[key];\n  }, obj);\n}\n```",
+      "example": "\n```typescript\ninterface User {\n  name: string;\n  address?: {\n    street: string;\n    city: string;\n    zipCode: string;\n  };\n  profile?: {\n    settings?: {\n      darkMode: boolean;\n    };\n  };\n}\n\nconst user: User = {\n  name: 'John Doe',\n  address: {\n    street: '123 Main St',\n    city: 'Boston',\n    zipCode: '02108'\n  }\n};\n\n// Usage examples\nconsole.log(getNestedValue(user, 'name')); // 'John Doe'\nconsole.log(getNestedValue(user, 'address', 'city')); // 'Boston'\nconsole.log(getNestedValue(user, 'profile', 'settings', 'darkMode')); // undefined (safely)\n```",
+      "tags": [
+        "typescript",
+        "generics",
+        "type safety",
+        "utility functions"
+      ],
+      "prerequisites": [
+        "typescript_1"
+      ],
+      "complexity": 8,
+      "interviewFrequency": 6,
+      "learningPath": "advanced"
+    },
+    {
+      "id": "javascript_arrays_1",
+      "topic": "JavaScript Arrays",
+      "level": "easy",
+      "type": "mcq",
+      "question": "Which array method would you use to create a new array containing only elements that pass a specified condition?",
+      "answer": "filter()",
+      "options": [
+        "filter()",
+        "map()",
+        "reduce()",
+        "forEach()"
+      ],
+      "example": "\n```javascript\nconst numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];\n\n// Get only even numbers\nconst evenNumbers = numbers.filter(num => num % 2 === 0);\nconsole.log(evenNumbers); // [2, 4, 6, 8, 10]\n\n// More complex example with objects\nconst employees = [\n  { name: 'Alice', department: 'Engineering', salary: 85000 },\n  { name: 'Bob', department: 'Marketing', salary: 75000 },\n  { name: 'Charlie', department: 'Engineering', salary: 90000 },\n  { name: 'Diana', department: 'HR', salary: 65000 }\n];\n\n// Get only engineering employees with salary > 80000\nconst highPaidEngineers = employees.filter(\n  emp => emp.department === 'Engineering' && emp.salary > 80000\n);\nconsole.log(highPaidEngineers);\n// [{ name: 'Alice', department: 'Engineering', salary: 85000 },\n//  { name: 'Charlie', department: 'Engineering', salary: 90000 }]\n```",
+      "tags": [
+        "javascript",
+        "arrays",
+        "filter"
+      ],
+      "analysisPoints": [
+        "array filtering",
+        "condition testing",
+        "predicate functions"
+      ],
+      "keyConcepts": [
+        "array methods",
+        "callback predicates",
+        "filtering collections",
+        "immutable operations"
+      ],
+      "evaluationCriteria": [
+        "correct filter condition",
+        "proper callback usage",
+        "understanding array methods"
+      ],
+      "prerequisites": [],
+      "complexity": 3,
+      "interviewFrequency": 9,
+      "learningPath": "beginner"
+    },
+    {
+      "id": "javascript_arrays_2",
+      "topic": "JavaScript Arrays",
+      "level": "medium",
+      "type": "code",
+      "question": "Write a function that groups an array of objects by a specified property.",
+      "options": [],
+      "answer": "\n```javascript\nfunction groupBy(array, property) {\n  return array.reduce((grouped, item) => {\n    const key = typeof property === 'function' \n      ? property(item) \n      : item[property];\n    \n    grouped[key] = grouped[key] || [];\n    grouped[key].push(item);\n    \n    return grouped;\n  }, {});\n}\n```",
+      "example": "\n```javascript\nconst people = [\n  { name: 'Alice', age: 25, city: 'New York' },\n  { name: 'Bob', age: 30, city: 'Boston' },\n  { name: 'Charlie', age: 35, city: 'New York' },\n  { name: 'Diana', age: 25, city: 'Chicago' }\n];\n\n// Group by city\nconst byCity = groupBy(people, 'city');\nconsole.log(byCity);\n/*\n{\n  'New York': [\n    { name: 'Alice', age: 25, city: 'New York' },\n    { name: 'Charlie', age: 35, city: 'New York' }\n  ],\n  'Boston': [\n    { name: 'Bob', age: 30, city: 'Boston' }\n  ],\n  'Chicago': [\n    { name: 'Diana', age: 25, city: 'Chicago' }\n  ]\n}\n*/\n\n// Group by age\nconst byAge = groupBy(people, 'age');\nconsole.log(byAge);\n\n// Group by custom function\nconst byFirstLetter = groupBy(people, item => item.name[0]);\nconsole.log(byFirstLetter);\n```",
+      "tags": [
+        "javascript",
+        "arrays",
+        "reduce",
+        "grouping"
+      ],
+      "analysisPoints": [
+        "array reduction",
+        "object transformation",
+        "accumulator pattern"
+      ],
+      "keyConcepts": [
+        "reduce method",
+        "object accumulation",
+        "array transformation",
+        "data grouping"
+      ],
+      "evaluationCriteria": [
+        "proper reducer implementation",
+        "handling initial value",
+        "object structure building"
+      ],
+      "prerequisites": [
+        "javascript_arrays_1"
+      ],
+      "complexity": 5,
+      "interviewFrequency": 7,
+      "learningPath": "intermediate"
+    },
+    {
+      "id": "react_performance_1",
+      "topic": "React Performance",
+      "level": "medium",
+      "type": "open",
+      "question": "Explain what code splitting is in React and how it improves performance.",
+      "options": [],
+      "answer": "\nCode splitting is a technique that allows you to split your JavaScript bundle into smaller chunks that can be loaded on demand, rather than loading the entire application upfront. This improves performance by:\n\n1. Reducing the initial load time of your application\n2. Loading only the code that is needed for the current view\n3. Deferring loading of non-critical components until they are needed\n\nIn React, code splitting can be implemented using:\n\n1. `React.lazy()` - For component-based code splitting\n2. `import()` - Dynamic imports for on-demand loading of modules\n3. `Suspense` - To show fallback content while components are loading\n\nThis is particularly useful for large applications where users may only interact with a small portion of the app during a session.",
+      "example": "\n```jsx\nimport React, { Suspense, lazy } from 'react';\nimport { BrowserRouter as Router, Routes, Route } from 'react-router-dom';\n\n// Regular import\nimport Home from './components/Home';\n\n// Lazy-loaded components\nconst About = lazy(() => import('./components/About'));\nconst Dashboard = lazy(() => import('./components/Dashboard'));\nconst Settings = lazy(() => import('./components/Settings'));\n\nfunction App() {\n  return (\n    <Router>\n      <div>\n        <nav>\n          <ul>\n            <li><a href=\"/\">Home</a></li>\n            <li><a href=\"/about\">About</a></li>\n            <li><a href=\"/dashboard\">Dashboard</a></li>\n            <li><a href=\"/settings\">Settings</a></li>\n          </ul>\n        </nav>\n        \n        <Suspense fallback={<div>Loading...</div>}>\n          <Routes>\n            <Route path=\"/\" element={<Home />} />\n            <Route path=\"/about\" element={<About />} />\n            <Route path=\"/dashboard\" element={<Dashboard />} />\n            <Route path=\"/settings\" element={<Settings />} />\n          </Routes>\n        </Suspense>\n      </div>\n    </Router>\n  );\n}\n```",
+      "tags": [
+        "react",
+        "performance",
+        "code splitting",
+        "lazy loading"
+      ],
+      "analysisPoints": [
+        "code splitting",
+        "performance optimization",
+        "dynamic imports"
+      ],
+      "keyConcepts": [
+        "React.lazy",
+        "Suspense",
+        "async loading",
+        "bundle optimization"
+      ],
+      "evaluationCriteria": [
+        "implementation of code splitting",
+        "optimal chunking strategy",
+        "user experience during loading"
+      ],
+      "prerequisites": [
+        "react_hooks_1"
+      ],
+      "complexity": 6,
+      "interviewFrequency": 7,
+      "learningPath": "intermediate"
+    },
+    {
+      "id": "react_performance_2",
+      "topic": "React Performance",
+      "level": "hard",
+      "type": "code",
+      "question": "Implement a custom hook called useDebounce that delays the update of a value for a specified amount of time.",
+      "options": [],
+      "analysisPoints": [
+        "custom hooks",
+        "debouncing",
+        "performance optimization"
+      ],
+      "keyConcepts": [
+        "useEffect",
+        "useState",
+        "cleanup functions",
+        "debounce pattern"
+      ],
+      "evaluationCriteria": [
+        "proper cleanup",
+        "generic typing",
+        "correct debounce implementation"
+      ],
+      "prerequisites": [
+        "react_hooks_2"
+      ],
+      "complexity": 7,
+      "interviewFrequency": 8,
+      "learningPath": "advanced",
+      "answer": "\n```typescript\nimport { useState, useEffect } from 'react';\n\nfunction useDebounce<T>(value: T, delay: number): T {\n  const [debouncedValue, setDebouncedValue] = useState<T>(value);\n  \n  useEffect(() => {\n    // Set up timeout to update debounced value\n    const timer = setTimeout(() => {\n      setDebouncedValue(value);\n    }, delay);\n    \n    // Clean up the timeout if value changes (or component unmounts)\n    return () => {\n      clearTimeout(timer);\n    };\n  }, [value, delay]);\n  \n  return debouncedValue;\n}\n```",
+      "example": "\n```tsx\nimport React, { useState } from 'react';\nimport useDebounce from './useDebounce';\n\nfunction SearchComponent() {\n  // State for the immediate search term input\n  const [searchTerm, setSearchTerm] = useState('');\n  // State for search results\n  const [results, setResults] = useState([]);\n  const [isSearching, setIsSearching] = useState(false);\n  \n  // Debounce the search term so the API isn't called on every keystroke\n  const debouncedSearchTerm = useDebounce(searchTerm, 500);\n  \n  // Effect for API call\n  useEffect(() => {\n    if (debouncedSearchTerm) {\n      setIsSearching(true);\n      fetchSearchResults(debouncedSearchTerm)\n        .then(results => {\n          setIsSearching(false);\n          setResults(results);\n        });\n    } else {\n      setResults([]);\n      setIsSearching(false);\n    }\n  }, [debouncedSearchTerm]);\n  \n  return (\n    <div>\n      <input\n        type=\"text\"\n        placeholder=\"Search...\"\n        value={searchTerm}\n        onChange={e => setSearchTerm(e.target.value)}\n      />\n      \n      {isSearching && <div>Searching...</div>}\n      \n      <ul>\n        {results.map(result => (\n          <li key={result.id}>{result.name}</li>\n        ))}\n      </ul>\n    </div>\n  );\n}\n\n// Mock API call\nfunction fetchSearchResults(term) {\n  return new Promise(resolve => {\n    setTimeout(() => {\n      resolve([\n        { id: 1, name: `Result for ${term} - 1` },\n        { id: 2, name: `Result for ${term} - 2` }\n      ]);\n    }, 200);\n  });\n}\n```",
+      "tags": [
+        "react",
+        "hooks",
+        "custom hooks",
+        "performance",
+        "debounce"
+      ]
+    },
+    {
+      "id": "nextjs_1",
+      "topic": "Next.js",
+      "level": "medium",
+      "type": "mcq",
+      "question": "Which Next.js data fetching method would you use for a page that needs to be generated on each request with user-specific data?",
+      "answer": "getServerSideProps",
+      "options": [
+        "getServerSideProps",
+        "getStaticProps",
+        "getStaticPaths",
+        "getInitialProps"
+      ],
+      "example": "\n```jsx\n// pages/dashboard.js\nexport async function getServerSideProps(context) {\n  // Get the user's session\n  const session = await getSession(context);\n  \n  if (!session) {\n    return {\n      redirect: {\n        destination: '/login',\n        permanent: false,\n      },\n    };\n  }\n  \n  // Fetch data based on the user's session\n  const response = await fetch(`https://api.example.com/dashboard/${session.user.id}`);\n  const dashboardData = await response.json();\n  \n  // Pass the data to the page\n  return {\n    props: {\n      user: session.user,\n      dashboardData,\n    },\n  };\n}\n\nexport default function Dashboard({ user, dashboardData }) {\n  return (\n    <div>\n      <h1>Welcome, {user.name}</h1>\n      <div>\n        {dashboardData.map(item => (\n          <div key={item.id}>{item.title}</div>\n        ))}\n      </div>\n    </div>\n  );\n}\n```",
+      "tags": [
+        "nextjs",
+        "data fetching",
+        "SSR",
+        "getServerSideProps"
+      ],
+      "keyConcepts": [
+        "getStaticProps",
+        "getServerSideProps",
+        "getStaticPaths",
+        "pre-rendering",
+        "static generation",
+        "server-side rendering"
+      ],
+      "evaluationCriteria": [
+        "understanding of Next.js rendering methods",
+        "appropriate use cases identification",
+        "performance optimization knowledge"
+      ],
+      "analysisPoints": [
+        "static vs server rendering",
+        "SEO considerations",
+        "caching strategies",
+        "performance optimization"
+      ],
+      "prerequisites": [
+        "nextjs_1"
+      ],
+      "complexity": 8,
+      "interviewFrequency": 7,
+      "learningPath": "advanced"
+    },
+    {
+      "id": "nextjs_2",
+      "topic": "Next.js",
+      "level": "hard",
+      "type": "open",
+      "question": "Compare and contrast the different data fetching methods in Next.js (getStaticProps, getServerSideProps, and getStaticPaths) and explain when to use each one.",
+      "options": [],
+      "answer": "\n# Next.js Data Fetching Methods Comparison:\n\n## getStaticProps\n- **Purpose**: Pre-renders page at build time\n- **When to use**: \n  - Pages with static content that doesn't change often\n  - SEO-critical pages that need to be indexed by search engines\n  - High-traffic pages where performance is critical\n- **Advantages**: \n  - Best performance (pre-generated HTML)\n  - Lower server costs (pages generated once)\n  - Great for SEO\n- **Disadvantages**:\n  - Data may become stale unless using ISR (Incremental Static Regeneration)\n  - Not suitable for user-specific or frequently changing data\n\n## getServerSideProps\n- **Purpose**: Generates page HTML on each request (SSR)\n- **When to use**: \n  - Pages with user-specific data (dashboard, profile)\n  - Pages with data that must be fresh on every request\n  - Pages requiring request-time information (cookies, headers)\n- **Advantages**: \n  - Always shows fresh data\n  - Can access request-specific data\n  - Still good for SEO\n- **Disadvantages**:\n  - Slower than static pages (server must render on each request)\n  - Higher server load\n  - TTFB (Time To First Byte) is higher\n\n## getStaticPaths\n- **Purpose**: Specifies which paths of a dynamic route should be pre-rendered\n- **When to use**: \n  - With dynamic routes (e.g., `[id].js`, `[slug].js`)\n  - When using getStaticProps with dynamic routes\n  - For creating static pages for a subset of possible dynamic routes\n- **Advantages**: \n  - Control over which pages are pre-generated\n  - Can use fallback modes for paths not generated at build time\n- **Disadvantages**:\n  - Complex to set up for routes with many possible values\n  - May increase build time for many paths\n\n## Key Decision Factors:\n1. **Content update frequency**: Static for rarely changing, server-side for frequently changing\n2. **Personalization**: Server-side for user-specific content\n3. **Performance needs**: Static for best performance\n4. **SEO importance**: Both work, but static is better for high-traffic pages\n5. **Build time constraints**: Consider build duration if pre-rendering many pages",
+      "example": "\n```jsx\n// Example 1: getStaticProps - Blog post page\n// pages/blog/[slug].js\nexport async function getStaticProps({ params }) {\n  const post = await fetchBlogPost(params.slug);\n  return {\n    props: { post },\n    revalidate: 3600, // Re-generate after 1 hour\n  };\n}\n\nexport async function getStaticPaths() {\n  const posts = await fetchMostPopularPosts();\n  \n  return {\n    paths: posts.map(post => ({ \n      params: { slug: post.slug } \n    })),\n    fallback: 'blocking', // Generate other pages on demand\n  };\n}\n\n// Example 2: getServerSideProps - User dashboard\n// pages/dashboard.js\nexport async function getServerSideProps({ req }) {\n  const session = await getSession({ req });\n  \n  if (!session) {\n    return {\n      redirect: {\n        destination: '/login',\n        permanent: false,\n      },\n    };\n  }\n  \n  const userStats = await fetchUserStats(session.user.id);\n  \n  return {\n    props: {\n      user: session.user,\n      stats: userStats,\n      lastUpdated: new Date().toISOString(),\n    },\n  };\n}\n```",
+      "tags": [
+        "nextjs",
+        "data fetching",
+        "SSR",
+        "SSG",
+        "ISR",
+        "getStaticProps",
+        "getServerSideProps",
+        "getStaticPaths"
+      ],
+      "analysisPoints": [
+        "static generation",
+        "server-side rendering",
+        "incremental static regeneration",
+        "data fetching patterns"
+      ],
+      "keyConcepts": [
+        "getStaticProps",
+        "getServerSideProps",
+        "getStaticPaths",
+        "build-time vs request-time",
+        "caching strategies"
+      ],
+      "evaluationCriteria": [
+        "understanding differences between methods",
+        "selecting appropriate method for use case",
+        "implementation knowledge"
+      ],
+      "prerequisites": [
+        "javascript",
+        "react",
+        "basic nextjs"
+      ],
+      "complexity": 8,
+      "interviewFrequency": 9,
+      "learningPath": "intermediate"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task_custom_hook_1",
+      "title": "Create a Custom Pagination Hook",
+      "description": "\nCreate a custom React hook called `usePagination` that handles pagination logic for a collection of items.\n\nThe hook should:\n1. Accept a total number of items and items per page\n2. Return the current page, total pages, and functions to navigate between pages\n3. Handle edge cases (e.g., going beyond the first or last page)\n4. Include an option to jump to a specific page\n\nThis hook should be reusable across different components that need pagination functionality.\n",
+      "difficulty": "medium",
+      "prerequisites": [
+        "react_hooks_1",
+        "react_hooks_2"
+      ],
+      "complexity": 5,
+      "interviewRelevance": 8,
+      "learningPath": "intermediate",
+      "relatedConcepts": [
+        "react-hooks",
+        "pagination",
+        "custom-hooks"
+      ],
+      "startingCode": "\nimport { useState } from 'react';\n\nexport function usePagination(totalItems: number, itemsPerPage: number) {\n  // Your implementation here\n}\n\n// Example usage:\n// function ProductList({ products }) {\n//   const { currentPage, totalPages, nextPage, prevPage, goToPage } = usePagination(products.length, 10);\n//   \n//   const currentProducts = products.slice(\n//     (currentPage - 1) * 10,\n//     currentPage * 10\n//   );\n//   \n//   return (\n//     <div>\n//       {/* Display products */}\n//       <div className=\"pagination\">\n//         <button onClick={prevPage}>Previous</button>\n//         <span>Page {currentPage} of {totalPages}</span>\n//         <button onClick={nextPage}>Next</button>\n//       </div>\n//     </div>\n//   );\n// }\n",
+      "solutionCode": "\nimport { useState, useCallback } from 'react';\n\ninterface UsePaginationReturn {\n  currentPage: number;\n  totalPages: number;\n  nextPage: () => void;\n  prevPage: () => void;\n  goToPage: (page: number) => void;\n  pageItems: number[];\n}\n\nexport function usePagination(totalItems: number, itemsPerPage: number): UsePaginationReturn {\n  const [currentPage, setCurrentPage] = useState(1);\n  \n  // Calculate total pages\n  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));\n  \n  // Ensure current page is within bounds when total changes\n  if (currentPage > totalPages) {\n    setCurrentPage(totalPages);\n  }\n  \n  // Navigate to next page\n  const nextPage = useCallback(() => {\n    setCurrentPage(current => Math.min(current + 1, totalPages));\n  }, [totalPages]);\n  \n  // Navigate to previous page\n  const prevPage = useCallback(() => {\n    setCurrentPage(current => Math.max(current - 1, 1));\n  }, []);\n  \n  // Navigate to specific page\n  const goToPage = useCallback((page: number) => {\n    const pageNumber = Math.max(1, Math.min(page, totalPages));\n    setCurrentPage(pageNumber);\n  }, [totalPages]);\n  \n  // Calculate the indices of items to display\n  const startIndex = (currentPage - 1) * itemsPerPage;\n  const endIndex = Math.min(startIndex + itemsPerPage - 1, totalItems - 1);\n  \n  // Generate array of indices for current page items\n  const pageItems = Array.from(\n    { length: endIndex - startIndex + 1 },\n    (_, i) => startIndex + i\n  );\n  \n  return {\n    currentPage,\n    totalPages,\n    nextPage,\n    prevPage,\n    goToPage,\n    pageItems\n  };\n}\n",
+      "testCases": [
+        "The hook should initialize with page 1",
+        "nextPage() should increment the current page, but not beyond totalPages",
+        "prevPage() should decrement the current page, but not below 1",
+        "goToPage() should set the current page to the specified value, clamped to valid range",
+        "totalPages should be correctly calculated based on totalItems and itemsPerPage"
+      ],
+      "hints": [
+        "Remember to handle edge cases like zero items or when totalItems changes",
+        "Use the useCallback hook to memoize functions for better performance",
+        "Consider what happens when currentPage is greater than totalPages",
+        "Make sure your returned pageItems array contains the correct indices"
+      ],
+      "tags": [
+        "react",
+        "hooks",
+        "custom hooks",
+        "pagination"
+      ],
+      "timeEstimate": 30
+    },
+    {
+      "id": "task_typescript_interfaces",
+      "title": "Create a Type-Safe API Client",
+      "description": "\nDevelop a type-safe API client using TypeScript interfaces and generics.\n\nYour API client should:\n1. Define interfaces for API responses and request parameters\n2. Support GET, POST, PUT, and DELETE operations\n3. Handle error responses properly with typed error objects\n4. Use generics to provide type safety for different endpoint responses\n\nFocus on creating a clean, reusable client that could be used throughout an application.\n",
+      "difficulty": "hard",
+      "prerequisites": [
+        "typescript_1",
+        "typescript_2"
+      ],
+      "complexity": 8,
+      "interviewRelevance": 9,
+      "learningPath": "advanced",
+      "relatedConcepts": [
+        "typescript",
+        "api-client",
+        "generics",
+        "interfaces"
+      ],
+      "startingCode": "\n// Define your types and interfaces here\n\n// Implement the API client\nexport class ApiClient {\n  private baseUrl: string;\n\n  constructor(baseUrl: string) {\n    this.baseUrl = baseUrl;\n  }\n\n  // Implement get, post, put, delete methods\n}\n\n// Example usage:\n// const api = new ApiClient('https://api.example.com');\n// const users = await api.get<User[]>('/users');\n",
+      "solutionCode": "\n// API Response types\ninterface ApiResponse<T> {\n  data: T;\n  status: number;\n  success: boolean;\n}\n\ninterface ApiError {\n  message: string;\n  code: string;\n  status: number;\n}\n\n// Request options interface\ninterface RequestOptions {\n  headers?: Record<string, string>;\n  params?: Record<string, string | number | boolean>;\n  timeout?: number;\n}\n\n// Specific request options interfaces\ninterface GetRequestOptions extends RequestOptions {}\n\ninterface PostRequestOptions<T> extends RequestOptions {\n  body: T;\n}\n\nexport class ApiClient {\n  private baseUrl: string;\n  private defaultHeaders: Record<string, string>;\n\n  constructor(baseUrl: string) {\n    this.baseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;\n    this.defaultHeaders = {\n      'Content-Type': 'application/json',\n      'Accept': 'application/json',\n    };\n  }\n\n  // Helper to build URL with query parameters\n  private buildUrl(endpoint: string, params?: Record<string, string | number | boolean>): string {\n    const url = new URL(`${this.baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`);\n    \n    if (params) {\n      Object.entries(params).forEach(([key, value]) => {\n        url.searchParams.append(key, String(value));\n      });\n    }\n    \n    return url.toString();\n  }\n\n  // Generic request method\n  private async request<T>(\n    method: string,\n    endpoint: string,\n    options?: RequestOptions & { body?: any }\n  ): Promise<ApiResponse<T>> {\n    try {\n      const headers = {\n        ...this.defaultHeaders,\n        ...(options?.headers || {})\n      };\n\n      const response = await fetch(this.buildUrl(endpoint, options?.params), {\n        method,\n        headers,\n        body: options?.body ? JSON.stringify(options.body) : undefined,\n        signal: options?.timeout ? AbortSignal.timeout(options.timeout) : undefined\n      });\n\n      const contentType = response.headers.get('content-type');\n      const data = contentType?.includes('application/json') ? await response.json() : await response.text();\n      \n      if (!response.ok) {\n        throw {\n          message: data.message || 'An error occurred',\n          code: data.code || 'UNKNOWN_ERROR',\n          status: response.status\n        } as ApiError;\n      }\n\n      return {\n        data: data as T,\n        status: response.status,\n        success: true\n      };\n    } catch (error) {\n      if ((error as ApiError).status) {\n        throw error;\n      }\n      \n      throw {\n        message: (error as Error).message || 'Network error',\n        code: 'NETWORK_ERROR',\n        status: 0\n      } as ApiError;\n    }\n  }\n\n  // Public API methods\n  public async get<T>(endpoint: string, options?: GetRequestOptions): Promise<T> {\n    const response = await this.request<T>('GET', endpoint, options);\n    return response.data;\n  }\n\n  public async post<T, U = any>(endpoint: string, options: PostRequestOptions<U>): Promise<T> {\n    const response = await this.request<T>('POST', endpoint, options);\n    return response.data;\n  }\n\n  public async put<T, U = any>(endpoint: string, options: PostRequestOptions<U>): Promise<T> {\n    const response = await this.request<T>('PUT', endpoint, options);\n    return response.data;\n  }\n\n  public async delete<T>(endpoint: string, options?: RequestOptions): Promise<T> {\n    const response = await this.request<T>('DELETE', endpoint, options);\n    return response.data;\n  }\n}\n",
+      "testCases": [
+        "The client should correctly build URLs with query parameters",
+        "GET requests should correctly parse JSON responses",
+        "POST/PUT requests should properly serialize request bodies",
+        "Error responses should be properly typed and include status codes",
+        "The client should handle non-JSON responses"
+      ],
+      "hints": [
+        "Use TypeScript generics to provide type safety for different endpoint responses",
+        "Consider using the Fetch API with proper type annotations",
+        "Don't forget to handle different content types in responses",
+        "Error handling should differentiate between network errors and API errors"
+      ],
+      "tags": [
+        "typescript",
+        "api",
+        "fetch",
+        "interfaces",
+        "generics"
+      ],
+      "timeEstimate": 45
+    }
+  ],
+  "theory": [
+    {
+      "id": "react_hooks_basics",
+      "title": "React Hooks Fundamentals",
+      "prerequisites": [],
+      "complexity": 3,
+      "interviewRelevance": 9,
+      "learningPath": "beginner",
+      "requiredFor": [
+        "react_hooks_3",
+        "react_hooks_4",
+        "react_performance_optimization"
+      ],
+      "content": "\n# React Hooks Fundamentals\n\nReact Hooks were introduced in React 16.8 as a way to use state and other React features without writing a class component. Hooks let you \"hook into\" React state and lifecycle features from function components.\n\n## Core Hooks\n\n1. **useState** - Adds state to functional components\n2. **useEffect** - Handles side effects in functional components\n3. **useContext** - Subscribes to React context\n4. **useReducer** - Alternative to useState for complex state logic\n5. **useCallback** - Returns a memoized callback function\n6. **useMemo** - Returns a memoized value\n7. **useRef** - Creates a mutable ref object\n\n## Rules of Hooks\n\n1. Only call hooks at the top level of your component\n2. Only call hooks from React function components or custom hooks\n    ",
+      "examples": [
+        {
+          "id": "useState_example",
+          "title": "useState Hook Example",
+          "code": "import React, { useState } from 'react';\n\nfunction Counter() {\n  // Declare a state variable called \"count\" with initial value 0\n  const [count, setCount] = useState(0);\n\n  return (\n    <div>\n      <p>You clicked {count} times</p>\n      <button onClick={() => setCount(count + 1)}>\n        Click me\n      </button>\n    </div>\n  );\n}",
+          "explanation": "This example demonstrates how to use the useState hook to add state to a functional component. The useState hook returns a pair: the current state value and a function to update it.",
+          "language": "tsx"
+        },
+        {
+          "id": "useEffect_example",
+          "title": "useEffect Hook Example",
+          "code": "import React, { useState, useEffect } from 'react';\n\nfunction WindowSizeTracker() {\n  // State to store window width\n  const [windowWidth, setWindowWidth] = useState(window.innerWidth);\n  \n  useEffect(() => {\n    // Handler to call on window resize\n    function handleResize() {\n      setWindowWidth(window.innerWidth);\n    }\n    \n    // Add event listener\n    window.addEventListener('resize', handleResize);\n    \n    // Remove event listener on cleanup\n    return () => {\n      window.removeEventListener('resize', handleResize);\n    };\n\n\n  }, []); // Empty array ensures effect runs only on mount and unmount\n  \n  return (\n    <div>\n      <p>Current window width: {windowWidth}px</p>\n    </div>\n  );\n}",
+          "explanation": "This example shows how to use the useEffect hook to handle side effects like subscribing to browser events. The cleanup function is returned to prevent memory leaks.",
+          "language": "tsx"
+        }
+      ],
+      "relatedQuestions": [
+        "react_hooks_1",
+        "react_hooks_2",
+        "react_hooks_3"
+      ],
+      "relatedTasks": [
+        "task_custom_hook_1"
+      ],
+      "tags": [
+        "react",
+        "hooks",
+        "functional components"
+      ],
+      "technology": "React"
+    },
+    {
+      "id": "typescript_interfaces_types",
+      "title": "TypeScript Interfaces vs Types",
+      "prerequisites": [],
+      "complexity": 4,
+      "interviewRelevance": 7,
+      "learningPath": "intermediate",
+      "requiredFor": [
+        "typescript_2",
+        "task_typescript_interfaces"
+      ],
+      "content": "\n# TypeScript: Interfaces vs Types\n\nTypeScript offers two primary ways to define object types: interfaces and type aliases. While they share many similarities, there are important differences to understand.\n\n## Interfaces\n\nInterfaces are a powerful way to define contracts within your code and with code outside of your project.\n\n- Can be extended with the `extends` keyword\n- Can be merged when declared multiple times (declaration merging)\n- Generally preferred for public API definitions\n\n## Type Aliases\n\nType aliases create a new name for a type. They are similar to interfaces but have some unique capabilities.\n\n- Can represent primitive types, unions, tuples, and other complex types\n- Cannot be extended or implemented like interfaces\n- Cannot be re-opened to add new properties\n\n## When to Use Each\n\n- Use **interfaces** for defining public APIs and when you want to take advantage of declaration merging\n- Use **type aliases** for unions, intersections, or when you need to create complex types\n    ",
+      "examples": [
+        {
+          "id": "interface_example",
+          "title": "Interface Example",
+          "code": "// Interface declaration\ninterface User {\n  id: number;\n  name: string;\n  email?: string; // Optional property\n}\n\n// Interface extension\ninterface Employee extends User {\n  department: string;\n  salary: number;\n}\n\n// Declaration merging\ninterface User {\n  createdAt: Date; // Added to original interface\n}\n\nconst employee: Employee = {\n  id: 123,\n  name: 'John Doe',\n  department: 'Engineering',\n  salary: 75000,\n  createdAt: new Date()\n};\n\n",
+          "explanation": "This example demonstrates interfaces in TypeScript, showing extension, optional properties, and declaration merging.",
+          "language": "typescript"
+        },
+        {
+          "id": "type_alias_example",
+          "title": "Type Alias Example",
+          "code": "// Type alias for an object\ntype User = {\n  id: number;\n  name: string;\n  email?: string;\n};\n\n\n\n// Type alias with union\ntype ID = number | string;\n\n// Complex type with intersection\ntype Employee = User & {\n  department: string;\n  salary: number;\n};\n\n\n\n// Type with literals\ntype Direction = 'north' | 'south' | 'east' | 'west';\n\nconst employee: Employee = {\n  id: 123,\n  name: 'John Doe',\n  department: 'Engineering',\n  salary: 75000\n};\n\n\n\nconst userId: ID = 'abc-123'; // Can be string or number",
+          "explanation": "This example showcases type aliases in TypeScript, demonstrating unions, intersections, and literal types.",
+          "language": "typescript"
+        }
+      ],
+      "relatedQuestions": [
+        "typescript_1",
+        "typescript_2"
+      ],
+      "relatedTasks": [
+        "task_typescript_interfaces"
+      ],
+      "tags": [
+        "typescript",
+        "interfaces",
+        "type aliases",
+        "type system"
+      ],
+      "technology": "TypeScript"
+    },
+    {
+      "id": "nextjs_data_fetching",
+      "title": "Next.js Data Fetching Methods",
+      "prerequisites": [],
+      "complexity": 6,
+      "interviewRelevance": 8,
+      "learningPath": "intermediate",
+      "requiredFor": [
+        "task_nextjs_isr"
+      ],
+      "content": "\n# Next.js Data Fetching Methods\n\nNext.js provides several ways to fetch data for your pages, each with different trade-offs in terms of performance, user experience, and developer experience.\n\n## Server-Side Rendering (SSR) with getServerSideProps\n\nUse `getServerSideProps` when you need to fetch data on each request. This is useful for pages that display frequently updated data or user-specific content.\n\n## Static Site Generation (SSG) with getStaticProps\n\nUse `getStaticProps` when the data required to render the page can be available at build time. This is ideal for marketing pages, blog posts, or product listings that don't change frequently.\n\n## Incremental Static Regeneration (ISR)\n\nISR allows you to update static pages after they've been built without needing to rebuild the entire site. Specify a `revalidate` property in `getStaticProps` to use this feature.\n\n## Client-Side Data Fetching\n\nFor data that changes frequently or is user-specific, you might want to fetch it directly from the client using SWR or React Query.\n    ",
+      "examples": [
+        {
+          "id": "getServerSideProps_example",
+          "title": "getServerSideProps Example",
+          "code": "// pages/dashboard.js\nexport async function getServerSideProps(context) {\n  // Fetch data from external API\n  const res = await fetch('https://api.example.com/user', {\n    headers: {\n      'Authorization': `Bearer ${context.req.cookies.token}`\n    }\n  });\n  const userData = await res.json();\n\n  // Pass data to the page via props\n  return { props: { userData } };\n\n\n}\n\nexport default function Dashboard({ userData }) {\n  return (\n    <div>\n      <h1>Welcome, {userData.name}</h1>\n      <p>Your role: {userData.role}</p>\n    </div>\n  );\n}",
+          "explanation": "This example shows how to use getServerSideProps to fetch user-specific data on each request, like for a personalized dashboard.",
+          "language": "jsx"
+        },
+        {
+          "id": "getStaticProps_example",
+          "title": "getStaticProps with ISR Example",
+          "code": "// pages/products/[id].js\nexport async function getStaticPaths() {\n  // Fetch list of product IDs\n  const res = await fetch('https://api.example.com/products');\n  const products = await res.json();\n  \n  // Generate paths for the most popular products\n  const paths = products.slice(0, 10).map(product => ({\n    params: { id: product.id.toString() }\n  }));\n  \n  return { \n    paths,\n    fallback: 'blocking' // Generate remaining pages on-demand\n  };\n\n\n}\n\nexport async function getStaticProps({ params }) {\n  // Fetch product data\n  const res = await fetch(`https://api.example.com/products/${params.id}`);\n  const product = await res.json();\n  \n  return { \n    props: { product },\n    revalidate: 60 // Regenerate page after 60 seconds\n  };\n\n\n}\n\nexport default function Product({ product }: { product: { name: string; description: string; price: number } }) {\n  return (\n    <div>\n      <h1>{product.name}</h1>\n      <p>{product.description}</p>\n      <p>Price: ${product.price}</p>\n    </div>\n  );\n}",
+          "explanation": "This example demonstrates getStaticProps with Incremental Static Regeneration, perfect for product pages that change occasionally.",
+          "language": "jsx"
+        }
+      ],
+      "relatedQuestions": [
+        "nextjs_1",
+        "nextjs_2"
+      ],
+      "relatedTasks": [
+        "task_nextjs_data_fetching"
+      ],
+      "tags": [
+        "nextjs",
+        "data fetching",
+        "ssr",
+        "ssg",
+        "isr"
+      ],
+      "technology": "Next.js"
+    },
+    {
+      "id": "javascript_array_methods",
+      "title": "Advanced JavaScript Array Methods",
+      "prerequisites": [
+        "javascript_arrays_1"
+      ],
+      "complexity": 5,
+      "interviewRelevance": 8,
+      "learningPath": "intermediate",
+      "requiredFor": [
+        "javascript_arrays_2"
+      ],
+      "content": "\n# Advanced JavaScript Array Methods\n\nJavaScript provides numerous powerful array methods beyond the basics of push, pop, and forEach. These methods enable complex data transformations, filtering, and aggregation with clean, functional code.\n\n## Filtering and Searching\n\n- **filter()** - Creates a new array with elements that pass a test\n- **find()** - Returns the first element that passes a test\n- **findIndex()** - Returns the index of the first element that passes a test\n- **some()** - Tests if at least one element passes a test\n- **every()** - Tests if all elements pass a test\n\n## Transforming\n\n- **map()** - Creates a new array by transforming every element\n- **flatMap()** - Maps each element, then flattens the result\n- **flat()** - Creates a new array with sub-array elements concatenated\n\n## Aggregating\n\n- **reduce()** - Reduces the array to a single value by executing a function\n- **reduceRight()** - Like reduce but works right-to-left\n    ",
+      "examples": [
+        {
+          "id": "array_methods_example",
+          "title": "Advanced Array Methods",
+          "code": "const numbers = [1, 2, 3, 4, 5, 6];\n\n// filter: creates a new array with elements that pass the test\nconst evens = numbers.filter(num => num % 2 === 0);\nconsole.log(evens); // [2, 4, 6]\n\n// reduce: accumulates values\nconst sum = numbers.reduce((total, num) => total + num, 0);\nconsole.log(sum); // 21\n\n// some: tests if at least one element passes the test\nconst hasEven = numbers.some(num => num % 2 === 0);\nconsole.log(hasEven); // true\n\n// every: tests if all elements pass the test\nconst allPositive = numbers.every(num => num > 0);\nconsole.log(allPositive); // true\n\n// find: returns the first element that passes the test\nconst firstEven = numbers.find(num => num % 2 === 0);\nconsole.log(firstEven); // 2\n\n// findIndex: returns the index of the first element that passes the test\nconst firstEvenIndex = numbers.findIndex(num => num % 2 === 0);\nconsole.log(firstEvenIndex); // 1\n\n// flatMap: maps each element and flattens the result\nconst pairs = numbers.flatMap(num => [num, num * 2]);\nconsole.log(pairs); // [1, 2, 2, 4, 3, 6, 4, 8, 5, 10, 6, 12]",
+          "explanation": "This example demonstrates various advanced array methods in JavaScript, showing their syntax and output.",
+          "language": "javascript"
+        },
+        {
+          "id": "array_methods_real_world",
+          "title": "Real-world Array Method Examples",
+          "code": "// Sample data\nconst users = [\n  { id: 1, name: 'Alice', age: 28, active: true },\n  { id: 2, name: 'Bob', age: 35, active: false },\n  { id: 3, name: 'Charlie', age: 24, active: true },\n  { id: 4, name: 'Diana', age: 42, active: true }\n];\n\n// Get all active users\nconst activeUsers = users.filter(user => user.active);\n\n// Check if all users are adults\nconst allAdults = users.every(user => user.age >= 18);\n\n// Find a user by ID\nfunction findUserById(id) {\n  return users.find(user => user.id === id);\n}\n\n// Transform users to name-only array\nconst names = users.map(user => user.name);\n\n// Group users by active status\nconst groupedByStatus = users.reduce((groups, user) => {\n  const key = user.active ? 'active' : 'inactive';\n  groups[key] = groups[key] || [];\n  groups[key].push(user);\n  return groups;\n}, {});\n\n// Get total age of all users\nconst totalAge = users.reduce((sum, user) => sum + user.age, 0);",
+          "explanation": "This example shows practical applications of array methods with a more complex data structure.",
+          "language": "javascript"
+        }
+      ],
+      "relatedQuestions": [
+        "javascript_arrays_1",
+        "javascript_arrays_2"
+      ],
+      "relatedTasks": [
+        "task_array_manipulation"
+      ],
+      "tags": [
+        "javascript",
+        "arrays",
+        "functional programming"
+      ],
+      "technology": "JavaScript"
+    },
+    {
+      "id": "react_performance_optimization",
+      "title": "React Performance Optimization Techniques",
+      "prerequisites": [
+        "react_hooks_basics",
+        "react_hooks_3"
+      ],
+      "complexity": 7,
+      "interviewRelevance": 7,
+      "learningPath": "advanced",
+      "requiredFor": [],
+      "content": "\n# React Performance Optimization Techniques\n\nOptimizing React applications is crucial for delivering a smooth user experience. Here are several key techniques to improve your React app's performance:\n\n## Component Optimization\n\n1. **React.memo** - Prevents unnecessary re-renders for functional components\n2. **PureComponent** - Class component equivalent of React.memo\n3. **shouldComponentUpdate** - Fine-grained control over component updates\n\n## Hook Optimization\n\n1. **useMemo** - Memoize expensive calculations\n2. **useCallback** - Prevent function recreation on each render\n3. **useTransition** - Mark state updates as non-urgent\n4. **useDeferredValue** - Defer updating less critical parts of the UI\n\n## Code-Splitting\n\n1. **React.lazy** - Load components only when needed\n2. **Suspense** - Show fallback content while components load\n\n## List Optimization\n\n1. **Virtualization** - Render only visible items in long lists\n2. **Proper key usage** - Help React identify which items have changed\n    ",
+      "examples": [
+        {
+          "id": "react_memo_example",
+          "title": "React.memo Example",
+          "code": "import React, { useState } from 'react';\n\n// Expensive component that shouldn't re-render unless props change\nconst ExpensiveComponent = React.memo(({ data }) => {\n  console.log('ExpensiveComponent rendered');\n  \n  // Imagine this component does something costly with the data\n  return (\n    <div>\n      <h2>Expensive Calculation Result</h2>\n      <ul>\n        {data.map(item => (\n          <li key={item.id}>{item.value}</li>\n        ))}\n      </ul>\n    </div>\n  );\n});\n\n// Parent component\nfunction App() {\n  const [count, setCount] = useState(0);\n  const [data] = useState([\n    { id: 1, value: 'Item 1' },\n    { id: 2, value: 'Item 2' },\n    { id: 3, value: 'Item 3' }\n  ]);\n  \n  return (\n    <div>\n      <h1>Counter: {count}</h1>\n      <button onClick={() => setCount(count + 1)}>\n        Increment\n      </button>\n      \n      {/* ExpensiveComponent won't re-render when count changes */}\n      <ExpensiveComponent data={data} />\n    </div>\n  );\n}",
+          "explanation": "This example demonstrates React.memo to prevent unnecessary re-renders of an expensive component when unrelated state changes in the parent.",
+          "language": "tsx"
+        },
+        {
+          "id": "useMemo_useCallback_example",
+          "title": "useMemo and useCallback Example",
+          "code": "import React, { useState, useMemo, useCallback } from 'react';\n\nfunction SearchResults({ items, query, onItemClick }) {\n  // Memoize expensive filtering operation\n  const filteredItems = useMemo(() => {\n    console.log('Filtering items...');\n    return items.filter(item => \n      item.name.toLowerCase().includes(query.toLowerCase())\n    );\n  }, [items, query]); // Only recalculate when items or query changes\n  \n  // Memoize event handler to prevent recreation\n  const handleItemClick = useCallback((item) => {\n    console.log('Item clicked:', item);\n    onItemClick(item);\n  }, [onItemClick]);\n  \n  return (\n    <ul>\n      {filteredItems.map(item => (\n        <li \n          key={item.id}\n          onClick={() => handleItemClick(item)}\n        >\n          {item.name}\n        </li>\n      ))}\n    </ul>\n  );\n}\n\n// Parent component\nfunction App() {\n  const [query, setQuery] = useState('');\n  const [items] = useState([\n    { id: 1, name: 'Apple' },\n    { id: 2, name: 'Banana' },\n    { id: 3, name: 'Cherry' },\n    { id: 4, name: 'Date' },\n    { id: 5, name: 'Elderberry' }\n  ]);\n  \n  const handleItemClick = (item) => {\n    alert(`You selected ${item.name}`);\n  };\n\n\n  \n  return (\n    <div>\n      <input \n        type=\"text\"\n        value={query}\n        onChange={(e) => setQuery(e.target.value)}\n        placeholder=\"Search fruits...\"\n      />\n      <SearchResults \n        items={items}\n        query={query}\n        onItemClick={handleItemClick}\n      />\n    </div>\n  );\n}",
+          "explanation": "This example shows how to use useMemo to optimize expensive calculations and useCallback to prevent function recreations.",
+          "language": "tsx"
+        }
+      ],
+      "relatedQuestions": [
+        "react_performance_1",
+        "react_performance_2"
+      ],
+      "relatedTasks": [
+        "task_optimize_component"
+      ],
+      "tags": [
+        "react",
+        "performance",
+        "optimization",
+        "memoization"
+      ],
+      "technology": "React"
+    }
+  ]
+}
