@@ -5,16 +5,22 @@ export function buildAnalysisPrompt(markdownChunk: string): string {
   // Count the number of lines in the chunk
   const lineCount = markdownChunk.split('\n').length;
   
-  // Create the prompt with concise but complete instructions
+  // Create the prompt with enhanced instructions for better content processing
   const prompt = `Analyze this markdown content and categorize it into theory, questions, and tasks.
 
 IMPORTANT INSTRUCTIONS:
-1. Determine logical content boundaries - set "suggestedEndLine" to a value between 1-${lineCount} where this chunk should end
-2. Create complete, high-quality content with ALL fields filled out - no empty fields or placeholders
-3. Respond with ONLY a valid JSON object in the format shown below
+1. NATURAL TOPIC BOUNDARIES: Carefully analyze where natural topic boundaries occur in the content. Set "suggestedEndLine" to a line number where a logical topic or section ends, NOT simply at line ${lineCount}. Look for section headings, topic changes, or natural breaks.
+
+2. MULTIPLE THEORY BLOCKS: Create MULTIPLE theory blocks when the content covers distinct topics or concepts. Never combine unrelated topics into a single theory block.
+
+3. IMAGE HANDLING: Preserve all image references from the markdown. Include them in the content field using proper markdown image syntax: ![alt text](image_url). If images are referenced, ensure they're included in the appropriate sections.
+
+4. COMPLETE CONTENT: Create comprehensive content with ALL fields filled out - no empty fields or placeholders. Ensure theory blocks are complete and not truncated.
+
+5. RESPOND WITH VALID JSON: Return ONLY a valid JSON object in the format shown below.
 
 REQUIRED FIELDS:
-- Theory: title, content, examples (2+), tags (3-5), technology, learningPath, complexity (1-10), interviewRelevance (1-10)
+- Theory: title, content (with complete sections and image references), examples (2+), tags (3-5), technology, learningPath, complexity (1-10), interviewRelevance (1-10)
 - Questions: text, difficulty (easy/medium/hard), type (mcq/code/open/flashcard), options (exactly 4 for MCQs), answer, analysis (3-5), tags (3-5)
 - Tasks: title, description, difficulty, startingCode, solutionCode, testCases (3-5), hints (2-3), tags (3-5), timeEstimate
 
