@@ -15,7 +15,6 @@ export interface ProcessingState {
  * Logical block information from AI analysis
  */
 export interface LogicalBlockInfo {
-  isComplete: boolean;
   suggestedEndLine: number;
 }
 

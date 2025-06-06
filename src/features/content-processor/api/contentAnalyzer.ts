@@ -40,9 +40,26 @@ export class ContentAnalyzer {
    * Builds the prompt for content analysis
    */
   private static buildAnalysisPrompt(markdownChunk: string): string {
-    const prompt = `Analyze this markdown content and categorize it into theory, questions, and tasks. 
+    // Count the number of lines in the chunk
+    const lineCount = markdownChunk.split('\n').length;
+    
+    const prompt = `Analyze this markdown content and categorize it into theory, questions, and tasks.
 
-For each logical section, determine if it's complete or if it's cut off mid-section. If it's cut off, suggest where the section should end (line number).
+IMPORTANT INSTRUCTIONS ABOUT LOGICAL BLOCKS:
+Your job is to determine where the content should be divided into logical chunks for processing.
+
+1. Analyze the content to find where natural topic boundaries occur
+2. Set "suggestedEndLine" to the line number where the current chunk should end
+
+Guidelines for setting these values:
+
+For suggestedEndLine:
+- The value should be between 1 and ${lineCount}
+- Aim to end chunks at natural topic boundaries (end of a section, concept, etc.)
+- If the entire content forms a complete topic, set suggestedEndLine to ${lineCount}
+- If you can identify a clear topic boundary before line ${lineCount}, use that line number instead
+
+These values help determine how content is processed and displayed.
 
 Theory sections should be well-structured with clear headings, examples, and explanations. Questions should have clear instructions and expected answers. Tasks should have clear requirements and acceptance criteria.
 
@@ -51,7 +68,6 @@ If the content is missing questions or tasks, generate 2-3 practice questions an
 Respond with ONLY a JSON object in this format:
 {
   "logicalBlockInfo": {
-    "isComplete": true,
     "suggestedEndLine": -1
   },
   "theory": [
@@ -98,7 +114,6 @@ ${markdownChunk}`;
    */
   private static processResponse(response: string): AIAnalysisResult & {
     logicalBlockInfo: {
-      isComplete: boolean;
       suggestedEndLine: number;
     };
   } {
@@ -117,7 +132,6 @@ ${markdownChunk}`;
       
       // Extract logical block info if available
       const logicalBlockInfo = parsedContent.logicalBlockInfo || {
-        isComplete: true,
         suggestedEndLine: -1 // -1 indicates no suggestion
       };
       
@@ -139,7 +153,6 @@ ${markdownChunk}`;
         questions: [],
         tasks: [],
         logicalBlockInfo: {
-          isComplete: false,
           suggestedEndLine: -1
         }
       };
