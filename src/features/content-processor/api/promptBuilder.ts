@@ -9,20 +9,34 @@ export function buildAnalysisPrompt(markdownChunk: string): string {
   const prompt = `Analyze this markdown content and categorize it into theory, questions, and tasks.
 
 IMPORTANT INSTRUCTIONS:
-1. NATURAL TOPIC BOUNDARIES: Carefully analyze where natural topic boundaries occur in the content. Set "suggestedEndLine" to a line number where a logical topic or section ends, NOT simply at line ${lineCount}. Look for section headings, topic changes, or natural breaks.
+1. INTELLIGENT CONTENT BOUNDARIES: Analyze the semantic structure of the content to identify where one complete topic or concept ends and another begins. Set "suggestedEndLine" to the exact line number where a logical content unit concludes. Look for these signals:
+   - Topic transitions (new subject matter being introduced)
+   - Conceptual completeness (a topic has been fully explained)
+   - Visual separators (horizontal rules, multiple blank lines)
+   - Format changes (switching from theory to examples)
+   NEVER set boundaries that would split related content, code blocks, or examples.
 
-2. MULTIPLE THEORY BLOCKS: Create MULTIPLE theory blocks when the content covers distinct topics or concepts. Never combine unrelated topics into a single theory block.
+2. MULTIPLE THEORY BLOCKS: Create MULTIPLE theory blocks when the content covers distinct topics or concepts. Identify separate topics based on subject matter, not just formatting. For example, content about "Event Loop" and "Design Patterns" should be separate theory blocks even if they appear in the same section. Each conceptually distinct topic should be its own theory block with a unique ID and complete content.
 
 3. IMAGE HANDLING: Preserve all image references from the markdown. Include them in the content field using proper markdown image syntax: ![alt text](image_url). If images are referenced, ensure they're included in the appropriate sections.
 
-4. COMPLETE CONTENT: Create comprehensive content with ALL fields filled out - no empty fields or placeholders. Ensure theory blocks are complete and not truncated.
+4. CONCISE CONTENT: Create complete content with ALL fields filled out - no empty fields or placeholders. Be concise and focused:
+   - Keep examples short but informative (2-3 examples maximum per theory block)
+   - Limit code examples to 10-15 lines maximum
+   - Keep total response under 8,192 tokens (approximately 32,000 characters) to avoid truncation
+   - For large tasks, provide shortened solution code that demonstrates the approach
+   - Focus on essential information and avoid verbose explanations
 
-5. RESPOND WITH VALID JSON: Return ONLY a valid JSON object in the format shown below.
+5. CONSISTENT ID REFERENCES: When creating relationships between theory blocks, questions, and tasks, ensure all IDs are consistent and valid. Use descriptive IDs based on the content (e.g., "theory_event_loop", "question_event_loop_1").
+
+6. RESPOND WITH VALID JSON: Return ONLY a valid JSON object in the format shown below.
 
 REQUIRED FIELDS:
 - Theory: title, content (with complete sections and image references), examples (2+), tags (3-5), technology, learningPath, complexity (1-10), interviewRelevance (1-10)
 - Questions: text, difficulty (easy/medium/hard), type (mcq/code/open/flashcard), options (exactly 4 for MCQs), answer, analysis (3-5), tags (3-5)
-- Tasks: title, description, difficulty, startingCode, solutionCode, testCases (3-5), hints (2-3), tags (3-5), timeEstimate
+- Tasks: title, description, difficulty, startingCode, solutionCode (KEEP UNDER 50 LINES), testCases (3-5), hints (2-3), tags (3-5), timeEstimate
+
+IMPORTANT: For tasks with complex solutions, provide a simplified version of the solutionCode that demonstrates the core approach without implementing every detail. This helps prevent response truncation.
 
 If content is missing questions or tasks, generate 2-3 practice questions and 1-2 coding tasks based on the theory.
 

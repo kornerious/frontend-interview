@@ -1,200 +1,1120 @@
 [
   {
-    "startLine": 0,
+    "tasks": [
+      {
+        "interviewRelevance": 8,
+        "learningPath": "intermediate",
+        "title": "Implement Execution Context Tracker",
+        "difficulty": "medium",
+        "prerequisites": [
+          "javascript_basics",
+          "functions",
+          "scope"
+        ],
+        "solutionCode": "class ExecutionContextTracker {\n  constructor() {\n    this.contextStack = [];\n    this.contextId = 0;\n  }\n  \n  createContext(name, type = 'function') {\n    const context = {\n      id: ++this.contextId,\n      name,\n      type,\n      created: Date.now()\n    };\n    this.contextStack.push(context);\n    console.log(`✓ Created ${type} context: ${name} (ID: ${context.id})`);\n    return context;\n  }\n  \n  destroyContext() {\n    const context = this.contextStack.pop();\n    if (context) {\n      console.log(`✗ Destroyed context: ${context.name} (ID: ${context.id})`);\n    }\n    return context;\n  }\n  \n  demonstrateScope() {\n    const tracker = this;\n    \n    function outerFunction(x) {\n      tracker.createContext('outerFunction');\n      const outerVar = 'I am outer';\n      \n      function innerFunction(y) {\n        tracker.createContext('innerFunction');\n        const innerVar = 'I am inner';\n        \n        // Access variables through scope chain\n        console.log('Scope chain access:', { x, y, outerVar, innerVar });\n        \n        tracker.destroyContext();\n      }\n      \n      innerFunction(20);\n      tracker.destroyContext();\n    }\n    \n    tracker.createContext('global', 'global');\n    outerFunction(10);\n    tracker.destroyContext();\n  }\n}",
+        "startingCode": "// Execution Context Tracker\nclass ExecutionContextTracker {\n  constructor() {\n    this.contextStack = [];\n    this.contextId = 0;\n  }\n  \n  // TODO: Implement context tracking methods\n  createContext(name, type = 'function') {\n    // Track context creation\n  }\n  \n  destroyContext() {\n    // Track context destruction\n  }\n  \n  // TODO: Implement scope chain demonstration\n  demonstrateScope() {\n    // Show variable access through scope chain\n  }\n}\n\n// TODO: Create examples that use the tracker\nfunction demonstrateContexts() {\n  // Implement demonstration\n}",
+        "timeEstimate": 30,
+        "testCases": [
+          "Test context creation and destruction tracking",
+          "Test scope chain variable access demonstration",
+          "Test nested function context management",
+          "Test context stack maintains proper order",
+          "Test 'this' binding in different contexts"
+        ],
+        "complexity": 6,
+        "relatedConcepts": [
+          "closures",
+          "hoisting",
+          "call_stack"
+        ],
+        "description": "\nCreate a function that demonstrates and tracks execution context behavior:\n\n1. Implement a context tracker that logs when contexts are created and destroyed\n2. Show how variables are accessed through the scope chain\n3. Demonstrate 'this' binding in different contexts\n4. Handle nested function calls and their contexts\n\nYour solution should clearly show the creation and destruction of execution contexts.\n",
+        "hints": [
+          "Use a stack data structure to track execution contexts",
+          "Log context creation and destruction for visibility",
+          "Demonstrate variable access through nested functions"
+        ],
+        "tags": [
+          "execution-context",
+          "scope-chain",
+          "javascript",
+          "fundamentals"
+        ],
+        "id": "task_execution_context"
+      },
+      {
+        "id": "task_event_loop",
+        "timeEstimate": 60,
+        "interviewRelevance": 9,
+        "relatedConcepts": [
+          "promises",
+          "callbacks",
+          "async_await"
+        ],
+        "prerequisites": [
+          "javascript_basics",
+          "asynchronous_programming",
+          "data_structures"
+        ],
+        "title": "Event Loop Simulator",
+        "solutionCode": "class EventLoopSimulator {\n  constructor() {\n    this.callStack = [];\n    this.callbackQueue = [];\n    this.microtaskQueue = [];\n    this.isRunning = false;\n    this.logs = [];\n  }\n  \n  log(message) {\n    this.logs.push(`${Date.now()}: ${message}`);\n    console.log(message);\n  }\n  \n  pushToStack(fn, name) {\n    this.callStack.push({ fn, name });\n    this.log(`📥 Pushed to stack: ${name}`);\n  }\n  \n  popFromStack() {\n    const item = this.callStack.pop();\n    if (item) {\n      this.log(`📤 Popped from stack: ${item.name}`);\n      item.fn();\n    }\n    return item;\n  }\n  \n  addCallback(callback, name, delay = 0) {\n    setTimeout(() => {\n      this.callbackQueue.push({ callback, name });\n      this.log(`⏰ Added to callback queue: ${name}`);\n    }, delay);\n  }\n  \n  addMicrotask(microtask, name) {\n    this.microtaskQueue.push({ microtask, name });\n    this.log(`🚀 Added to microtask queue: ${name}`);\n  }\n  \n  processMicrotasks() {\n    while (this.microtaskQueue.length > 0) {\n      const task = this.microtaskQueue.shift();\n      this.log(`🔄 Processing microtask: ${task.name}`);\n      task.microtask();\n    }\n  }\n  \n  processCallbacks() {\n    if (this.callbackQueue.length > 0) {\n      const task = this.callbackQueue.shift();\n      this.log(`🔄 Processing callback: ${task.name}`);\n      this.pushToStack(task.callback, task.name);\n    }\n  }\n  \n  runEventLoop() {\n    this.isRunning = true;\n    \n    const loop = () => {\n      // Execute call stack\n      while (this.callStack.length > 0) {\n        this.popFromStack();\n      }\n      \n      // Process all microtasks\n      this.processMicrotasks();\n      \n      // Process one callback\n      this.processCallbacks();\n      \n      if (this.isRunning) {\n        setTimeout(loop, 10);\n      }\n    };\n    \n    loop();\n  }\n  \n  stop() {\n    this.isRunning = false;\n  }\n}",
+        "hints": [
+          "Use arrays to simulate the different queues",
+          "Process microtasks completely before handling callbacks",
+          "Use setTimeout to simulate async behavior"
+        ],
+        "learningPath": "advanced",
+        "tags": [
+          "event-loop",
+          "asynchronous",
+          "simulation",
+          "queues"
+        ],
+        "description": "\nBuild a simplified event loop simulator that demonstrates:\n\n1. Call stack operations (push/pop functions)\n2. Callback queue management for setTimeout\n3. Microtask queue for Promises\n4. Event loop cycle processing\n5. Execution order visualization\n\nThe simulator should show how different async operations are scheduled and executed.\n",
+        "complexity": 8,
+        "startingCode": "class EventLoopSimulator {\n  constructor() {\n    this.callStack = [];\n    this.callbackQueue = [];\n    this.microtaskQueue = [];\n    this.isRunning = false;\n  }\n  \n  // TODO: Implement call stack operations\n  pushToStack(fn) {\n    // Add function to call stack\n  }\n  \n  // TODO: Implement queue management\n  addCallback(callback, delay = 0) {\n    // Add to callback queue with delay\n  }\n  \n  addMicrotask(microtask) {\n    // Add to microtask queue\n  }\n  \n  // TODO: Implement event loop cycle\n  runEventLoop() {\n    // Process queues in correct order\n  }\n}",
+        "testCases": [
+          "Test call stack push and pop operations",
+          "Test callback queue with setTimeout simulation",
+          "Test microtask queue with Promise simulation",
+          "Test correct execution order (microtasks before callbacks)",
+          "Test event loop cycle processing"
+        ],
+        "difficulty": "hard"
+      }
+    ],
     "questions": [
       {
-        "id": "question_event_loop_1",
-        "topic": "JavaScript Event Loop",
+        "question": "What happens when a function is called in JavaScript in terms of execution context?",
         "level": "medium",
+        "answer": "A new function execution context is created and pushed onto the call stack",
         "type": "mcq",
-        "question": "What is the correct order of execution for the following code?\n\n```javascript\nconsole.log('1');\nsetTimeout(() => console.log('2'), 0);\nPromise.resolve().then(() => console.log('3'));\nconsole.log('4');\n```",
-        "answer": "1, 4, 3, 2",
+        "complexity": 6,
+        "topic": "JavaScript Execution Context",
+        "example": "\n```javascript\nfunction outer() {\n  var outerVar = 'outer';\n  \n  function inner() {\n    var innerVar = 'inner';\n    // New execution context created here\n  }\n  \n  inner(); // Creates new context\n}\n\nouter(); // Creates new context\n```",
         "options": [
-          "1, 4, 3, 2",
-          "1, 2, 3, 4",
-          "1, 4, 2, 3",
-          "1, 3, 4, 2"
+          "A new function execution context is created and pushed onto the call stack",
+          "The global execution context is modified to include the function's variables",
+          "The function shares the same execution context as its caller",
+          "A new thread is created to handle the function execution"
+        ],
+        "learningPath": "intermediate",
+        "keyConcepts": [
+          "Execution Context",
+          "Call Stack",
+          "Variable Environment",
+          "Single-threaded execution"
+        ],
+        "prerequisites": [
+          "javascript_basics",
+          "functions"
+        ],
+        "evaluationCriteria": [
+          "Understanding of execution context creation",
+          "Knowledge of call stack behavior",
+          "Recognition of JavaScript's single-threaded nature",
+          "Distinction between global and function contexts"
+        ],
+        "id": "question_execution_context_1",
+        "tags": [
+          "execution-context",
+          "call-stack",
+          "javascript",
+          "fundamentals"
         ],
         "analysisPoints": [
-          "Synchronous code executes first on the call stack",
+          "Each function call creates its own execution context",
+          "Execution contexts are managed in a stack (LIFO) structure",
+          "Function contexts have their own variable environment",
+          "JavaScript is single-threaded, so no new threads are created"
+        ],
+        "interviewFrequency": 8
+      },
+      {
+        "id": "question_event_loop_1",
+        "answer": "Output: 1, 4, 3, 2. Synchronous code runs first (1, 4), then microtasks/Promises (3), then macrotasks/setTimeout (2).",
+        "tags": [
+          "event-loop",
+          "asynchronous",
+          "promises",
+          "settimeout"
+        ],
+        "options": [],
+        "type": "code",
+        "complexity": 8,
+        "analysisPoints": [
+          "Synchronous code executes immediately",
           "Microtasks (Promises) have higher priority than macrotasks",
           "setTimeout callbacks go to the macrotask queue",
           "Event loop processes microtasks before macrotasks"
         ],
-        "keyConcepts": [
-          "Call stack execution order",
-          "Microtask vs macrotask priority",
-          "Event loop processing",
-          "Asynchronous JavaScript execution"
-        ],
+        "topic": "Event Loop",
+        "level": "hard",
+        "question": "What will be the output order of the following code and why?",
         "evaluationCriteria": [
-          "Understanding of synchronous vs asynchronous execution",
-          "Knowledge of microtask and macrotask queues",
-          "Comprehension of event loop mechanics",
-          "Ability to predict execution order"
+          "Understanding of event loop phases",
+          "Knowledge of task queue priorities",
+          "Ability to trace asynchronous execution",
+          "Recognition of Promise vs setTimeout behavior"
         ],
-        "example": "\n```javascript\n// Event Loop Example\nconsole.log('Start');\nsetTimeout(() => console.log('Timer'), 0);\nPromise.resolve().then(() => console.log('Promise'));\nconsole.log('End');\n// Output: Start, End, Promise, Timer\n```",
-        "tags": [
-          "event-loop",
-          "asynchronous",
-          "javascript",
-          "execution-order"
-        ],
+        "learningPath": "intermediate",
         "prerequisites": [
           "javascript_basics",
-          "callbacks",
-          "promises"
-        ],
-        "complexity": 7,
-        "interviewFrequency": 9,
-        "learningPath": "intermediate"
-      },
-      {
-        "id": "question_design_patterns_1",
-        "topic": "JavaScript Design Patterns",
-        "level": "hard",
-        "type": "open",
-        "question": "Explain the differences between Constructor Pattern and Factory Pattern in JavaScript. When would you use each pattern and what are their advantages and disadvantages?",
-        "answer": "**Constructor Pattern:**\n- Uses the `new` keyword to create instances\n- Each instance has its own copy of methods (memory overhead)\n- Direct instantiation with `new ClassName()`\n- Prototype chain is automatically set up\n- Better for when you need inheritance and prototype methods\n\n**Factory Pattern:**\n- Returns objects without using `new`\n- Can return different types of objects based on parameters\n- More flexible object creation\n- Can implement object pooling\n- Better for complex object creation logic\n\n**When to use Constructor Pattern:**\n- When you need inheritance\n- When objects share common methods via prototype\n- When you want clear object instantiation\n\n**When to use Factory Pattern:**\n- When object creation is complex\n- When you need to create different types of objects\n- When you want to encapsulate object creation logic\n- When you need object pooling or caching",
-        "options": [],
-        "analysisPoints": [
-          "Understanding of object creation mechanisms",
-          "Knowledge of memory implications",
-          "Awareness of use cases for each pattern",
-          "Comprehension of prototype chain differences"
+          "promises",
+          "asynchronous_programming"
         ],
         "keyConcepts": [
-          "Constructor functions",
-          "Factory functions",
-          "Object instantiation",
-          "Prototype chain",
-          "Memory management"
+          "Event Loop",
+          "Microtask Queue",
+          "Macrotask Queue",
+          "Promise execution order"
+        ],
+        "example": "\n```javascript\nconsole.log('1');\n\nsetTimeout(() => console.log('2'), 0);\n\nPromise.resolve().then(() => console.log('3'));\n\nconsole.log('4');\n```",
+        "interviewFrequency": 9
+      },
+      {
+        "learningPath": "intermediate",
+        "options": [],
+        "type": "open",
+        "prerequisites": [
+          "javascript_objects",
+          "functions",
+          "oop_basics"
         ],
         "evaluationCriteria": [
-          "Depth of pattern understanding",
-          "Ability to compare and contrast patterns",
-          "Knowledge of practical applications",
-          "Understanding of performance implications"
+          "Clear explanation of both patterns",
+          "Understanding of when to use each pattern",
+          "Knowledge of advantages and disadvantages",
+          "Ability to provide practical examples"
         ],
-        "example": "\n```javascript\n// Constructor Pattern\nfunction Car(make, model) {\n  this.make = make;\n  this.model = model;\n}\nCar.prototype.start = function() { console.log('Engine started'); };\n\n// Factory Pattern\nfunction createVehicle(type, make, model) {\n  if (type === 'car') {\n    return { type: 'car', make, model, start: () => console.log('Car started') };\n  }\n  if (type === 'truck') {\n    return { type: 'truck', make, model, load: () => console.log('Truck loaded') };\n  }\n}\n```",
+        "id": "question_design_patterns_1",
+        "answer": "Constructor Pattern uses 'new' keyword to create instances with shared structure but different properties. Factory Pattern returns objects based on conditions without exposing creation logic. Use Constructor for similar objects with different data; use Factory when creation logic is complex or you need different object types based on parameters.",
+        "question": "Explain the difference between the Constructor pattern and Factory pattern in JavaScript. When would you use each?",
+        "level": "medium",
+        "analysisPoints": [
+          "Constructor pattern requires 'new' keyword",
+          "Factory pattern encapsulates object creation logic",
+          "Constructor pattern creates instances of the same type",
+          "Factory pattern can return different object types"
+        ],
+        "topic": "JavaScript Design Patterns",
         "tags": [
           "design-patterns",
           "constructor",
           "factory",
           "object-creation"
         ],
-        "prerequisites": [
-          "javascript_objects",
-          "prototypes",
-          "functions"
-        ],
-        "complexity": 8,
         "interviewFrequency": 7,
-        "learningPath": "advanced"
+        "example": "\n```javascript\n// Constructor Pattern\nfunction Car(make, model) {\n  this.make = make;\n  this.model = model;\n}\n\n// Factory Pattern\nfunction createVehicle(type) {\n  if (type === 'car') return new Car();\n  if (type === 'bike') return new Bike();\n}\n```",
+        "keyConcepts": [
+          "Constructor Pattern",
+          "Factory Pattern",
+          "Object Creation",
+          "Design Pattern Selection"
+        ],
+        "complexity": 6
       }
     ],
-    "processedDate": "2025-06-06T16:56:20.998Z",
-    "completed": false,
+    "logicalBlockInfo": {
+      "suggestedEndLine": 81
+    },
+    "theory": [
+      {
+        "learningPath": "intermediate",
+        "prerequisites": [
+          "basic_javascript",
+          "functions"
+        ],
+        "technology": "JavaScript",
+        "examples": [
+          {
+            "explanation": "This example demonstrates how different execution contexts are created and how they access variables through the scope chain.",
+            "id": "example_execution_context_1",
+            "title": "Global vs Function Context",
+            "code": "// Global Execution Context\nvar globalVar = 'I am global';\n\nfunction outerFunction() {\n  // Function Execution Context\n  var outerVar = 'I am outer';\n  \n  function innerFunction() {\n    // Another Function Execution Context\n    var innerVar = 'I am inner';\n    console.log(globalVar, outerVar, innerVar);\n  }\n  \n  innerFunction();\n}\n\nouterFunction();",
+            "language": "javascript"
+          },
+          {
+            "code": "const obj = {\n  name: 'Object',\n  regularFunction: function() {\n    console.log('Regular:', this.name);\n  },\n  arrowFunction: () => {\n    console.log('Arrow:', this.name);\n  }\n};\n\nobj.regularFunction(); // 'Object'\nobj.arrowFunction(); // undefined (inherits global this)",
+            "language": "javascript",
+            "explanation": "Shows how 'this' binding differs between regular functions and arrow functions within execution contexts.",
+            "title": "This Binding Context",
+            "id": "example_execution_context_2"
+          }
+        ],
+        "tags": [
+          "javascript",
+          "engine",
+          "execution-context",
+          "scope"
+        ],
+        "id": "theory_js_engine_execution",
+        "requiredFor": [
+          "closures",
+          "hoisting",
+          "advanced_javascript"
+        ],
+        "relatedTasks": [
+          "task_execution_context"
+        ],
+        "complexity": 7,
+        "interviewRelevance": 9,
+        "relatedQuestions": [
+          "question_execution_context_1",
+          "question_execution_context_2"
+        ],
+        "content": "# JavaScript Engine and Execution Context\n\nThe JavaScript engine is responsible for parsing, compiling, and executing JavaScript code. Understanding how it works is crucial for writing efficient code and debugging complex applications.\n\n## Execution Context\n\nThe environment where JavaScript code is evaluated and executed. Each context has its own variable environment, scope chain, and `this` value.\n\n![JavaScript Memory Heap and Call Stack](images/js_engine_memory_heap.png)\n\n![JavaScript Event Loop](images/js_engine_execution.png)\n\n![JavaScript Execution Context](images/js_event_loop.png)\n\n## Key Components\n\n1. **Global Execution Context**: Created when the script first runs\n2. **Function Execution Context**: Created when a function is invoked\n3. **Variable Environment**: Stores variables and function declarations\n4. **Scope Chain**: Determines variable access hierarchy\n5. **This Binding**: References the current object context",
+        "title": "JavaScript Engine and Execution Context"
+      },
+      {
+        "content": "# Event Loop and Asynchronous JavaScript\n\nThe Event Loop is a crucial concept in JavaScript that enables non-blocking, asynchronous behavior despite JavaScript being single-threaded. It continuously checks if there are any tasks in the task queue that need to be executed.\n\n## Key Components of JavaScript Runtime\n\n1. **Call Stack**: Where function calls are stacked and executed (LIFO - Last In, First Out)\n2. **Web APIs**: Browser APIs (DOM, AJAX, setTimeout, etc.) that run operations asynchronously\n3. **Callback Queue**: Where callbacks from async operations wait to be executed\n4. **Microtask Queue**: Higher priority queue for Promises and mutation observers\n5. **Event Loop**: Constantly checks if the call stack is empty and moves callbacks to it\n\n## Event Loop Algorithm\n\n1. Execute code in the call stack until it's empty\n2. Check the microtask queue and execute all tasks there\n3. Render UI updates if needed\n4. Check the callback queue and push the oldest task to the call stack\n5. Repeat\n\n## Event Loop Detailed Diagrams\n\n![JavaScript Event Loop 7](images/event_loop_6.jpeg)\n\n![JavaScript Event Loop Processing](images/event_loop_1.png)\n\n![JavaScript Call Stack 1](images/event_loop_2.jpeg)\n\n![JavaScript Call Stack 2](images/event_loop_3.jpeg)\n\n![JavaScript Call Stack 3](images/event_loop_4.jpeg)\n\n![JavaScript Call Stack 4](images/event_loop_5.jpeg)\n\n![JavaScript Processing Model](images/event_loop_6.jpeg)",
+        "requiredFor": [
+          "async_await",
+          "promises",
+          "performance_optimization"
+        ],
+        "relatedQuestions": [
+          "question_event_loop_1",
+          "question_event_loop_2"
+        ],
+        "technology": "JavaScript",
+        "relatedTasks": [
+          "task_event_loop"
+        ],
+        "interviewRelevance": 10,
+        "complexity": 8,
+        "examples": [
+          {
+            "title": "Basic Event Loop Example",
+            "language": "javascript",
+            "explanation": "Demonstrates the order of execution: synchronous code first, then microtasks (Promises), then macrotasks (setTimeout).",
+            "code": "console.log('Start'); // 1. Runs immediately\n\nsetTimeout(() => {\n  console.log('Timeout callback'); // 4. Runs after stack is empty\n}, 0);\n\nPromise.resolve().then(() => {\n  console.log('Promise callback'); // 3. Runs before timeout\n});\n\nconsole.log('End'); // 2. Runs immediately\n\n// Output: Start, End, Promise callback, Timeout callback",
+            "id": "example_event_loop_1"
+          },
+          {
+            "title": "Complex Async Flow",
+            "explanation": "Shows how async/await interacts with the event loop and how microtasks are prioritized over macrotasks.",
+            "code": "async function complexFlow() {\n  console.log('1');\n  \n  setTimeout(() => console.log('2'), 0);\n  \n  await Promise.resolve();\n  console.log('3');\n  \n  setTimeout(() => console.log('4'), 0);\n  \n  return Promise.resolve().then(() => console.log('5'));\n}\n\ncomplexFlow().then(() => console.log('6'));\nconsole.log('7');\n\n// Output: 1, 7, 3, 5, 6, 2, 4",
+            "language": "javascript",
+            "id": "example_event_loop_2"
+          }
+        ],
+        "tags": [
+          "javascript",
+          "event-loop",
+          "asynchronous",
+          "promises"
+        ],
+        "title": "Event Loop and Asynchronous JavaScript",
+        "id": "theory_event_loop",
+        "prerequisites": [
+          "javascript_basics",
+          "functions",
+          "callbacks"
+        ],
+        "learningPath": "intermediate"
+      },
+      {
+        "examples": [
+          {
+            "title": "Constructor Pattern",
+            "code": "// Constructor Pattern\nfunction Person(name, age) {\n  this.name = name;\n  this.age = age;\n  \n  this.sayHello = function() {\n    console.log(`Hello, my name is ${this.name}`);\n  };\n}\n\nconst john = new Person('John', 30);\njohn.sayHello(); // Hello, my name is John",
+            "id": "example_constructor_pattern",
+            "explanation": "The Constructor pattern creates objects with shared structure but different property values, using the 'new' keyword.",
+            "language": "javascript"
+          },
+          {
+            "code": "// Factory Pattern\nfunction createUser(type) {\n  if (type === 'admin') {\n    return {\n      name: 'Admin',\n      permissions: ['read', 'write', 'delete']\n    };\n  } else if (type === 'user') {\n    return {\n      name: 'User',\n      permissions: ['read']\n    };\n  }\n}\n\nconst admin = createUser('admin');\nconst user = createUser('user');",
+            "language": "javascript",
+            "explanation": "The Factory pattern encapsulates object creation logic and returns different objects based on input parameters.",
+            "id": "example_factory_pattern",
+            "title": "Factory Pattern"
+          }
+        ],
+        "relatedQuestions": [
+          "question_design_patterns_1",
+          "question_design_patterns_2"
+        ],
+        "relatedTasks": [
+          "task_design_patterns"
+        ],
+        "technology": "JavaScript",
+        "title": "JavaScript Design Patterns",
+        "requiredFor": [
+          "advanced_javascript",
+          "software_architecture",
+          "react_patterns"
+        ],
+        "id": "theory_design_patterns",
+        "content": "# JavaScript Design Patterns\n\nDesign patterns are reusable solutions to commonly occurring problems in software design. They represent best practices and provide a common vocabulary for developers.\n\n## Creational Patterns\n\nCreational patterns deal with object creation mechanisms, trying to create objects in a manner suitable to the situation.\n\n### Constructor Pattern\n\nThe Constructor pattern is used to create specific types of objects by preparing the object for use and accepting arguments to set the values of member properties and methods.\n\n### Factory Pattern\n\nThe Factory pattern provides a way to create objects without specifying the exact class of object that will be created. It's useful when you need to create objects based on certain conditions.",
+        "tags": [
+          "javascript",
+          "design-patterns",
+          "oop",
+          "architecture"
+        ],
+        "learningPath": "intermediate",
+        "complexity": 6,
+        "prerequisites": [
+          "javascript_objects",
+          "functions",
+          "oop_concepts"
+        ],
+        "interviewRelevance": 7
+      }
+    ],
+    "completed": true,
+    "startLine": 0,
+    "id": "chunk_0_1749253288316",
+    "processedDate": "2025-06-06T23:41:28.316Z",
+    "endLine": 81
+  },
+  {
+    "id": "chunk_81_1749253466807",
+    "completed": true,
     "tasks": [
       {
-        "id": "task_event_loop_implementation",
-        "title": "Implement Event Loop Simulation",
-        "description": "\nCreate a simplified Event Loop simulator that demonstrates how JavaScript handles asynchronous operations:\n\n1. Implement a CallStack class that manages function execution\n2. Create separate queues for microtasks and macrotasks\n3. Implement the event loop logic that processes tasks in correct priority order\n4. Add methods to simulate setTimeout, Promise.resolve, and synchronous operations\n5. Provide a way to visualize the execution order\n\nYour implementation should correctly handle the priority of microtasks over macrotasks and demonstrate non-blocking behavior.\n",
+        "hints": [
+          "Remember that microtasks (Promises) always have higher priority than macrotasks (setTimeout)",
+          "Process all synchronous operations first, then handle async queues",
+          "The event loop processes ALL microtasks before moving to the next macrotask"
+        ],
+        "startingCode": "// Event Loop Simulator\nfunction simulateEventLoop(operations) {\n  // TODO: Implement event loop simulation\n  // operations format: [{ type: 'sync', value: '1' }, { type: 'timeout', value: '2', delay: 0 }, { type: 'promise', value: '3' }]\n  \n  const executionOrder = [];\n  const callStack = [];\n  const microtaskQueue = [];\n  const macrotaskQueue = [];\n  \n  // TODO: Process operations according to event loop rules\n  // 1. Execute synchronous operations immediately\n  // 2. Queue microtasks (Promises)\n  // 3. Queue macrotasks (setTimeout)\n  // 4. Process microtasks before macrotasks\n  \n  return executionOrder;\n}\n\n// Test cases\nconst testOps = [\n  { type: 'sync', value: '1' },\n  { type: 'timeout', value: '2', delay: 0 },\n  { type: 'promise', value: '3' },\n  { type: 'sync', value: '4' }\n];\n\nconsole.log(simulateEventLoop(testOps)); // Should output: ['1', '4', '3', '2']",
+        "timeEstimate": 60,
+        "description": "\nCreate a function that simulates the JavaScript event loop and predicts the execution order of mixed synchronous and asynchronous operations.\n\n1. Parse different types of operations (sync, setTimeout, Promise)\n2. Simulate call stack, microtask queue, and macrotask queue\n3. Return the execution order based on event loop rules\n4. Handle nested async operations correctly\n\nYour solution should demonstrate understanding of event loop mechanics and task prioritization.\n",
+        "title": "Implement Event Loop Execution Order Predictor",
+        "learningPath": "advanced",
+        "prerequisites": [
+          "event-loop",
+          "promises",
+          "callbacks",
+          "queues"
+        ],
+        "solutionCode": "function simulateEventLoop(operations) {\n  const executionOrder = [];\n  const microtaskQueue = [];\n  const macrotaskQueue = [];\n  \n  // Process operations in order\n  operations.forEach(op => {\n    switch(op.type) {\n      case 'sync':\n        executionOrder.push(op.value);\n        break;\n      case 'promise':\n        microtaskQueue.push(op.value);\n        break;\n      case 'timeout':\n        macrotaskQueue.push(op.value);\n        break;\n    }\n  });\n  \n  // Process microtasks first\n  while(microtaskQueue.length > 0) {\n    executionOrder.push(microtaskQueue.shift());\n  }\n  \n  // Then process macrotasks\n  while(macrotaskQueue.length > 0) {\n    executionOrder.push(macrotaskQueue.shift());\n  }\n  \n  return executionOrder;\n}\n\n// Enhanced version with nested operations\nfunction simulateEventLoopAdvanced(operations) {\n  const executionOrder = [];\n  const microtaskQueue = [];\n  const macrotaskQueue = [];\n  \n  function processQueues() {\n    // Process all microtasks\n    while(microtaskQueue.length > 0) {\n      const task = microtaskQueue.shift();\n      executionOrder.push(task.value);\n      \n      // Handle nested operations\n      if(task.nested) {\n        task.nested.forEach(nestedOp => {\n          if(nestedOp.type === 'promise') {\n            microtaskQueue.push(nestedOp);\n          } else if(nestedOp.type === 'timeout') {\n            macrotaskQueue.push(nestedOp);\n          }\n        });\n      }\n    }\n    \n    // Process one macrotask\n    if(macrotaskQueue.length > 0) {\n      const task = macrotaskQueue.shift();\n      executionOrder.push(task.value);\n      \n      if(task.nested) {\n        task.nested.forEach(nestedOp => {\n          if(nestedOp.type === 'promise') {\n            microtaskQueue.push(nestedOp);\n          } else if(nestedOp.type === 'timeout') {\n            macrotaskQueue.push(nestedOp);\n          }\n        });\n      }\n      \n      // Check for more microtasks after macrotask\n      if(microtaskQueue.length > 0) {\n        processQueues();\n      }\n    }\n  }\n  \n  // Initial processing\n  operations.forEach(op => {\n    if(op.type === 'sync') {\n      executionOrder.push(op.value);\n    } else if(op.type === 'promise') {\n      microtaskQueue.push(op);\n    } else if(op.type === 'timeout') {\n      macrotaskQueue.push(op);\n    }\n  });\n  \n  processQueues();\n  return executionOrder;\n}",
+        "id": "task_event_loop_simulation",
+        "tags": [
+          "event-loop",
+          "asynchronous",
+          "simulation",
+          "queues",
+          "javascript-internals"
+        ],
         "difficulty": "hard",
-        "startingCode": "// Event Loop Simulator\nclass EventLoopSimulator {\n  constructor() {\n    this.callStack = [];\n    this.microtaskQueue = [];\n    this.macrotaskQueue = [];\n    this.isRunning = false;\n    this.executionLog = [];\n  }\n  \n  // TODO: Implement addToCallStack method\n  addToCallStack(task) {\n    // Add synchronous task to call stack\n  }\n  \n  // TODO: Implement addMicrotask method\n  addMicrotask(callback) {\n    // Add microtask (Promise) to microtask queue\n  }\n  \n  // TODO: Implement addMacrotask method\n  addMacrotask(callback, delay = 0) {\n    // Add macrotask (setTimeout) to macrotask queue\n  }\n  \n  // TODO: Implement event loop logic\n  runEventLoop() {\n    // Process call stack, then microtasks, then macrotasks\n  }\n  \n  // TODO: Implement execution visualization\n  getExecutionOrder() {\n    return this.executionLog;\n  }\n}\n\n// Example usage:\n// const simulator = new EventLoopSimulator();\n// simulator.addToCallStack(() => console.log('Sync 1'));\n// simulator.addMacrotask(() => console.log('Timeout'));\n// simulator.addMicrotask(() => console.log('Promise'));\n// simulator.runEventLoop();",
-        "solutionCode": "// Event Loop Simulator - Complete Implementation\nclass EventLoopSimulator {\n  constructor() {\n    this.callStack = [];\n    this.microtaskQueue = [];\n    this.macrotaskQueue = [];\n    this.isRunning = false;\n    this.executionLog = [];\n  }\n  \n  addToCallStack(task) {\n    this.callStack.push({\n      type: 'sync',\n      callback: task,\n      timestamp: Date.now()\n    });\n  }\n  \n  addMicrotask(callback) {\n    this.microtaskQueue.push({\n      type: 'microtask',\n      callback: callback,\n      timestamp: Date.now()\n    });\n  }\n  \n  addMacrotask(callback, delay = 0) {\n    setTimeout(() => {\n      this.macrotaskQueue.push({\n        type: 'macrotask',\n        callback: callback,\n        timestamp: Date.now()\n      });\n    }, delay);\n  }\n  \n  executeTask(task) {\n    try {\n      const result = task.callback();\n      this.executionLog.push({\n        type: task.type,\n        result: result,\n        timestamp: task.timestamp\n      });\n      return result;\n    } catch (error) {\n      this.executionLog.push({\n        type: task.type,\n        error: error.message,\n        timestamp: task.timestamp\n      });\n    }\n  }\n  \n  runEventLoop() {\n    this.isRunning = true;\n    \n    // Process call stack first (synchronous tasks)\n    while (this.callStack.length > 0) {\n      const task = this.callStack.shift();\n      this.executeTask(task);\n    }\n    \n    // Process all microtasks\n    while (this.microtaskQueue.length > 0) {\n      const task = this.microtaskQueue.shift();\n      this.executeTask(task);\n    }\n    \n    // Process one macrotask, then check for new microtasks\n    if (this.macrotaskQueue.length > 0) {\n      const task = this.macrotaskQueue.shift();\n      this.executeTask(task);\n      \n      // After processing a macrotask, process any new microtasks\n      if (this.microtaskQueue.length > 0) {\n        this.runEventLoop(); // Recursive call to handle new microtasks\n      }\n    }\n    \n    // Continue if there are more macrotasks\n    if (this.macrotaskQueue.length > 0) {\n      setTimeout(() => this.runEventLoop(), 0);\n    } else {\n      this.isRunning = false;\n    }\n  }\n  \n  getExecutionOrder() {\n    return this.executionLog.map((entry, index) => ({\n      order: index + 1,\n      type: entry.type,\n      result: entry.result || entry.error,\n      timestamp: entry.timestamp\n    }));\n  }\n  \n  reset() {\n    this.callStack = [];\n    this.microtaskQueue = [];\n    this.macrotaskQueue = [];\n    this.executionLog = [];\n    this.isRunning = false;\n  }\n}\n\n// Helper function to simulate real Event Loop behavior\nfunction simulateEventLoop() {\n  const simulator = new EventLoopSimulator();\n  \n  simulator.addToCallStack(() => 'Sync 1');\n  simulator.addMacrotask(() => 'Timeout 1');\n  simulator.addMicrotask(() => 'Promise 1');\n  simulator.addToCallStack(() => 'Sync 2');\n  simulator.addMicrotask(() => 'Promise 2');\n  \n  setTimeout(() => {\n    simulator.runEventLoop();\n    console.log('Execution Order:', simulator.getExecutionOrder());\n  }, 100);\n  \n  return simulator;\n}",
+        "interviewRelevance": 9,
+        "relatedConcepts": [
+          "microtasks",
+          "macrotasks",
+          "call-stack",
+          "asynchronous-programming"
+        ],
+        "complexity": 8,
         "testCases": [
-          "Test synchronous task execution: callStack tasks should execute immediately in FIFO order",
-          "Test microtask priority: microtasks should execute before macrotasks even if added later",
-          "Test macrotask execution: setTimeout callbacks should execute after all microtasks are processed",
-          "Test mixed execution order: complex scenario with multiple sync, micro, and macro tasks",
-          "Test error handling: simulator should handle exceptions in tasks gracefully without breaking the loop"
+          "simulateEventLoop([{type:'sync',value:'1'},{type:'timeout',value:'2'},{type:'promise',value:'3'},{type:'sync',value:'4'}]) should return ['1','4','3','2']",
+          "simulateEventLoop([{type:'promise',value:'A'},{type:'promise',value:'B'},{type:'timeout',value:'C'}]) should return ['A','B','C']",
+          "simulateEventLoop([{type:'timeout',value:'X'},{type:'timeout',value:'Y'},{type:'promise',value:'Z'}]) should return ['Z','X','Y']",
+          "simulateEventLoop([{type:'sync',value:'start'},{type:'sync',value:'end'}]) should return ['start','end']",
+          "Complex nested operations should maintain correct execution order with microtasks having priority"
+        ]
+      },
+      {
+        "relatedConcepts": [
+          "event-driven-programming",
+          "pub-sub-pattern",
+          "callbacks",
+          "design-patterns"
+        ],
+        "complexity": 6,
+        "interviewRelevance": 8,
+        "solutionCode": "class EventEmitter {\n  constructor() {\n    this.events = new Map();\n  }\n  \n  subscribe(eventType, callback) {\n    if (typeof callback !== 'function') {\n      throw new Error('Callback must be a function');\n    }\n    \n    if (!this.events.has(eventType)) {\n      this.events.set(eventType, new Set());\n    }\n    \n    this.events.get(eventType).add(callback);\n    \n    // Return unsubscribe function\n    return () => this.unsubscribe(eventType, callback);\n  }\n  \n  unsubscribe(eventType, callback) {\n    if (this.events.has(eventType)) {\n      this.events.get(eventType).delete(callback);\n      \n      // Clean up empty event types\n      if (this.events.get(eventType).size === 0) {\n        this.events.delete(eventType);\n      }\n    }\n  }\n  \n  emit(eventType, data) {\n    if (this.events.has(eventType)) {\n      this.events.get(eventType).forEach(callback => {\n        try {\n          callback(data);\n        } catch (error) {\n          console.error(`Error in event handler for ${eventType}:`, error);\n        }\n      });\n    }\n  }\n  \n  listSubscribers(eventType) {\n    return this.events.has(eventType) \n      ? Array.from(this.events.get(eventType))\n      : [];\n  }\n  \n  once(eventType, callback) {\n    const onceWrapper = (data) => {\n      callback(data);\n      this.unsubscribe(eventType, onceWrapper);\n    };\n    \n    return this.subscribe(eventType, onceWrapper);\n  }\n  \n  removeAllListeners(eventType) {\n    if (eventType) {\n      this.events.delete(eventType);\n    } else {\n      this.events.clear();\n    }\n  }\n}",
+        "description": "\nImplement the Observer pattern to create a simple event system that allows objects to subscribe to and publish events.\n\n1. Create an EventEmitter class that manages subscribers\n2. Implement subscribe/unsubscribe methods\n3. Implement emit method to notify all subscribers\n4. Handle multiple event types and subscriber management\n5. Add error handling for invalid operations\n\nYour solution should demonstrate proper use of the Observer pattern and event-driven programming.\n",
+        "testCases": [
+          "EventEmitter should allow subscribing to events and receive notifications when emitted",
+          "Unsubscribe function should properly remove listeners and stop notifications",
+          "Multiple subscribers should all receive the same event data",
+          "Different event types should be handled independently",
+          "Error handling should prevent one failing callback from affecting others"
         ],
         "hints": [
-          "Remember that microtasks have higher priority than macrotasks",
-          "Process ALL microtasks before moving to the next macrotask",
-          "Use setTimeout to simulate the asynchronous nature of macrotasks"
+          "Use Map to store event types and Set to store unique callbacks",
+          "Return an unsubscribe function from the subscribe method for convenience",
+          "Consider using try-catch when calling callbacks to handle errors gracefully"
+        ],
+        "timeEstimate": 45,
+        "difficulty": "medium",
+        "startingCode": "// Observer Pattern - Event System\nclass EventEmitter {\n  constructor() {\n    // TODO: Initialize data structures to store subscribers\n  }\n  \n  subscribe(eventType, callback) {\n    // TODO: Add callback to the list of subscribers for eventType\n    // Return a function to unsubscribe\n  }\n  \n  unsubscribe(eventType, callback) {\n    // TODO: Remove callback from subscribers list\n  }\n  \n  emit(eventType, data) {\n    // TODO: Call all subscribers for the given eventType with data\n  }\n  \n  listSubscribers(eventType) {\n    // TODO: Return list of subscribers for eventType\n  }\n}\n\n// Usage example:\nconst emitter = new EventEmitter();\nconst unsubscribe = emitter.subscribe('test', (data) => console.log('Received:', data));\nemitter.emit('test', 'Hello World');\nunsubscribe();",
+        "prerequisites": [
+          "classes",
+          "callbacks",
+          "map-set",
+          "error-handling"
+        ],
+        "tags": [
+          "observer-pattern",
+          "events",
+          "design-patterns",
+          "callbacks",
+          "error-handling"
+        ],
+        "id": "task_design_pattern_implementation",
+        "learningPath": "intermediate",
+        "title": "Implement Observer Pattern with Event System"
+      }
+    ],
+    "processedDate": "2025-06-06T23:44:26.807Z",
+    "questions": [
+      {
+        "type": "mcq",
+        "topic": "Execution Context",
+        "keyConcepts": [
+          "Function execution context",
+          "Call stack management",
+          "Variable environment",
+          "Scope chain"
+        ],
+        "answer": "A new function execution context is created and pushed onto the call stack",
+        "level": "medium",
+        "analysisPoints": [
+          "Each function call creates its own execution context",
+          "Execution contexts are managed in a stack (LIFO)",
+          "Function contexts are separate from global context",
+          "Context creation includes variable environment and scope chain setup"
+        ],
+        "tags": [
+          "execution-context",
+          "call-stack",
+          "scope",
+          "functions"
+        ],
+        "example": "\n```javascript\nfunction outer() {\n  var outerVar = 'outer';\n  \n  function inner() {\n    var innerVar = 'inner';\n    console.log(outerVar); // Accessible via scope chain\n  }\n  \n  inner(); // Creates new execution context\n}\n\nouter(); // Creates new execution context\n```",
+        "prerequisites": [
+          "functions",
+          "variables"
+        ],
+        "id": "question_execution_context_1",
+        "interviewFrequency": 8,
+        "options": [
+          "A new function execution context is created and pushed onto the call stack",
+          "The global execution context is modified to include the function's variables",
+          "The function shares the same execution context as its parent",
+          "A new global execution context is created for the function"
+        ],
+        "complexity": 6,
+        "learningPath": "intermediate",
+        "evaluationCriteria": [
+          "Understanding of execution context lifecycle",
+          "Knowledge of call stack behavior",
+          "Distinction between global and function contexts",
+          "Awareness of context isolation"
+        ],
+        "question": "What happens when a function is called in JavaScript in terms of execution context?"
+      },
+      {
+        "interviewFrequency": 9,
+        "tags": [
+          "event-loop",
+          "microtasks",
+          "macrotasks",
+          "asynchronous"
+        ],
+        "options": [],
+        "complexity": 9,
+        "id": "question_event_loop_1",
+        "evaluationCriteria": [
+          "Correct prediction of execution order",
+          "Understanding of task queue priorities",
+          "Explanation of event loop mechanics",
+          "Knowledge of Promise vs setTimeout behavior"
+        ],
+        "type": "open",
+        "topic": "Event Loop",
+        "learningPath": "advanced",
+        "example": "\n```javascript\nconsole.log('Start');\n\nsetTimeout(() => console.log('Timeout 1'), 0);\nsetTimeout(() => console.log('Timeout 2'), 0);\n\nPromise.resolve().then(() => {\n  console.log('Promise 1');\n  return Promise.resolve();\n}).then(() => console.log('Promise 2'));\n\nconsole.log('End');\n// Output: Start, End, Promise 1, Promise 2, Timeout 1, Timeout 2\n```",
+        "answer": "Microtasks (like Promise callbacks) have higher priority than macrotasks (like setTimeout callbacks). The event loop processes all microtasks before moving to the next macrotask. The output will be: 1, 4, 3, 2. Explanation: '1' and '4' are synchronous and execute immediately. Promise.resolve().then() is a microtask that executes after the current execution stack is empty but before any macrotasks. setTimeout is a macrotask that executes last.",
+        "keyConcepts": [
+          "Microtask queue",
+          "Macrotask queue",
+          "Event loop priority",
+          "Asynchronous execution order"
+        ],
+        "question": "Explain the difference between microtasks and macrotasks in the JavaScript event loop, and predict the output of the following code: console.log('1'); setTimeout(() => console.log('2'), 0); Promise.resolve().then(() => console.log('3')); console.log('4');",
+        "level": "hard",
+        "prerequisites": [
+          "promises",
+          "callbacks",
+          "setTimeout"
+        ],
+        "analysisPoints": [
+          "Microtasks have higher priority than macrotasks",
+          "Event loop processes all microtasks before next macrotask",
+          "Synchronous code executes first",
+          "Understanding of task queue priorities is crucial for async programming"
+        ]
+      },
+      {
+        "options": [
+          "Singleton Pattern",
+          "Factory Pattern",
+          "Observer Pattern",
+          "Adapter Pattern"
+        ],
+        "tags": [
+          "singleton",
+          "design-patterns",
+          "global-access",
+          "instance-control"
+        ],
+        "complexity": 6,
+        "evaluationCriteria": [
+          "Recognition of singleton characteristics",
+          "Understanding of use cases",
+          "Knowledge of implementation approaches",
+          "Awareness of potential drawbacks"
+        ],
+        "learningPath": "intermediate",
+        "question": "Which design pattern ensures that a class has only one instance and provides a global point of access to it?",
+        "interviewFrequency": 7,
+        "answer": "Singleton Pattern",
+        "prerequisites": [
+          "closures",
+          "objects",
+          "functions"
+        ],
+        "type": "mcq",
+        "example": "\n```javascript\nconst DatabaseConnection = (function() {\n  let instance;\n  \n  function createConnection() {\n    return {\n      connect: () => console.log('Connected to database'),\n      query: (sql) => console.log(`Executing: ${sql}`)\n    };\n  }\n  \n  return {\n    getInstance: () => {\n      if (!instance) {\n        instance = createConnection();\n      }\n      return instance;\n    }\n  };\n})();\n```",
+        "level": "medium",
+        "topic": "Design Patterns",
+        "analysisPoints": [
+          "Singleton restricts instantiation to one object",
+          "Provides global access point",
+          "Often implemented using closures in JavaScript",
+          "Useful for configuration objects, loggers, caches"
+        ],
+        "keyConcepts": [
+          "Single instance guarantee",
+          "Global access",
+          "Lazy initialization",
+          "Instance control"
+        ],
+        "id": "question_design_patterns_1"
+      }
+    ],
+    "startLine": 81,
+    "theory": [
+      {
+        "prerequisites": [
+          "variables",
+          "functions",
+          "scope"
+        ],
+        "requiredFor": [
+          "closures",
+          "hoisting",
+          "async-programming"
+        ],
+        "complexity": 6,
+        "examples": [
+          {
+            "id": "example_execution_context_1",
+            "code": "// Global Execution Context\nvar globalVar = 'I am global';\n\nfunction myFunction() {\n  // Function Execution Context\n  var localVar = 'I am local';\n  console.log(globalVar); // Accessible\n  console.log(localVar);  // Accessible\n}\n\nmyFunction();\nconsole.log(globalVar); // Accessible\n// console.log(localVar); // Error: not defined",
+            "title": "Global vs Function Context",
+            "explanation": "This example shows how global variables are accessible everywhere, while function-scoped variables are only accessible within their execution context.",
+            "language": "javascript"
+          },
+          {
+            "language": "javascript",
+            "code": "// Global context\nconsole.log(this); // Window object (browser)\n\nconst obj = {\n  name: 'Object',\n  method: function() {\n    console.log(this.name); // 'Object'\n  },\n  arrow: () => {\n    console.log(this.name); // undefined (lexical this)\n  }\n};\n\nobj.method(); // 'Object'\nobj.arrow();  // undefined",
+            "explanation": "Demonstrates how 'this' binding varies between regular functions and arrow functions in different execution contexts.",
+            "id": "example_execution_context_2",
+            "title": "this Binding in Different Contexts"
+          }
+        ],
+        "learningPath": "intermediate",
+        "content": "# JavaScript Execution Context\n\nThe environment where JavaScript code is evaluated and executed. Each context has its own variable environment, scope chain, and `this` value.\n\n![JavaScript Memory Heap and Call Stack](images/js_engine_memory_heap.png)\n\n![JavaScript Event Loop](images/js_engine_execution.png)\n\n![JavaScript Execution Context](images/js_event_loop.png)\n\n## Key Components\n\n- **Variable Environment**: Stores variables and function declarations\n- **Scope Chain**: Determines variable access hierarchy\n- **this Binding**: References the current execution context object\n\n## Types of Execution Context\n\n1. **Global Execution Context**: Default context where code runs initially\n2. **Function Execution Context**: Created when a function is invoked\n3. **Eval Execution Context**: Created when code is executed inside eval()",
+        "relatedTasks": [
+          "task_execution_context"
+        ],
+        "relatedQuestions": [
+          "question_execution_context_1",
+          "question_execution_context_2"
+        ],
+        "tags": [
+          "execution-context",
+          "scope",
+          "this-binding",
+          "javascript-fundamentals"
+        ],
+        "title": "JavaScript Execution Context",
+        "id": "theory_execution_context",
+        "technology": "JavaScript",
+        "interviewRelevance": 8
+      },
+      {
+        "learningPath": "intermediate",
+        "interviewRelevance": 9,
+        "requiredFor": [
+          "async-await",
+          "performance-optimization",
+          "web-workers"
+        ],
+        "relatedTasks": [
+          "task_event_loop"
+        ],
+        "complexity": 8,
+        "technology": "JavaScript",
+        "examples": [
+          {
+            "id": "example_event_loop_1",
+            "title": "Basic Event Loop Example",
+            "explanation": "This example demonstrates the order of execution in the event loop, showing how microtasks (Promises) have higher priority than macrotasks (setTimeout).",
+            "language": "javascript",
+            "code": "console.log('Start'); // 1. Runs immediately\n\nsetTimeout(() => {\n  console.log('Timeout callback'); // 4. Runs after stack is empty\n}, 0);\n\nPromise.resolve().then(() => {\n  console.log('Promise callback'); // 3. Runs before timeout\n});\n\nconsole.log('End'); // 2. Runs immediately\n\n// Output:\n// 'Start'\n// 'End'\n// 'Promise callback' (microtask)\n// 'Timeout callback' (task queue)"
+          },
+          {
+            "code": "console.log('1');\n\nsetTimeout(() => console.log('2'), 0);\n\nPromise.resolve().then(() => {\n  console.log('3');\n  return Promise.resolve();\n}).then(() => console.log('4'));\n\nsetTimeout(() => console.log('5'), 0);\n\nconsole.log('6');\n\n// Output: 1, 6, 3, 4, 2, 5",
+            "id": "example_event_loop_2",
+            "explanation": "Shows how multiple asynchronous operations are queued and executed, with microtasks always being processed before macrotasks.",
+            "language": "javascript",
+            "title": "Complex Async Flow"
+          }
+        ],
+        "title": "Event Loop and Asynchronous JavaScript",
+        "content": "# Event Loop and Asynchronous JavaScript\n\nThe Event Loop is a crucial concept in JavaScript that enables non-blocking, asynchronous behavior despite JavaScript being single-threaded. It continuously checks if there are any tasks in the task queue that need to be executed.\n\n## Key Components of JavaScript Runtime\n\n1. **Call Stack**: Where function calls are stacked and executed (LIFO - Last In, First Out)\n2. **Web APIs**: Browser APIs (DOM, AJAX, setTimeout, etc.) that run operations asynchronously\n3. **Callback Queue**: Where callbacks from async operations wait to be executed\n4. **Microtask Queue**: Higher priority queue for Promises and mutation observers\n5. **Event Loop**: Constantly checks if the call stack is empty and moves callbacks to it\n\n## Event Loop Algorithm\n\n1. Execute code in the call stack until it's empty\n2. Check the microtask queue and execute all tasks there\n3. Render UI updates if needed\n4. Check the callback queue and push the oldest task to the call stack\n5. Repeat\n\n## Visual References\n\n![JavaScript Event Loop 7](images/event_loop_6.jpeg)\n![JavaScript Event Loop Processing](images/event_loop_1.png)\n![JavaScript Call Stack 1](images/event_loop_2.jpeg)\n![JavaScript Call Stack 2](images/event_loop_3.jpeg)\n![JavaScript Call Stack 3](images/event_loop_4.jpeg)\n![JavaScript Call Stack 4](images/event_loop_5.jpeg)\n![JavaScript Processing Model](images/event_loop_6.jpeg)",
+        "prerequisites": [
+          "functions",
+          "callbacks",
+          "promises"
         ],
         "tags": [
           "event-loop",
           "asynchronous",
-          "javascript",
-          "simulation",
-          "queues"
-        ],
-        "timeEstimate": 60,
-        "prerequisites": [
-          "javascript_basics",
-          "queues",
-          "asynchronous_programming"
-        ],
-        "complexity": 8,
-        "interviewRelevance": 9,
-        "learningPath": "advanced",
-        "relatedConcepts": [
-          "call_stack",
-          "microtasks",
-          "macrotasks",
           "promises",
-          "setTimeout"
+          "callbacks",
+          "microtasks"
+        ],
+        "relatedQuestions": [
+          "question_event_loop_1",
+          "question_event_loop_2"
+        ],
+        "id": "theory_event_loop"
+      },
+      {
+        "examples": [
+          {
+            "code": "const Singleton = (function() {\n  let instance;\n  \n  function createInstance() {\n    return {\n      data: [],\n      addItem: function(item) {\n        this.data.push(item);\n      }\n    };\n  }\n  \n  return {\n    getInstance: function() {\n      if (!instance) {\n        instance = createInstance();\n      }\n      return instance;\n    }\n  };\n})();\n\nconst instance1 = Singleton.getInstance();\nconst instance2 = Singleton.getInstance();\nconsole.log(instance1 === instance2); // true",
+            "explanation": "The Singleton pattern ensures only one instance exists and provides global access to it using an IIFE and closure.",
+            "title": "Singleton Pattern Implementation",
+            "id": "example_design_patterns_1",
+            "language": "javascript"
+          },
+          {
+            "language": "javascript",
+            "title": "Factory Pattern Implementation",
+            "id": "example_design_patterns_2",
+            "code": "function createUser(type) {\n  if (type === 'admin') {\n    return {\n      name: 'Admin',\n      permissions: ['read', 'write', 'delete'],\n      role: 'administrator'\n    };\n  } else if (type === 'user') {\n    return {\n      name: 'User',\n      permissions: ['read'],\n      role: 'standard'\n    };\n  }\n}\n\nconst admin = createUser('admin');\nconst user = createUser('user');\nconsole.log(admin.permissions); // ['read', 'write', 'delete']",
+            "explanation": "The Factory pattern creates objects without exposing the creation logic, allowing for flexible object creation based on parameters."
+          }
+        ],
+        "tags": [
+          "design-patterns",
+          "oop",
+          "singleton",
+          "factory",
+          "adapter"
+        ],
+        "prerequisites": [
+          "objects",
+          "functions",
+          "closures",
+          "prototypes"
+        ],
+        "id": "theory_design_patterns",
+        "title": "JavaScript Design Patterns",
+        "content": "# JavaScript Design Patterns\n\nDesign patterns are reusable solutions to commonly occurring problems in software design. They represent best practices and proven solutions that can be applied to solve design problems in object-oriented programming.\n\n## Creational Patterns\n\nPatterns that deal with object creation mechanisms, trying to create objects in a manner suitable to the situation.\n\n### Constructor Pattern\nA pattern for creating objects with shared properties and methods.\n\n### Factory Pattern\nCreates objects without exposing the instantiation logic to the client.\n\n### Singleton Pattern\nEnsures a class has only one instance and provides global access to it.\n\n## Structural Patterns\n\nPatterns that deal with object composition and relationships between objects.\n\n### Adapter Pattern\nAllows incompatible interfaces to work together by wrapping an existing class with a new interface.",
+        "relatedQuestions": [
+          "question_design_patterns_1",
+          "question_design_patterns_2"
+        ],
+        "complexity": 7,
+        "interviewRelevance": 8,
+        "technology": "JavaScript",
+        "requiredFor": [
+          "architecture",
+          "frameworks",
+          "large-scale-applications"
+        ],
+        "learningPath": "intermediate",
+        "relatedTasks": [
+          "task_design_patterns"
         ]
       }
     ],
+    "endLine": 250,
     "logicalBlockInfo": {
-      "suggestedEndLine": 200
+      "suggestedEndLine": 169
+    }
+  },
+  {
+    "processedDate": "2025-06-06T23:47:09.588Z",
+    "tasks": [
+      {
+        "id": "task_implement_adapter",
+        "title": "Implement a Payment Gateway Adapter",
+        "description": "\nCreate an adapter pattern implementation for integrating different payment gateways:\n\n1. Create a legacy PayPal class with processPayment(amount, currency) method\n2. Create a new Stripe class with charge(amount, currencyCode) method\n3. Implement a PaymentAdapter that makes Stripe compatible with PayPal interface\n4. Ensure the adapter handles currency code conversion (USD -> 'usd')\n5. Test both payment methods through the same interface\n\nYour solution should demonstrate proper adapter pattern implementation.\n",
+        "difficulty": "medium",
+        "startingCode": "// Legacy PayPal implementation\nclass PayPal {\n  processPayment(amount, currency) {\n    // TODO: Implement PayPal payment processing\n  }\n}\n\n// New Stripe implementation\nclass Stripe {\n  charge(amount, currencyCode) {\n    // TODO: Implement Stripe charging\n  }\n}\n\n// Adapter class\nclass PaymentAdapter {\n  constructor(paymentGateway) {\n    // TODO: Initialize adapter\n  }\n  \n  processPayment(amount, currency) {\n    // TODO: Implement adapter logic\n  }\n}\n\n// Test your implementation\nconst paypal = new PayPal();\nconst stripeAdapter = new PaymentAdapter(new Stripe());\n",
+        "solutionCode": "class PayPal {\n  processPayment(amount, currency) {\n    console.log(`PayPal: Processing $${amount} ${currency}`);\n    return { success: true, gateway: 'PayPal', amount, currency };\n  }\n}\n\nclass Stripe {\n  charge(amount, currencyCode) {\n    console.log(`Stripe: Charging $${amount} ${currencyCode}`);\n    return { success: true, gateway: 'Stripe', amount, currencyCode };\n  }\n}\n\nclass PaymentAdapter {\n  constructor(paymentGateway) {\n    this.gateway = paymentGateway;\n  }\n  \n  processPayment(amount, currency) {\n    // Convert currency format for Stripe\n    const currencyCode = currency.toLowerCase();\n    return this.gateway.charge(amount, currencyCode);\n  }\n}\n\n// Usage\nconst paypal = new PayPal();\nconst stripeAdapter = new PaymentAdapter(new Stripe());\n\npaypal.processPayment(100, 'USD');\nstripeAdapter.processPayment(100, 'USD');",
+        "testCases": [
+          "PayPal should process payment with correct amount and currency",
+          "Stripe adapter should convert currency format correctly (USD -> usd)",
+          "Both payment methods should return success response",
+          "Adapter should maintain the same interface as PayPal",
+          "Should handle different currency codes properly"
+        ],
+        "hints": [
+          "The adapter should wrap the Stripe instance and convert the interface",
+          "Remember to convert currency format from uppercase to lowercase",
+          "Both methods should return similar response structures"
+        ],
+        "tags": [
+          "design-patterns",
+          "adapter",
+          "payment-processing",
+          "interface-compatibility"
+        ],
+        "timeEstimate": 30,
+        "prerequisites": [
+          "object-oriented-programming",
+          "design-patterns"
+        ],
+        "complexity": 6,
+        "interviewRelevance": 8,
+        "learningPath": "intermediate",
+        "relatedConcepts": [
+          "structural-patterns",
+          "interface-design",
+          "third-party-integration"
+        ]
+      },
+      {
+        "id": "task_implement_observer",
+        "title": "Build a News Subscription System",
+        "description": "\nImplement an Observer pattern for a news subscription system:\n\n1. Create a NewsAgency class (Subject) that can add/remove subscribers and publish news\n2. Create a Subscriber class (Observer) that receives news updates\n3. Implement different types of subscribers (Email, SMS, Push) with different notification methods\n4. Add functionality to filter news by category\n5. Ensure subscribers can unsubscribe and won't receive further notifications\n\nYour implementation should demonstrate proper Observer pattern usage.\n",
+        "difficulty": "medium",
+        "startingCode": "// Subject interface\nclass NewsAgency {\n  constructor() {\n    // TODO: Initialize subscribers list\n  }\n  \n  subscribe(subscriber) {\n    // TODO: Add subscriber\n  }\n  \n  unsubscribe(subscriber) {\n    // TODO: Remove subscriber\n  }\n  \n  publishNews(news, category) {\n    // TODO: Notify all subscribers\n  }\n}\n\n// Observer interface\nclass Subscriber {\n  constructor(name, type) {\n    // TODO: Initialize subscriber\n  }\n  \n  update(news, category) {\n    // TODO: Handle news update\n  }\n}\n\n// Test implementation\nconst agency = new NewsAgency();\nconst emailSub = new Subscriber('John', 'email');\n",
+        "solutionCode": "class NewsAgency {\n  constructor() {\n    this.subscribers = [];\n  }\n  \n  subscribe(subscriber) {\n    this.subscribers.push(subscriber);\n    console.log(`${subscriber.name} subscribed via ${subscriber.type}`);\n  }\n  \n  unsubscribe(subscriber) {\n    this.subscribers = this.subscribers.filter(sub => sub !== subscriber);\n    console.log(`${subscriber.name} unsubscribed`);\n  }\n  \n  publishNews(news, category = 'general') {\n    console.log(`Publishing: ${news} [${category}]`);\n    this.subscribers.forEach(subscriber => {\n      if (subscriber.interestedIn(category)) {\n        subscriber.update(news, category);\n      }\n    });\n  }\n}\n\nclass Subscriber {\n  constructor(name, type, interests = ['general']) {\n    this.name = name;\n    this.type = type;\n    this.interests = interests;\n  }\n  \n  interestedIn(category) {\n    return this.interests.includes(category) || this.interests.includes('all');\n  }\n  \n  update(news, category) {\n    console.log(`${this.name} (${this.type}): ${news}`);\n  }\n}\n\n// Usage\nconst agency = new NewsAgency();\nconst emailSub = new Subscriber('John', 'email', ['sports', 'tech']);\nconst smsSub = new Subscriber('Jane', 'sms', ['all']);\n\nagency.subscribe(emailSub);\nagency.subscribe(smsSub);\nagency.publishNews('Team wins championship!', 'sports');",
+        "testCases": [
+          "NewsAgency should maintain list of subscribers correctly",
+          "Subscribers should receive notifications for their interested categories",
+          "Unsubscribed users should not receive further notifications",
+          "Different subscriber types should handle notifications appropriately",
+          "Category filtering should work correctly for targeted news"
+        ],
+        "hints": [
+          "Use an array to store subscribers in the NewsAgency",
+          "Implement category filtering in the subscriber's interestedIn method",
+          "Remember to remove subscribers properly when they unsubscribe"
+        ],
+        "tags": [
+          "design-patterns",
+          "observer",
+          "subscription-system",
+          "event-driven"
+        ],
+        "timeEstimate": 40,
+        "prerequisites": [
+          "object-oriented-programming",
+          "arrays",
+          "design-patterns"
+        ],
+        "complexity": 7,
+        "interviewRelevance": 9,
+        "learningPath": "intermediate",
+        "relatedConcepts": [
+          "behavioral-patterns",
+          "event-systems",
+          "pub-sub-architecture"
+        ]
+      }
+    ],
+    "startLine": 250,
+    "id": "chunk_250_1749253629588",
+    "logicalBlockInfo": {
+      "suggestedEndLine": 174
     },
+    "endLine": 424,
+    "questions": [
+      {
+        "id": "question_adapter_pattern",
+        "topic": "Adapter Design Pattern",
+        "level": "medium",
+        "type": "mcq",
+        "question": "What is the primary purpose of the Adapter design pattern?",
+        "answer": "To allow incompatible interfaces to work together by providing a bridge between them",
+        "options": [
+          "To allow incompatible interfaces to work together by providing a bridge between them",
+          "To create multiple instances of the same object with different configurations",
+          "To add new functionality to existing objects without modifying their structure",
+          "To define a family of algorithms and make them interchangeable"
+        ],
+        "analysisPoints": [
+          "Adapter pattern focuses on interface compatibility",
+          "It acts as a wrapper to convert one interface to another",
+          "Commonly used when integrating legacy code with new systems",
+          "Does not change the functionality, only the interface"
+        ],
+        "keyConcepts": [
+          "Interface compatibility",
+          "Wrapper pattern",
+          "Legacy system integration",
+          "Structural design pattern"
+        ],
+        "evaluationCriteria": [
+          "Understanding of structural patterns",
+          "Ability to distinguish from other patterns",
+          "Recognition of use cases",
+          "Knowledge of implementation approach"
+        ],
+        "example": "\n```javascript\nclass CalcAdapter {\n  constructor() {\n    this.calc = new NewCalculator();\n  }\n  \n  operate(term1, term2, operation) {\n    switch(operation) {\n      case 'add': return this.calc.add(term1, term2);\n      default: return NaN;\n    }\n  }\n}\n```",
+        "tags": [
+          "design-patterns",
+          "adapter",
+          "structural",
+          "interfaces"
+        ],
+        "prerequisites": [
+          "object-oriented-programming",
+          "interfaces"
+        ],
+        "complexity": 6,
+        "interviewFrequency": 7,
+        "learningPath": "intermediate"
+      },
+      {
+        "id": "question_observer_pattern",
+        "topic": "Observer Design Pattern",
+        "level": "medium",
+        "type": "open",
+        "question": "Explain the Observer pattern and provide a real-world scenario where it would be beneficial. Include the key components and their responsibilities.",
+        "answer": "The Observer pattern defines a one-to-many dependency between objects where when one object (Subject) changes state, all dependent objects (Observers) are automatically notified and updated. Key components: 1) Subject - maintains list of observers and notifies them of changes, 2) Observer - defines update interface for objects that should be notified, 3) ConcreteSubject - stores state and sends notifications, 4) ConcreteObserver - implements update interface. Real-world example: Newsletter subscription system where users subscribe to topics and get notified of new articles. Benefits include loose coupling, dynamic relationships, and broadcast communication.",
+        "options": [],
+        "analysisPoints": [
+          "Defines one-to-many dependency relationships",
+          "Promotes loose coupling between subjects and observers",
+          "Supports broadcast communication patterns",
+          "Allows dynamic subscription and unsubscription"
+        ],
+        "keyConcepts": [
+          "Subject-Observer relationship",
+          "Automatic notification system",
+          "Loose coupling",
+          "Event-driven architecture"
+        ],
+        "evaluationCriteria": [
+          "Understanding of pattern structure",
+          "Ability to identify real-world applications",
+          "Knowledge of benefits and trade-offs",
+          "Implementation considerations"
+        ],
+        "example": "\n```javascript\nclass Subject {\n  constructor() {\n    this.observers = [];\n  }\n  \n  subscribe(observer) {\n    this.observers.push(observer);\n  }\n  \n  notify(data) {\n    this.observers.forEach(obs => obs.update(data));\n  }\n}\n```",
+        "tags": [
+          "design-patterns",
+          "observer",
+          "behavioral",
+          "events"
+        ],
+        "prerequisites": [
+          "object-oriented-programming",
+          "event-handling"
+        ],
+        "complexity": 7,
+        "interviewFrequency": 8,
+        "learningPath": "intermediate"
+      },
+      {
+        "id": "question_type_conversion",
+        "topic": "JavaScript Type Conversion",
+        "level": "easy",
+        "type": "mcq",
+        "question": "What will be the output of parseInt('42px', 10)?",
+        "answer": "42",
+        "options": [
+          "42",
+          "NaN",
+          "'42px'",
+          "undefined"
+        ],
+        "analysisPoints": [
+          "parseInt extracts numbers from the beginning of a string",
+          "It stops parsing when it encounters a non-numeric character",
+          "The radix parameter specifies the number base",
+          "Returns a number, not a string"
+        ],
+        "keyConcepts": [
+          "String to number conversion",
+          "parseInt behavior",
+          "Radix parameter",
+          "Parsing until non-numeric character"
+        ],
+        "evaluationCriteria": [
+          "Understanding of parseInt function",
+          "Knowledge of parsing behavior",
+          "Recognition of radix usage",
+          "Type conversion concepts"
+        ],
+        "example": "\n```javascript\nparseInt('42px'); // 42\nparseInt('42px', 10); // 42\nparseInt('abc42'); // NaN\nparseInt('0xFF', 16); // 255\n```",
+        "tags": [
+          "javascript",
+          "type-conversion",
+          "parseInt",
+          "parsing"
+        ],
+        "prerequisites": [
+          "javascript-basics",
+          "data-types"
+        ],
+        "complexity": 3,
+        "interviewFrequency": 6,
+        "learningPath": "beginner"
+      }
+    ],
+    "completed": false,
     "theory": [
       {
-        "id": "theory_js_engine_event_loop",
-        "title": "JavaScript Engine and Event Loop",
-        "content": "# JavaScript Engine and Event Loop\n\n## Execution Context\n\nThe environment where JavaScript code is evaluated and executed. Each context has its own variable environment, scope chain, and `this` value.\n\n## Event Loop and Asynchronous JavaScript\n\nThe Event Loop is a crucial concept in JavaScript that enables non-blocking, asynchronous behavior despite JavaScript being single-threaded. It continuously checks if there are any tasks in the task queue that need to be executed.\n\n### Key Components of JavaScript Runtime:\n\n1. **Call Stack**: Where function calls are stacked and executed (LIFO - Last In, First Out)\n2. **Web APIs**: Browser APIs (DOM, AJAX, setTimeout, etc.) that run operations asynchronously\n3. **Callback Queue**: Where callbacks from async operations wait to be executed\n4. **Microtask Queue**: Higher priority queue for Promises and mutation observers\n5. **Event Loop**: Constantly checks if the call stack is empty and moves callbacks to it\n\n### Event Loop Algorithm:\n\n1. Execute code in the call stack until it's empty\n2. Check the microtask queue and execute all tasks there\n3. Render UI updates if needed\n4. Check the callback queue and push the oldest task to the call stack\n5. Repeat\n\n## JavaScript Design Patterns\n\n### Creational Patterns\n\nPatterns that deal with object creation mechanisms, trying to create objects in a manner suitable to the situation.",
+        "id": "theory_design_patterns_structural",
+        "title": "Structural Design Patterns",
+        "content": "# Structural Design Patterns\n\nStructural design patterns deal with object composition and typically identify simple ways to realize relationships between entities.\n\n## Adapter Pattern\n\nThe Adapter pattern allows incompatible interfaces to work together. It acts as a bridge between two incompatible interfaces.\n\n```javascript\nclass OldCalculator {\n  operate(term1, term2, operation) {\n    switch(operation) {\n      case 'add': return term1 + term2;\n      case 'sub': return term1 - term2;\n      default: return NaN;\n    }\n  }\n}\n\nclass NewCalculator {\n  add(term1, term2) {\n    return term1 + term2;\n  }\n  \n  sub(term1, term2) {\n    return term1 - term2;\n  }\n}\n\nclass CalcAdapter {\n  constructor() {\n    this.calc = new NewCalculator();\n  }\n  \n  operate(term1, term2, operation) {\n    switch(operation) {\n      case 'add': return this.calc.add(term1, term2);\n      case 'sub': return this.calc.sub(term1, term2);\n      default: return NaN;\n    }\n  }\n}\n```\n\n## Decorator Pattern\n\nThe Decorator pattern allows behavior to be added to objects dynamically without altering their structure.\n\n```javascript\nfunction Coffee() {\n  this.cost = function() {\n    return 5;\n  };\n}\n\nfunction Milk(coffee) {\n  const cost = coffee.cost();\n  coffee.cost = function() {\n    return cost + 1;\n  };\n}\n```",
         "prerequisites": [
-          "basic_javascript",
-          "functions",
-          "callbacks"
+          "object-oriented-programming",
+          "javascript-functions"
+        ],
+        "complexity": 7,
+        "interviewRelevance": 8,
+        "learningPath": "intermediate",
+        "requiredFor": [
+          "advanced-design-patterns",
+          "software-architecture"
+        ],
+        "relatedQuestions": [
+          "question_adapter_pattern",
+          "question_decorator_pattern"
+        ],
+        "relatedTasks": [
+          "task_implement_adapter"
+        ],
+        "tags": [
+          "design-patterns",
+          "structural",
+          "adapter",
+          "decorator"
+        ],
+        "technology": "JavaScript",
+        "examples": [
+          {
+            "id": "example_adapter_1",
+            "title": "Calculator Adapter",
+            "code": "const oldCalc = new OldCalculator();\nconsole.log(oldCalc.operate(10, 5, 'add')); // 15\n\nconst newCalcAdapter = new CalcAdapter();\nconsole.log(newCalcAdapter.operate(10, 5, 'add')); // 15",
+            "explanation": "This example shows how the Adapter pattern bridges the gap between old and new calculator interfaces, allowing them to be used interchangeably.",
+            "language": "javascript"
+          },
+          {
+            "id": "example_decorator_1",
+            "title": "Coffee Decorator",
+            "code": "const coffee = new Coffee();\nMilk(coffee);\nWhip(coffee);\nVanilla(coffee);\nconsole.log(coffee.cost()); // 11",
+            "explanation": "The Decorator pattern allows us to add features (milk, whip, vanilla) to the base coffee object dynamically, modifying its behavior at runtime.",
+            "language": "javascript"
+          }
+        ]
+      },
+      {
+        "id": "theory_design_patterns_behavioral",
+        "title": "Behavioral Design Patterns",
+        "content": "# Behavioral Design Patterns\n\nBehavioral design patterns are concerned with communication between objects and the assignment of responsibilities between objects.\n\n## Observer Pattern\n\nThe Observer pattern defines a one-to-many dependency between objects so that when one object changes state, all dependents are notified automatically.\n\n```javascript\nclass Subject {\n  constructor() {\n    this.observers = [];\n  }\n  \n  subscribe(observer) {\n    this.observers.push(observer);\n  }\n  \n  unsubscribe(observer) {\n    this.observers = this.observers.filter(obs => obs !== observer);\n  }\n  \n  notify(data) {\n    this.observers.forEach(observer => observer.update(data));\n  }\n}\n```\n\n## Strategy Pattern\n\nThe Strategy pattern defines a family of algorithms, encapsulates each one, and makes them interchangeable at runtime.\n\n```javascript\nclass ShippingStrategy {\n  calculate(order) {}\n}\n\nclass FedEx extends ShippingStrategy {\n  calculate(order) {\n    return order.weight * 3;\n  }\n}\n```",
+        "prerequisites": [
+          "object-oriented-programming",
+          "javascript-classes"
         ],
         "complexity": 8,
         "interviewRelevance": 9,
         "learningPath": "intermediate",
         "requiredFor": [
-          "async_programming",
-          "node_js",
-          "react_lifecycle"
+          "event-driven-programming",
+          "reactive-programming"
         ],
         "relatedQuestions": [
-          "question_event_loop_1",
-          "question_design_patterns_1"
+          "question_observer_pattern",
+          "question_strategy_pattern"
         ],
         "relatedTasks": [
-          "task_event_loop_implementation"
+          "task_implement_observer"
         ],
         "tags": [
-          "javascript",
-          "event-loop",
-          "asynchronous",
           "design-patterns",
-          "execution-context"
+          "behavioral",
+          "observer",
+          "strategy"
         ],
         "technology": "JavaScript",
         "examples": [
           {
-            "id": "example_event_loop_1",
-            "title": "Event Loop Execution Order",
-            "code": "console.log('Start'); // 1. Runs immediately\n\nsetTimeout(() => {\n  console.log('Timeout callback'); // 4. Runs after stack is empty and delay is complete\n}, 0);\n\nPromise.resolve().then(() => {\n  console.log('Promise callback'); // 3. Runs after stack is empty but before timeout\n});\n\nconsole.log('End'); // 2. Runs immediately\n\n// Output order:\n// 'Start'\n// 'End'\n// 'Promise callback' (microtask)\n// 'Timeout callback' (task queue)",
-            "explanation": "This example demonstrates the priority order of the Event Loop: synchronous code executes first, then microtasks (Promises), then macrotasks (setTimeout). The microtask queue has higher priority than the callback queue.",
+            "id": "example_observer_1",
+            "title": "Observer Implementation",
+            "code": "const subject = new Subject();\nconst observer1 = new Observer('Observer 1');\nsubject.subscribe(observer1);\nsubject.notify('Hello Observers!');\n// Observer 1 received: Hello Observers!",
+            "explanation": "This demonstrates the Observer pattern where subjects maintain a list of observers and notify them of state changes automatically.",
             "language": "javascript"
           },
           {
-            "id": "example_constructor_pattern_1",
-            "title": "Constructor Pattern Implementation",
-            "code": "// Constructor Pattern\nfunction Person(name, age) {\n  this.name = name;\n  this.age = age;\n  \n  this.sayHello = function() {\n    console.log(`Hello, my name is ${this.name}`);\n  };\n}\n\nconst john = new Person('John', 30);\njohn.sayHello(); // Hello, my name is John",
-            "explanation": "The Constructor Pattern creates objects using a constructor function. Each instance gets its own copy of properties and methods. This pattern is fundamental for object-oriented programming in JavaScript.",
+            "id": "example_strategy_1",
+            "title": "Shipping Strategy",
+            "code": "const shipping = new Shipping();\nconst order = { weight: 10 };\nshipping.setStrategy(new FedEx());\nconsole.log(`FedEx: $${shipping.calculate(order)}`); // FedEx: $30",
+            "explanation": "The Strategy pattern allows switching between different shipping calculation algorithms at runtime without changing the client code.",
+            "language": "javascript"
+          }
+        ]
+      },
+      {
+        "id": "theory_javascript_data_types",
+        "title": "JavaScript Data Types and Type Conversion",
+        "content": "# JavaScript Data Types and Type Conversion\n\n## Core Data Types\n\nJavaScript has two categories of data types:\n\n### Primitive Types\n- String\n- Number\n- BigInt\n- Boolean\n- Undefined\n- Symbol\n- Null\n\n### Complex Type\n- Object (includes arrays, functions, etc.)\n\n```javascript\nlet firstObj = { name: 'Hello' };  \nlet secondObj = firstObj;  \nfirstObj = { name: 'Bye' };  \nconsole.log(secondObj.name); // Output: Hello\n```\n\n## Type Conversion\n\n### parseInt() and parseFloat()\n\n```javascript\n// parseInt(string, radix) - converts string to integer\nparseInt('42'); // 42\nparseInt('42px'); // 42 - extracts numbers until non-numeric\nparseInt('-50px'); // -50 - handles negative numbers\nparseInt('0xFF', 16); // 255 - hexadecimal with radix 16\n\n// parseFloat() - converts string to floating point\nparseFloat('3.14'); // 3.14\nparseFloat('3.14 meters'); // 3.14\n```",
+        "prerequisites": [
+          "javascript-basics"
+        ],
+        "complexity": 4,
+        "interviewRelevance": 7,
+        "learningPath": "beginner",
+        "requiredFor": [
+          "javascript-advanced",
+          "type-checking"
+        ],
+        "relatedQuestions": [
+          "question_data_types",
+          "question_type_conversion"
+        ],
+        "relatedTasks": [
+          "task_type_conversion"
+        ],
+        "tags": [
+          "javascript",
+          "data-types",
+          "type-conversion",
+          "primitives"
+        ],
+        "technology": "JavaScript",
+        "examples": [
+          {
+            "id": "example_object_reference",
+            "title": "Object Reference Behavior",
+            "code": "let firstObj = { name: 'Hello' };\nlet secondObj = firstObj;\nfirstObj = { name: 'Bye' };\nconsole.log(secondObj.name); // 'Hello'",
+            "explanation": "This demonstrates that when you assign a new object to firstObj, secondObj still references the original object, showing how object references work in JavaScript.",
+            "language": "javascript"
+          },
+          {
+            "id": "example_type_conversion",
+            "title": "Type Conversion Methods",
+            "code": "parseInt('42px'); // 42\nparseFloat('3.14 meters'); // 3.14\nparseInt('0xFF', 16); // 255\nNumber('123'); // 123\nString(456); // '456'",
+            "explanation": "These examples show different ways to convert between data types in JavaScript, including parsing strings to numbers and explicit type conversion.",
             "language": "javascript"
           }
         ]
       }
-    ],
-    "endLine": 200,
-    "id": "chunk_0_1749228980998"
+    ]
   }
 ]
