@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, CircularProgress, Typography, Alert, Paper, LinearProgress, Tabs, Tab, Select, MenuItem, FormControl, InputLabel, SelectChangeEvent } from '@mui/material';
+import { Box, Button, CircularProgress, Typography, Alert, Paper, LinearProgress, Tabs, Tab, Select, MenuItem, FormControl, InputLabel, SelectChangeEvent, Switch, FormControlLabel, TextField, IconButton } from '@mui/material';
 import { useContentProcessorStore } from '../store/useContentProcessorStore';
 import TheoryList from './TheoryList';
 import QuestionList from './QuestionList';
 import TaskList from './TaskList';
 import { ContentProcessorStorage } from '../utils/storageService';
+import LocalLlmSelector from './LocalLlmSelector';
+import localLlmService from '../api/localLlmService';
 
 /**
  * Main content processor panel component
@@ -28,7 +30,12 @@ const ContentProcessorPanel: React.FC = () => {
 
   // Tab state
   const [tabValue, setTabValue] = useState(0);
-
+  
+  // Local LLM state - default to using local LLM with DeepSeek Coder V2 Extended
+  const [useLocalLlm, setUseLocalLlm] = useState(true);
+  const [selectedModel, setSelectedModel] = useState('deepseek-coder-v2-extended:latest');
+  const [localLlmInitialized, setLocalLlmInitialized] = useState(false);
+  
   // Initialize on mount
   useEffect(() => {
     initialize()
@@ -36,7 +43,24 @@ const ContentProcessorPanel: React.FC = () => {
       .catch(err => {
         console.error('Failed to initialize content processor:', err);
       });
-  }, [initialize, loadAllChunks]);
+    
+    // Initialize local LLM service
+    if (useLocalLlm) {
+      localLlmService.initialize({ apiKey: '' })
+        .then(initialized => {
+          setLocalLlmInitialized(initialized);
+          if (initialized) {
+            localLlmService.setDefaultModel(selectedModel);
+            console.log('Local LLM service initialized with model:', selectedModel);
+          }
+        })
+        .catch(err => {
+          console.error('Failed to initialize local LLM service:', err);
+        });
+    }
+  }, [initialize, loadAllChunks, useLocalLlm, selectedModel]);
+  
+  // useEffect for calculating total chunks removed
 
   // Handle tab change
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -49,10 +73,22 @@ const ContentProcessorPanel: React.FC = () => {
     setCurrentChunk(chunkId);
   };
 
-  // Handle process next chunk
+  // Handle processing the next chunk
   const handleProcessNextChunk = async () => {
     try {
-      await processNextChunk();
+      // If using local LLM and it's initialized, process with local LLM
+      if (useLocalLlm && localLlmInitialized) {
+        console.log(`Processing next chunk with local LLM model: ${selectedModel}`);
+        await processNextChunk({
+          useLocalLlm: true,
+          localLlmModel: selectedModel
+        });
+      } else {
+        // Otherwise use Claude
+        console.log('Processing next chunk with Claude API');
+        await processNextChunk();
+      }
+      
       // Reset to theory tab when new content is loaded
       setTabValue(0);
     } catch (err) {
@@ -64,7 +100,18 @@ const ContentProcessorPanel: React.FC = () => {
   const handleMarkCompleted = async () => {
     try {
       await markCurrentChunkCompleted();
-      await processNextChunk();
+      
+      // If using local LLM and it's initialized, process with local LLM
+      if (useLocalLlm && localLlmInitialized) {
+        await processNextChunk({
+          useLocalLlm: true,
+          localLlmModel: selectedModel
+        });
+      } else {
+        // Otherwise use Claude
+        await processNextChunk();
+      }
+      
       // Reset to theory tab when new content is loaded
       setTabValue(0);
     } catch (err) {
@@ -122,13 +169,57 @@ const ContentProcessorPanel: React.FC = () => {
 
   return (
     <Paper elevation={3} sx={{ width: '100%', p: 3, mb: 3 }}>
+      <details>
       <Typography variant="h4" gutterBottom>
         Content Processor
       </Typography>
       
-      <Typography variant="body1" paragraph>
-        This panel processes your large markdown file in chunks, using AI to extract theory, questions, and tasks.
-      </Typography>
+        <summary style={{ cursor: 'pointer', color: '#666', marginBottom: '8px' }}>
+        </summary>
+        
+        <Typography variant="body1" paragraph>
+          This panel processes your MyNotes.md file in chunks, using AI to extract theory, questions, and tasks.
+          You're currently using the <strong>{useLocalLlm ? `local LLM model (${selectedModel})` : 'Claude API'}</strong>.
+        </Typography>
+        
+        <Typography variant="body1" paragraph sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+          To process MyNotes.md, click the "Start Processing" button below. If no content appears, click "Reset Processor" and try again.
+        </Typography>
+        
+        {/* LLM Selection */}
+        <Box sx={{ mb: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={useLocalLlm}
+                onChange={(e) => setUseLocalLlm(e.target.checked)}
+                color="primary"
+              />
+            }
+            label="Use Local LLM (Ollama)"
+          />
+          
+          {useLocalLlm && (
+            <LocalLlmSelector 
+              onModelSelect={(model) => {
+                setSelectedModel(model);
+                setLocalLlmInitialized(true);
+              }}
+              onProcessContent={async (content, model) => {
+                console.log(`Processing test content with ${model}`);
+                try {
+                  const result = await localLlmService.processContent(content, { model });
+                  console.log('Processing result:', result.substring(0, 100) + '...');
+                  return;
+                } catch (err) {
+                  console.error('Error processing test content:', err);
+                  throw err;
+                }
+              }}
+            />
+          )}
+        </Box>
+      </details>
       
       {/* Progress indicator */}
       <Box sx={{ width: '100%', mb: 3 }}>
@@ -248,14 +339,18 @@ const ContentProcessorPanel: React.FC = () => {
                 color="primary"
                 onClick={handleProcessNextChunk}
                 disabled={isLoading || progressPercentage >= 100}
-                sx={{ mt: 2 }}
+                sx={{ mt: 2, fontSize: '1.1rem', py: 1, px: 3 }}
+                size="large"
+                startIcon={useLocalLlm && localLlmInitialized ? <span role="img" aria-label="local">🖥️</span> : <span role="img" aria-label="cloud">☁️</span>}
               >
-                Start Processing
+                Start Processing MyNotes.md with {useLocalLlm && localLlmInitialized ? `Local LLM (${selectedModel})` : 'Claude AI'}
               </Button>
             </>
           )}
         </Box>
       )}
+      
+      {/* Additional processing options removed */}
       
       {/* Admin controls */}
       <Box sx={{ mt: 3, pt: 2, borderTop: '1px dashed #ccc' }}>

@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "start:ollama": "ollama serve",
+    "start:all": "concurrently \"npm run start:ollama\" \"npm run dev\""
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.52.0",
@@ -23,6 +25,7 @@
     "@mui/icons-material": "^5.11.16",
     "@mui/material": "^5.11.16",
     "@octokit/rest": "^22.0.0",
+    "axios": "^1.9.0",
     "dayjs": "^1.11.13",
     "dotenv": "^16.5.0",
     "firebase": "^11.8.1",
@@ -43,6 +46,7 @@
     "@types/react": "18.2.45",
     "@types/react-dom": "18.2.18",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "concurrently": "^9.1.2",
     "eslint": "8.56.0",
     "eslint-config-next": "14.1.0",
     "typescript": "5.3.3"

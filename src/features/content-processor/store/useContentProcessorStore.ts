@@ -2,6 +2,11 @@ import { create } from 'zustand';
 import { ProcessingState, ProcessedChunk } from '../types';
 import { ContentProcessor } from '../utils/contentProcessor';
 
+interface ProcessOptions {
+  useLocalLlm?: boolean;
+  localLlmModel?: string;
+}
+
 interface ContentProcessorStore {
   // State
   processingState: ProcessingState | null;
@@ -12,7 +17,7 @@ interface ContentProcessorStore {
   
   // Actions
   initialize: () => Promise<void>;
-  processNextChunk: () => Promise<void>;
+  processNextChunk: (options?: ProcessOptions) => Promise<void>;
   markCurrentChunkCompleted: () => Promise<void>;
   resetProcessing: () => Promise<void>;
   loadAllChunks: () => Promise<void>;
@@ -57,12 +62,15 @@ export const useContentProcessorStore = create<ContentProcessorStore>((set, get)
   },
   
   // Process the next chunk
-  processNextChunk: async () => {
+  processNextChunk: async (options?: ProcessOptions) => {
     try {
       set({ isLoading: true, error: null });
       
       // Process the next chunk
-      const { chunk, state } = await ContentProcessor.processNextChunk();
+      const { chunk, state } = await ContentProcessor.processNextChunk({
+        useLocalLlm: options?.useLocalLlm || false,
+        localLlmModel: options?.localLlmModel || ''
+      });
       
       // Update the store
       set(prevState => ({
@@ -79,6 +87,8 @@ export const useContentProcessorStore = create<ContentProcessorStore>((set, get)
       });
     }
   },
+  
+  // Removed processLineRange, processLineRangeInChunks, and processChunkByIndex methods
   
   // Mark the current chunk as completed
   markCurrentChunkCompleted: async () => {

@@ -2,7 +2,7 @@ import { ContentAnalyzer } from '../api/contentAnalyzer';
 import { FileProcessor } from './fileProcessor';
 import { ContentProcessorStorage } from './storageService';
 import { ProcessingState, ProcessedChunk } from '../types';
-export const CHUNK_SIZE = 200; 
+export const CHUNK_SIZE = 100; 
 
 /**
  * Main content processor service
@@ -40,9 +40,13 @@ export class ContentProcessor {
   
   /**
    * Processes the next logical block of the file
+   * @param options Optional processing options for using local LLM
    * @returns The processed chunk and updated state
    */
-  static async processNextChunk(): Promise<{
+  static async processNextChunk(options?: {
+    useLocalLlm?: boolean;
+    localLlmModel?: string;
+  }): Promise<{
     chunk: ProcessedChunk;
     state: ProcessingState;
   }> {
@@ -73,7 +77,10 @@ export class ContentProcessor {
       const initialLinesRead = content.split('\n').length;
       
       // Process the chunk with AI and get logical block information
-      const analysisResult = await ContentAnalyzer.analyzeContent(content);
+      const analysisResult = await ContentAnalyzer.analyzeContent(content, {
+        useLocalLlm: options?.useLocalLlm,
+        localLlmModel: options?.localLlmModel
+      });
       
       // Determine the actual number of lines to process based on AI's suggestion
       let linesRead = initialLinesRead;

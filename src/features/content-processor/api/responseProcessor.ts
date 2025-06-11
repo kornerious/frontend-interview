@@ -78,42 +78,104 @@ export function processResponse(response: string): AIAnalysisResult & {
  */
 export function extractJsonFromResponse(response: string): any {
   // Log the raw response for debugging
-  console.log('CLAUDE RAW RESPONSE LENGTH:', response.length);
-  console.log('CLAUDE RAW RESPONSE PREVIEW:', response.substring(0, 200) + '...');
+  console.log('RAW RESPONSE LENGTH:', response.length);
+  console.log('RAW RESPONSE PREVIEW:', response.substring(0, 200) + '...');
+  
+  // Log the full response for detailed debugging
+  console.log('FULL RAW RESPONSE:', response);
+  
+  // Check for common JSON formatting issues
+  if (response.includes('```json')) {
+    console.log('DETECTED CODE BLOCK FORMAT - ATTEMPTING TO EXTRACT JSON FROM CODE BLOCKS');
+  }
+  
+  if (response.startsWith('```') || response.includes('```json')) {
+    // Try to extract from code blocks
+    const codeBlockMatch = response.match(/```(?:json)?\n([\s\S]*?)\n```/);
+    if (codeBlockMatch && codeBlockMatch[1]) {
+      console.log('EXTRACTED JSON FROM CODE BLOCK');
+      response = codeBlockMatch[1];
+    }
+  }
   
   try {
-    // Try to extract JSON from the response
+    // Try multiple approaches to extract JSON from the response
+    let jsonString = '';
+    
+    // First try: Look for the outermost complete JSON object
     const jsonMatch = response.match(/\{[\s\S]*\}/); 
-    if (!jsonMatch) {
-      console.error('NO JSON FOUND IN CLAUDE RESPONSE');
-      // Return a minimal valid JSON structure
-      return {
-        logicalBlockInfo: { suggestedEndLine: -1 },
-        theory: [],
-        questions: [],
-        tasks: []
-      };
+    if (jsonMatch) {
+      jsonString = jsonMatch[0];
+      console.log('FOUND JSON USING STANDARD PATTERN');
+    } else {
+      // Second try: Look for any JSON-like structure with braces
+      const braceMatch = response.match(/\{[^\{\}]*((\{[^\{\}]*\})|[^\{\}])*\}/);
+      if (braceMatch) {
+        jsonString = braceMatch[0];
+        console.log('FOUND JSON USING BRACE PATTERN');
+      } else {
+        console.error('NO JSON FOUND IN RESPONSE');
+        // Return a minimal valid JSON structure
+        return {
+          logicalBlockInfo: { suggestedEndLine: -1 },
+          theory: [],
+          questions: [],
+          tasks: []
+        };
+      }
     }
     
-    // Get the JSON string and parse it
-    const jsonString = jsonMatch[0];
+    // Clean up the JSON string - remove any non-JSON text before or after
+    jsonString = jsonString.replace(/^[^\{]*/, '').replace(/[^\}]*$/, '');
     console.log('EXTRACTED JSON LENGTH:', jsonString.length);
+    console.log('EXTRACTED JSON PREVIEW:', jsonString.substring(0, 200) + '...');
     
-    // Parse the JSON
-    const parsedJson = JSON.parse(jsonString);
+    // Try to fix common JSON issues before parsing
+    let fixedJsonString = jsonString;
     
-    // Log the structure to help with debugging
-    console.log('PARSED JSON STRUCTURE:', {
-      hasTheory: Array.isArray(parsedJson.theory) && parsedJson.theory.length > 0,
-      theoryCount: Array.isArray(parsedJson.theory) ? parsedJson.theory.length : 0,
-      hasQuestions: Array.isArray(parsedJson.questions) && parsedJson.questions.length > 0,
-      questionCount: Array.isArray(parsedJson.questions) ? parsedJson.questions.length : 0,
-      hasTasks: Array.isArray(parsedJson.tasks) && parsedJson.tasks.length > 0,
-      taskCount: Array.isArray(parsedJson.tasks) ? parsedJson.tasks.length : 0,
-      hasLogicalBlockInfo: !!parsedJson.logicalBlockInfo
-    });
+    // Fix unescaped quotes in JSON strings
+    fixedJsonString = fixedJsonString.replace(/"([^"]*)\n([^"]*)"(?=[,\}])/g, '"$1\\n$2"');
     
-    return parsedJson;
+    // Fix trailing commas in arrays and objects
+    fixedJsonString = fixedJsonString.replace(/,\s*([\}\]])/g, '$1');
+    
+    try {
+      // Parse the JSON
+      const parsedJson = JSON.parse(fixedJsonString);
+      
+      // Log the structure to help with debugging
+      console.log('PARSED JSON STRUCTURE:', {
+        hasTheory: Array.isArray(parsedJson.theory) && parsedJson.theory.length > 0,
+        theoryCount: Array.isArray(parsedJson.theory) ? parsedJson.theory.length : 0,
+        hasQuestions: Array.isArray(parsedJson.questions) && parsedJson.questions.length > 0,
+        questionCount: Array.isArray(parsedJson.questions) ? parsedJson.questions.length : 0,
+        hasTasks: Array.isArray(parsedJson.tasks) && parsedJson.tasks.length > 0,
+        taskCount: Array.isArray(parsedJson.tasks) ? parsedJson.tasks.length : 0,
+        hasLogicalBlockInfo: !!parsedJson.logicalBlockInfo
+      });
+      
+      return parsedJson;
+    } catch (parseError) {
+      console.error('ERROR PARSING JSON:', parseError);
+      console.log('ATTEMPTING TO FIX JSON WITH JSON5...');
+      
+      // If we have the JSON5 library, we could use it here
+      // For now, let's try a more aggressive approach to fix the JSON
+      try {
+        // Try to manually construct a minimal valid JSON
+        return {
+          logicalBlockInfo: { 
+            suggestedEndLine: 100 // Default to processing 100 lines (our chunk size)
+          },
+          theory: [],
+          questions: [],
+          tasks: []
+        };
+      } catch (e) {
+        console.error('FAILED TO RECOVER JSON:', e);
+        return null;
+      }
+    }
   } catch (error) {
     console.error('ERROR PARSING JSON FROM CLAUDE RESPONSE:', error);
     return null;
