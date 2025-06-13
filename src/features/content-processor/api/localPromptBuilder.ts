@@ -14,20 +14,26 @@ export function buildLocalLlmAnalysisPrompt(markdownChunk: string): string {
   const prompt = `You are an expert content analyzer for frontend interview preparation. Your task is to thoroughly analyze the provided markdown content and transform it into comprehensive theory, questions, and tasks.
 
 CRITICAL INSTRUCTIONS - FOLLOW EXACTLY:
-Keep total response under 131000 tokens to avoid truncation!!!
+Keep total response (input and output) under 127000 tokens to avoid truncation!!!
 
 1. CONTENT EXTRACTION EXCELLENCE: Extract 100% of the valuable content from the provided markdown. Leave nothing important behind. Identify ALL topics, concepts, code examples, and explanations.
 
-2. SEMANTIC BOUNDARY DETECTION: Identify logical content boundaries within the chunk. If the content starts or ends mid-topic, make a note in your logicalBlockInfo response with a suggestedEndLine value to indicate where a better boundary would be.
+2. SEMANTIC BOUNDARY DETECTION: Identify logical content boundaries within the chunk. If the content starts or ends mid-topic, make a note in your logicalBlockInfo response with a suggestedEndLine value to indicate where a better boundary would be. IMPORTANT: Logical blocks should NOT exceed 100 lines - break larger topics into smaller logical units.
 
 3. PARTIAL CONTENT HANDLING (CRITICAL): 
    - If content starts mid-topic: Create a complete theory block with a title indicating continuation (e.g., "JavaScript Design Patterns (Continued)"). Include sufficient context to make it standalone.
    - If content ends mid-topic: Process the available content completely and indicate in logicalBlockInfo where the logical boundary should be.
    - Never leave a chunk empty - extract whatever partial content is available rather than skipping it.
+   - STRICT SIZE LIMIT: Never process more than 100 lines in a single logical block. If a topic exceeds this limit, break it into smaller, coherent sections.
 
 4. COMPREHENSIVE CONTENT EXTRACTION: Extract ALL relevant content from the provided chunk. Create multiple theory blocks for distinct topics, with corresponding questions and tasks for each theory block. with unique ID and complete content. Include ALL subtopics and ensure theory blocks contain rich, detailed explanations.
 
-5. IMAGE PRESERVATION (CRITICAL): Capture and preserve ALL image references from the markdown using exact markdown syntax: ![alt text](image_url). Images are essential visual aids - ensure EVERY image is included in the appropriate theory section with its exact path preserved.
+5. IMAGE PRESERVATION (HIGHEST PRIORITY): 
+   - MANDATORY: Scan the entire content for ALL image references using pattern ![alt text](image_url)
+   - Include EVERY image found in the appropriate theory section with EXACT original syntax preserved
+   - DO NOT modify image paths - keep them exactly as they appear in the original markdown
+   - Images are CRITICAL visual aids and must be preserved with highest priority
+   - If you find ANY images in the content, they MUST appear in your output
 
 6. QUESTION GENERATION EXCELLENCE: For EACH theory block, generate AT LEAST 5 diverse questions (total minimum 10 questions):
    - Include a mix of question types: MCQs, coding challenges, open-ended questions

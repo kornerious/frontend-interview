@@ -1,0 +1,277 @@
+[
+  {
+    "endLine": 450,
+    "processedDate": "2025-06-12T10:34:01.863Z",
+    "theory": [
+      {
+        "id": "theory_javascript_engine",
+        "title": "JavaScript Engine and Execution Context",
+        "content": "# JavaScript Engine and Execution Context\n\n## Key Concepts\n- **Execution Context**: The environment where JavaScript code is evaluated and executed. Each context has its own variable environment, scope chain, and `this` value.\n- **Memory Heap**: Where the memory allocation for variables and objects occurs.\n- **Call Stack**: Where function calls are stacked and executed (LIFO - Last In, First Out).\n\n## Implementation\n```javascript\nfunction exampleFunction() {\n  console.log('Example Function');\n}\nexampleFunction(); // Output: Example Function\n```",
+        "prerequisites": [
+          "basic-programming"
+        ],
+        "complexity": 5,
+        "interviewRelevance": 7,
+        "learningPath": "beginner",
+        "requiredFor": [
+          "advanced-concepts"
+        ],
+        "relatedQuestions": [
+          "question_js_engine_1",
+          "question_js_engine_2"
+        ],
+        "relatedTasks": [
+          "task_js_engine_1"
+        ],
+        "tags": [
+          "JavaScript",
+          "Engine",
+          "Execution Context"
+        ],
+        "technology": "JavaScript",
+        "examples": [
+          {
+            "id": "example_js_engine_1",
+            "title": "Memory Allocation in JavaScript Engine",
+            "code": "let x = 5; let y = 'Hello';",
+            "explanation": "Variables `x` and `y` are allocated memory on the heap, while their references are stored on the call stack.",
+            "language": "javascript"
+          },
+          {
+            "id": "example_js_engine_2",
+            "title": "Call Stack Execution",
+            "code": "function foo() { console.log('foo'); } function bar() { foo(); } bar(); // Output: foo",
+            "explanation": "Function calls are pushed onto the call stack, and popped off after execution.",
+            "language": "javascript"
+          }
+        ]
+      },
+      {
+        "id": "theory_event_loop",
+        "title": "Event Loop and Asynchronous JavaScript (Continued)",
+        "content": "# Event Loop and Asynchronous JavaScript\n\n## Key Concepts\n- **Event Loop**: Continuously checks if there are any tasks in the task queue that need to be executed.\n- **Task Queue**: A data structure used by the event loop to manage callback functions waiting for execution.\n- **Microtasks (Promises) and Macrotasks**: Microtasks include promises' callbacks, while macrotasks encompass other asynchronous operations like `setTimeout` or DOM events.\n\n## Implementation\n```javascript\nconsole.log('Start');\nsetTimeout(() => console.log('Timeout'), 0);\nPromise.resolve().then(() => console.log('Promise'));\nconsole.log('End');\n// Output: Start, End, Promise, Timeout\n```",
+        "prerequisites": [
+          "basic-programming"
+        ],
+        "complexity": 6,
+        "interviewRelevance": 8,
+        "learningPath": "intermediate",
+        "requiredFor": [
+          "advanced-concepts"
+        ],
+        "relatedQuestions": [
+          "question_event_loop_1",
+          "question_event_loop_2"
+        ],
+        "relatedTasks": [
+          "task_async_js_1"
+        ],
+        "tags": [
+          "JavaScript",
+          "Event Loop"
+        ],
+        "technology": "JavaScript",
+        "examples": [
+          {
+            "id": "example_event_loop_1",
+            "title": "Microtasks and Macrotasks",
+            "code": "setTimeout(() => console.log('Macrotask'), 0); Promise.resolve().then(() => console.log('Microtask'));",
+            "explanation": "The microtask queue is processed before the macrotask queue, demonstrating the priority of promises' callbacks over other asynchronous operations.",
+            "language": "javascript"
+          },
+          {
+            "id": "example_event_loop_2",
+            "title": "Async/Await and Event Loop",
+            "code": "async function asyncExample() {\n  console.log('Start Async');\n  await Promise.resolve().then(() => console.log('Inside Await'));\n  console.log('End Async');\n}\nasyncExample(); // Output: Start Async, Inside Await, End Async",
+            "explanation": "The `await` keyword allows the function to pause execution until the promise is resolved, demonstrating how async functions manage tasks in the event loop.",
+            "language": "javascript"
+          }
+        ]
+      }
+    ],
+    "completed": false,
+    "id": "chunk_0_1749724441863",
+    "tasks": [
+      {
+        "id": "task_js_engine_1",
+        "title": "Implement a JavaScript Function and Analyze Execution Context",
+        "description": "Write a function that demonstrates the concept of execution contexts in JavaScript. Use console logs to trace the flow from call stack entry to exit.",
+        "difficulty": "medium",
+        "startingCode": "function exampleFunction() {\n  console.log('Inside Function');\n}\nexampleFunction(); // Call the function here\nconsole.log('Outside Function');",
+        "solutionCode": "function exampleFunction() {\n  console.log('Inside Function');\n}\nexampleFunction(); // Call the function here\nconsole.log('Outside Function');",
+        "testCases": [
+          "Calling `exampleFunction()` should log 'Inside Function' and then 'Outside Function' to the console.",
+          "Ensure that each call stack entry is properly popped off after execution."
+        ],
+        "hints": [
+          "Use Chrome DevTools or Node.js REPL to trace the function calls step-by-step.",
+          "Pay attention to how local variables and scope are managed in different contexts."
+        ],
+        "tags": [
+          "JavaScript",
+          "Engine"
+        ],
+        "timeEstimate": 30,
+        "prerequisites": [],
+        "complexity": 6,
+        "interviewRelevance": 7,
+        "learningPath": "intermediate",
+        "relatedConcepts": []
+      },
+      {
+        "id": "task_async_js_1",
+        "title": "Implement and Analyze Async/Await with Event Loop",
+        "description": "Create an async function that uses `await` to wait for a promise resolution, then log the result. Trace how this process interacts with the event loop.",
+        "difficulty": "hard",
+        "startingCode": "async function asyncExample() {\n  console.log('Start Async');\n  await Promise.resolve().then(() => console.log('Inside Await'));\n  console.log('End Async');\n}\n// Call the async function here",
+        "solutionCode": "async function asyncExample() {\n  console.log('Start Async');\n  await Promise.resolve().then(() => console.log('Inside Await'));\n  console.log('End Async');\n}\nasyncExample(); // Call the async function here",
+        "testCases": [
+          "Calling `asyncExample()` should log 'Start Async', 'Inside Await', and then 'End Async' in that order.",
+          "Ensure that the event loop handles microtasks before proceeding with the next macrotask."
+        ],
+        "hints": [
+          "Use async/await syntax to handle promises more cleanly.",
+          "Analyze the call stack changes when `await` is encountered and how execution resumes afterward."
+        ],
+        "tags": [
+          "JavaScript",
+          "Event Loop"
+        ],
+        "timeEstimate": 45,
+        "prerequisites": [],
+        "complexity": 8,
+        "interviewRelevance": 9,
+        "learningPath": "advanced",
+        "relatedConcepts": []
+      }
+    ],
+    "logicalBlockInfo": {
+      "suggestedEndLine": 450
+    },
+    "questions": [
+      {
+        "id": "question_js_engine_1",
+        "topic": "JavaScript Engine and Execution Context",
+        "level": "easy",
+        "type": "mcq",
+        "question": "Which of the following is responsible for executing JavaScript code in a browser?",
+        "answer": "JavaScript Engine",
+        "options": [
+          "Browser's Rendering Engine",
+          "Web Server",
+          "JavaScript Engine",
+          "Operating System"
+        ],
+        "analysisPoints": [
+          "The JavaScript engine manages the execution of code."
+        ],
+        "keyConcepts": [
+          "JavaScript Engine"
+        ],
+        "evaluationCriteria": [
+          "Understanding of JavaScript runtime environment"
+        ],
+        "example": "\n```javascript\nconsole.log(typeof globalThis); // Output: object",
+        "tags": [
+          "JavaScript",
+          "Engine"
+        ],
+        "prerequisites": [],
+        "complexity": 4,
+        "interviewFrequency": 7,
+        "learningPath": "beginner"
+      },
+      {
+        "id": "question_js_engine_2",
+        "topic": "JavaScript Engine and Execution Context",
+        "level": "hard",
+        "type": "open",
+        "question": "Explain how the event loop handles asynchronous callbacks in JavaScript.",
+        "answer": "The event loop manages both microtasks (like promise callbacks) and macrotasks (like setTimeout). Microtasks are prioritized over macrotasks, ensuring that promises' callbacks are executed before other async operations.",
+        "options": [],
+        "analysisPoints": [
+          "Microtasks are processed before macrotasks due to their priority in the queue."
+        ],
+        "keyConcepts": [
+          "Event Loop",
+          "Microtasks",
+          "Macrotasks"
+        ],
+        "evaluationCriteria": [
+          "Ability to explain JavaScript concurrency model"
+        ],
+        "example": "\n```javascript\nconsole.log('Start');\nsetTimeout(() => console.log('Timeout'), 0);\nPromise.resolve().then(() => console.log('Promise'));\nconsole.log('End');\n// Output: Start, End, Promise, Timeout",
+        "tags": [
+          "JavaScript",
+          "Event Loop"
+        ],
+        "prerequisites": [],
+        "complexity": 8,
+        "interviewFrequency": 9,
+        "learningPath": "intermediate"
+      },
+      {
+        "id": "question_event_loop_1",
+        "topic": "Event Loop and Asynchronous JavaScript",
+        "level": "medium",
+        "type": "mcq",
+        "question": "Which of the following is part of the event loop mechanism in JavaScript?",
+        "answer": "Task Queue",
+        "options": [
+          "Web Server",
+          "Browser Rendering Engine",
+          "Task Queue",
+          "JavaScript Engine"
+        ],
+        "analysisPoints": [
+          "The task queue is managed by the event loop to handle asynchronous callbacks."
+        ],
+        "keyConcepts": [
+          "Event Loop"
+        ],
+        "evaluationCriteria": [
+          "Understanding of JavaScript runtime mechanisms"
+        ],
+        "example": "\n```javascript\ntimeout(() => console.log('Task from Queue'), 0);\nconsole.log('Start'); // Output: Start, Task from Queue",
+        "tags": [
+          "JavaScript",
+          "Event Loop"
+        ],
+        "prerequisites": [],
+        "complexity": 5,
+        "interviewFrequency": 7,
+        "learningPath": "intermediate"
+      },
+      {
+        "id": "question_event_loop_2",
+        "topic": "Event Loop and Asynchronous JavaScript",
+        "level": "hard",
+        "type": "open",
+        "question": "Describe the difference between microtasks and macrotasks in terms of their execution order in the event loop.",
+        "answer": "Microtasks are executed before macrotasks. Examples include promise callbacks and `process.nextTick` (Node.js) for microtasks, while setTimeout, setInterval, and other DOM events are examples of macrotasks.",
+        "options": [],
+        "analysisPoints": [
+          "Microtasks are prioritized over macrotasks in the event loop queue."
+        ],
+        "keyConcepts": [
+          "Event Loop",
+          "Microtasks",
+          "Macrotasks"
+        ],
+        "evaluationCriteria": [
+          "Ability to explain task priorities within the event loop"
+        ],
+        "example": "\n```javascript\nconsole.log('Start');\nPromise.resolve().then(() => console.log('Microtask'));\ntimeout(() => console.log('Macrotask'), 0);\nconsole.log('End'); // Output: Start, End, Microtask, Macrotask",
+        "tags": [
+          "JavaScript",
+          "Event Loop"
+        ],
+        "prerequisites": [],
+        "complexity": 7,
+        "interviewFrequency": 8,
+        "learningPath": "advanced"
+      }
+    ],
+    "startLine": 0
+  }
+]

@@ -124,6 +124,29 @@ export class ContentProcessorStorage {
       return [];
     }
   }
+  
+  /**
+   * Clear all processed chunks
+   */
+  static async clearAllProcessedChunks(): Promise<void> {
+    try {
+      // Get existing settings
+      const settings = await firebaseService.getSettings() || {};
+      
+      // Clear chunks but keep other content processor settings
+      await firebaseService.saveSettings({
+        [this.CONTENT_PROCESSOR_KEY]: {
+          ...(settings[this.CONTENT_PROCESSOR_KEY] || {}),
+          [this.CHUNKS_KEY]: {}
+        }
+      });
+      
+      console.log('All processed chunks cleared successfully');
+    } catch (error) {
+      console.error('Error clearing processed chunks from Firebase:', error);
+      throw error;
+    }
+  }
 
   /**
    * Mark a chunk as completed

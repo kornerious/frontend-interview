@@ -93,7 +93,7 @@ class LocalLlmService {
     options: LlmOptions = { 
       model: LOCAL_LLM_MODELS.DEEPSEEK_CODER_EXTENDED,
       temperature: 0.9, // Maximum temperature for creative question/task generation
-      maxTokens: 150000 // Increased to 150K tokens to handle larger chunks
+      maxTokens: 127000 // Increased to 150K tokens to handle larger chunks
     }
   ): Promise<string> {
     if (!this.initialized) {
@@ -110,7 +110,7 @@ class LocalLlmService {
         stream: false,
         options: {
           temperature: 0.9, // Maximum temperature for creative question/task generation
-          num_predict: 150000 // Increased to 150K tokens to match our maxTokens setting
+          num_predict: 127000 // Increased to 150K tokens to match our maxTokens setting
         }
       }, {
         timeout: 600000 // 10 minute timeout for large content processing
@@ -144,7 +144,7 @@ class LocalLlmService {
       const response = await this.processContent(fullPrompt, {
         model: this.defaultModel,
         temperature: 0.9, // Maximum temperature for creative question/task generation
-        maxTokens: 150000 // Increased to 150K tokens to handle larger chunks
+        maxTokens: 127000 // Increased to 150K tokens to handle larger chunks
       });
       
       console.log('RECEIVED FROM LOCAL LLM:', response.substring(0, 100) + '...');
