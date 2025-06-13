@@ -1,14 +1,23 @@
 import React, { useState } from 'react';
-import { Box, Button, CircularProgress, TextField, Typography } from '@mui/material';
+import { 
+  Box, Button, CircularProgress, TextField, Typography, 
+  FormControl, InputLabel, Select, MenuItem, SelectChangeEvent,
+  Checkbox, FormControlLabel, FormGroup, Chip
+} from '@mui/material';
 import { ChunkProcessor } from '../utils/chunkProcessor';
 import { useContentProcessorStore } from '../store/useContentProcessorStore';
 import { ContentProcessorStorage } from '../utils/storageService';
+import { ProcessingStage, MultiStageProcessingOptions } from '../api/multiStageProcessor';
 
 interface LineRangeProcessorProps {
   useLocalLlm: boolean;
   localLlmInitialized: boolean;
   selectedModel: string;
 }
+
+type QuestionType = 'mcq' | 'code' | 'open' | 'flashcard';
+type DifficultyLevel = 'easy' | 'medium' | 'hard';
+type FocusArea = 'theory' | 'questions' | 'tasks';
 
 /**
  * Component for processing specific line ranges in chunks
@@ -25,6 +34,49 @@ const LineRangeProcessor: React.FC<LineRangeProcessorProps> = ({
   const [processingDelay, setProcessingDelay] = useState(1);
   const [isProcessingRange, setIsProcessingRange] = useState(false);
   
+  // Multi-stage processing state
+  const [processingStage, setProcessingStage] = useState<ProcessingStage>('theory-extraction');
+  const [selectedChunkId, setSelectedChunkId] = useState<string>('');
+  const [difficulty, setDifficulty] = useState<DifficultyLevel>('medium');
+  const [focusArea, setFocusArea] = useState<FocusArea>('theory');
+  const [questionTypes, setQuestionTypes] = useState<QuestionType[]>(['mcq', 'code', 'open', 'flashcard']);
+  const [enhanceExamples, setEnhanceExamples] = useState<boolean>(true);
+  const [simplifyContent, setSimplifyContent] = useState<boolean>(false);
+  
+  // Get store actions for multi-stage processing
+  const { processLineRange: storeProcessLineRange, enhanceTheory, generateQuestions, generateTasks, rewriteChunk, setProcessingStage: setStoreProcessingStage } = useContentProcessorStore();
+  
+  // Handle processing stage change
+  const handleProcessingStageChange = (event: SelectChangeEvent<string>) => {
+    setProcessingStage(event.target.value as ProcessingStage);
+  };
+  
+  // Handle chunk selection change
+  const handleChunkChange = (event: SelectChangeEvent<string>) => {
+    setSelectedChunkId(event.target.value);
+  };
+  
+  // Handle difficulty change
+  const handleDifficultyChange = (event: SelectChangeEvent<string>) => {
+    setDifficulty(event.target.value as DifficultyLevel);
+  };
+  
+  // Handle focus area change
+  const handleFocusAreaChange = (event: SelectChangeEvent<string>) => {
+    setFocusArea(event.target.value as FocusArea);
+  };
+  
+  // Handle question type toggle
+  const handleQuestionTypeToggle = (type: QuestionType) => {
+    setQuestionTypes(prev => {
+      if (prev.includes(type)) {
+        return prev.filter(t => t !== type);
+      } else {
+        return [...prev, type];
+      }
+    });
+  };
+  
   // Process a specific line range with AI-determined logical blocks
   const processLineRange = async () => {
     try {
@@ -37,16 +89,17 @@ const LineRangeProcessor: React.FC<LineRangeProcessorProps> = ({
       setIsProcessingRange(true);
       console.log(`Processing lines ${startLine}-${endLine} with AI-determined logical blocks, up to ${numChunks} chunks with ${processingDelay}s delay...`);
       
-      // Use the ChunkProcessor utility to process the line range
-      const options = {
+      // Use the store action to process the line range
+      const options: MultiStageProcessingOptions = {
         processingDelay,
+        maxChunks: numChunks,
         useLocalLlm: useLocalLlm && localLlmInitialized,
-        localLlmModel: useLocalLlm && localLlmInitialized ? selectedModel : undefined
+        localLlmModel: useLocalLlm && localLlmInitialized ? selectedModel : undefined,
+        stage: 'theory-extraction'
       };
       
       // Process the line range and get all processed chunks
-      const processedChunks = await ChunkProcessor.processLineRange(startLine, endLine, numChunks, options);
-      console.log(`Processed ${processedChunks.length} chunks from line range ${startLine}-${endLine}`);
+      await storeProcessLineRange(startLine, endLine, numChunks, options);
       
       // Get all processed chunks after processing
       const allProcessedChunks = await ContentProcessorStorage.getAllProcessedChunks();
@@ -56,78 +109,141 @@ const LineRangeProcessor: React.FC<LineRangeProcessorProps> = ({
       useContentProcessorStore.setState({ allChunks: allProcessedChunks });
       
       // Set the current chunk to the first one so user can see results
-      if (processedChunks.length > 0) {
+      if (allProcessedChunks.length > 0) {
         // Get the first chunk ID and set it as current
-        const firstChunkId = processedChunks[0].id;
-        useContentProcessorStore.getState().setCurrentChunk(firstChunkId);
+        useContentProcessorStore.setState({ currentChunk: allProcessedChunks[0] });
+        setSelectedChunkId(allProcessedChunks[0].id);
+      }
+    } catch (error) {
+      console.error('Error processing line range:', error);
+      alert(`Error processing line range: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setIsProcessingRange(false);
+    }
+  };
+  
+  // Process a chunk with the selected stage
+  const processChunkWithStage = async () => {
+    if (!selectedChunkId) {
+      alert('Please select a chunk to process');
+      return;
+    }
+    
+    try {
+      setIsProcessingRange(true);
+      
+      const options: MultiStageProcessingOptions = {
+        useLocalLlm: useLocalLlm && localLlmInitialized,
+        localLlmModel: useLocalLlm && localLlmInitialized ? selectedModel : undefined,
+        rewriteOptions: {
+          difficulty,
+          focus: focusArea,
+          questionTypes,
+          enhanceExamples,
+          simplifyContent
+        }
+      };
+      
+      console.log(`Processing chunk ${selectedChunkId} with stage: ${processingStage}`);
+      
+      // Call the appropriate function based on the selected stage
+      switch (processingStage) {
+        case 'theory-enhancement':
+          await enhanceTheory(selectedChunkId, options);
+          break;
+        case 'question-generation':
+          await generateQuestions(selectedChunkId, options);
+          break;
+        case 'task-generation':
+          await generateTasks(selectedChunkId, options);
+          break;
+        case 'chunk-rewrite':
+          await rewriteChunk(selectedChunkId, options);
+          break;
+        default:
+          alert(`Unsupported processing stage: ${processingStage}`);
+          return;
       }
       
+      // Get all processed chunks after processing
+      const allProcessedChunks = await ContentProcessorStorage.getAllProcessedChunks();
+      
+      // Force update the UI with all processed chunks
+      useContentProcessorStore.setState({ allChunks: allProcessedChunks });
+      
+      // Find and set the current chunk to the one we just processed
+      const processedChunk = allProcessedChunks.find(chunk => chunk.id === selectedChunkId);
+      if (processedChunk) {
+        useContentProcessorStore.setState({ currentChunk: processedChunk });
+      }
+      
+      alert(`Successfully processed chunk with ${processingStage}`);
+    } catch (error) {
+      console.error(`Error processing chunk with ${processingStage}:`, error);
+      alert(`Error processing chunk: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
       setIsProcessingRange(false);
-      console.log(`Line range processing complete. Processed ${processedChunks.length} chunks from line ${startLine} to ${endLine}.`);
-    } catch (err) {
-      console.error('Error processing line range:', err);
-      setIsProcessingRange(false);
-      alert(`Error processing line range: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
+  // Get all chunks for selection
+  const { allChunks } = useContentProcessorStore();
+
   return (
-    <Box sx={{ width: '100%', mb: 3, p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
-      <Typography variant="subtitle1" gutterBottom>
-        Process Line Range in Chunks
+    <Box sx={{ mb: 4, p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+      <Typography variant="h6" gutterBottom>
+        Multi-Stage Content Processing
       </Typography>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <TextField
-          label="Start Line"
-          type="number"
-          value={startLine}
-          onChange={(e) => setStartLine(parseInt(e.target.value) || 0)}
-          InputProps={{ inputProps: { min: 0 } }}
-          size="small"
-          sx={{ width: 120, mr: 2 }}
-        />
-        <TextField
-          label="End Line"
-          type="number"
-          value={endLine}
-          onChange={(e) => setEndLine(parseInt(e.target.value) || 0)}
-          InputProps={{ inputProps: { min: 0 } }}
-          size="small"
-          sx={{ width: 120, mr: 2 }}
-        />
-        <TextField
-          label="Number of Chunks"
-          type="number"
-          value={numChunks}
-          onChange={(e) => setNumChunks(parseInt(e.target.value) || 1)}
-          InputProps={{ inputProps: { min: 1 } }}
-          size="small"
-          sx={{ width: 120, mr: 2 }}
-        />
-        <TextField
-          label="Delay (seconds)"
-          type="number"
-          value={processingDelay}
-          onChange={(e) => setProcessingDelay(parseInt(e.target.value) || 0)}
-          InputProps={{ inputProps: { min: 0 } }}
-          size="small"
-          sx={{ width: 120, mr: 2 }}
-        />
+      
+      {/* Initial content processing section */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="subtitle1" gutterBottom>
+          1. Initial Content Processing
+        </Typography>
+        
+        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+          <TextField
+            label="Start Line"
+            type="number"
+            size="small"
+            value={startLine}
+            onChange={(e) => setStartLine(parseInt(e.target.value) || 0)}
+            sx={{ width: 120 }}
+          />
+          <TextField
+            label="End Line"
+            type="number"
+            size="small"
+            value={endLine}
+            onChange={(e) => setEndLine(parseInt(e.target.value) || 0)}
+            sx={{ width: 120 }}
+          />
+          <TextField
+            label="Num Chunks"
+            type="number"
+            size="small"
+            value={numChunks}
+            onChange={(e) => setNumChunks(parseInt(e.target.value) || 1)}
+            sx={{ width: 120 }}
+          />
+          <TextField
+            label="Delay (s)"
+            type="number"
+            size="small"
+            value={processingDelay}
+            onChange={(e) => setProcessingDelay(parseInt(e.target.value) || 0)}
+            sx={{ width: 120 }}
+          />
+        </Box>
+        
         <Button
           variant="contained"
-          color="secondary"
           onClick={processLineRange}
           disabled={isProcessingRange}
-          sx={{ ml: 2 }}
+          startIcon={isProcessingRange ? <CircularProgress size={20} /> : null}
+          sx={{ mb: 2 }}
         >
-          {isProcessingRange ? (
-            <>
-              <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
-              Processing Line Range...
-            </>
-          ) : (
-            "Process Line Range"
-          )}
+          {isProcessingRange ? 'Processing...' : 'Process Line Range'}
         </Button>
       </Box>
       <Typography variant="caption" color="text.secondary">

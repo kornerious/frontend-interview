@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { ProcessingState, ProcessedChunk } from '../types';
 import { ContentProcessor } from '../utils/contentProcessor';
+import { MultiStageProcessor, ProcessingStage, MultiStageProcessingOptions } from '../api/multiStageProcessor';
 
 interface ProcessOptions {
   useLocalLlm?: boolean;
@@ -14,6 +15,7 @@ interface ContentProcessorStore {
   allChunks: ProcessedChunk[];
   isLoading: boolean;
   error: string | null;
+  currentStage: ProcessingStage;
   
   // Actions
   initialize: () => Promise<void>;
@@ -22,6 +24,14 @@ interface ContentProcessorStore {
   resetProcessing: () => Promise<void>;
   loadAllChunks: () => Promise<void>;
   setCurrentChunk: (chunkId: string) => void;
+  
+  // Multi-stage processing actions
+  setProcessingStage: (stage: ProcessingStage) => void;
+  processLineRange: (startLine: number, endLine: number, numChunks: number, options?: MultiStageProcessingOptions) => Promise<void>;
+  enhanceTheory: (chunkId: string, options?: MultiStageProcessingOptions) => Promise<void>;
+  generateQuestions: (chunkId: string, options?: MultiStageProcessingOptions) => Promise<void>;
+  generateTasks: (chunkId: string, options?: MultiStageProcessingOptions) => Promise<void>;
+  rewriteChunk: (chunkId: string, options?: MultiStageProcessingOptions) => Promise<void>;
 }
 
 export const useContentProcessorStore = create<ContentProcessorStore>((set, get) => ({
@@ -31,6 +41,7 @@ export const useContentProcessorStore = create<ContentProcessorStore>((set, get)
   allChunks: [],
   isLoading: false,
   error: null,
+  currentStage: 'theory-extraction',
   
   // Initialize the processor
   initialize: async () => {
@@ -177,6 +188,142 @@ export const useContentProcessorStore = create<ContentProcessorStore>((set, get)
     
     if (chunk) {
       set({ currentChunk: chunk });
+    }
+  },
+  
+  // Set the current processing stage
+  setProcessingStage: (stage: ProcessingStage) => {
+    set({ currentStage: stage });
+  },
+  
+  // Process a line range with multi-stage processor
+  processLineRange: async (startLine: number, endLine: number, numChunks: number, options?: MultiStageProcessingOptions) => {
+    try {
+      set({ isLoading: true, error: null });
+      
+      // Process the line range
+      const processedChunks = await MultiStageProcessor.processLineRange(
+        startLine,
+        endLine,
+        numChunks,
+        {
+          ...options,
+          maxChunks: 1000 // Limit to first 1000 chunks as requested
+        }
+      );
+      
+      // Update the store with new chunks
+      set(prevState => ({
+        allChunks: [...prevState.allChunks, ...processedChunks],
+        currentChunk: processedChunks.length > 0 ? processedChunks[0] : prevState.currentChunk,
+        isLoading: false
+      }));
+    } catch (error) {
+      console.error('Error processing line range:', error);
+      set({
+        error: error instanceof Error ? error.message : 'Failed to process line range',
+        isLoading: false
+      });
+    }
+  },
+  
+  // Enhance theory blocks in a chunk
+  enhanceTheory: async (chunkId: string, options?: MultiStageProcessingOptions) => {
+    try {
+      set({ isLoading: true, error: null });
+      
+      // Enhance theory blocks
+      const enhancedChunk = await MultiStageProcessor.enhanceTheory(chunkId, options);
+      
+      // Update the store
+      set(prevState => ({
+        allChunks: prevState.allChunks.map(chunk => 
+          chunk.id === chunkId ? enhancedChunk : chunk
+        ),
+        currentChunk: prevState.currentChunk?.id === chunkId ? enhancedChunk : prevState.currentChunk,
+        isLoading: false
+      }));
+    } catch (error) {
+      console.error('Error enhancing theory:', error);
+      set({
+        error: error instanceof Error ? error.message : 'Failed to enhance theory',
+        isLoading: false
+      });
+    }
+  },
+  
+  // Generate questions for a chunk
+  generateQuestions: async (chunkId: string, options?: MultiStageProcessingOptions) => {
+    try {
+      set({ isLoading: true, error: null });
+      
+      // Generate questions
+      const updatedChunk = await MultiStageProcessor.generateQuestions(chunkId, options);
+      
+      // Update the store
+      set(prevState => ({
+        allChunks: prevState.allChunks.map(chunk => 
+          chunk.id === chunkId ? updatedChunk : chunk
+        ),
+        currentChunk: prevState.currentChunk?.id === chunkId ? updatedChunk : prevState.currentChunk,
+        isLoading: false
+      }));
+    } catch (error) {
+      console.error('Error generating questions:', error);
+      set({
+        error: error instanceof Error ? error.message : 'Failed to generate questions',
+        isLoading: false
+      });
+    }
+  },
+  
+  // Generate tasks for a chunk
+  generateTasks: async (chunkId: string, options?: MultiStageProcessingOptions) => {
+    try {
+      set({ isLoading: true, error: null });
+      
+      // Generate tasks
+      const updatedChunk = await MultiStageProcessor.generateTasks(chunkId, options);
+      
+      // Update the store
+      set(prevState => ({
+        allChunks: prevState.allChunks.map(chunk => 
+          chunk.id === chunkId ? updatedChunk : chunk
+        ),
+        currentChunk: prevState.currentChunk?.id === chunkId ? updatedChunk : prevState.currentChunk,
+        isLoading: false
+      }));
+    } catch (error) {
+      console.error('Error generating tasks:', error);
+      set({
+        error: error instanceof Error ? error.message : 'Failed to generate tasks',
+        isLoading: false
+      });
+    }
+  },
+  
+  // Rewrite a chunk with specific options
+  rewriteChunk: async (chunkId: string, options?: MultiStageProcessingOptions) => {
+    try {
+      set({ isLoading: true, error: null });
+      
+      // Rewrite chunk
+      const rewrittenChunk = await MultiStageProcessor.rewriteChunk(chunkId, options);
+      
+      // Update the store
+      set(prevState => ({
+        allChunks: prevState.allChunks.map(chunk => 
+          chunk.id === chunkId ? rewrittenChunk : chunk
+        ),
+        currentChunk: prevState.currentChunk?.id === chunkId ? rewrittenChunk : prevState.currentChunk,
+        isLoading: false
+      }));
+    } catch (error) {
+      console.error('Error rewriting chunk:', error);
+      set({
+        error: error instanceof Error ? error.message : 'Failed to rewrite chunk',
+        isLoading: false
+      });
     }
   },
 }));

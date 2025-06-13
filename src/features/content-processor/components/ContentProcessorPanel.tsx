@@ -1,19 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Box, Button, CircularProgress, Typography, Alert, Paper, 
-  LinearProgress, Tabs, Tab, Select, MenuItem, FormControl, 
-  InputLabel, SelectChangeEvent
+import {
+  Box, Typography, Paper, Button,
+  SelectChangeEvent,
+  CircularProgress
 } from '@mui/material';
 import { useContentProcessorStore } from '../store/useContentProcessorStore';
-import TheoryList from './TheoryList';
-import QuestionList from './QuestionList';
-import TaskList from './TaskList';
-import { ContentProcessor } from '../utils/contentProcessor';
+import { ProcessingStage } from '../api/multiStageProcessor';
 import { ExportUtils } from '../utils/exportUtils';
 import localLlmService from '../api/localLlmService';
 import ProcessingControls from './ProcessingControls';
 import LineRangeProcessor from './LineRangeProcessor';
-import LocalLlmSelector from './LocalLlmSelector';
+import MultiStageControls from './MultiStageControls';
+import ContentTabsPanel from './ContentTabsPanel';
+import ProgressBar from './ProgressBar';
+import ChunkSelector from './ChunkSelector';
+import AdminControls from './AdminControls';
+import ErrorAlert from './ErrorAlert';
+import ModelSelector from './ModelSelector';
+import DialogManager from './DialogManager';
 
 /**
  * Main content processor panel component
@@ -27,12 +31,18 @@ const ContentProcessorPanel: React.FC = () => {
     allChunks,
     isLoading,
     error,
+    currentStage,
     initialize,
     processNextChunk,
     markCurrentChunkCompleted,
     resetProcessing,
     setCurrentChunk,
-    loadAllChunks
+    loadAllChunks,
+    setProcessingStage,
+    enhanceTheory,
+    generateQuestions,
+    generateTasks,
+    rewriteChunk
   } = useContentProcessorStore();
 
   // Tab state
@@ -43,7 +53,13 @@ const ContentProcessorPanel: React.FC = () => {
   const [selectedModel, setSelectedModel] = useState('deepseek-coder-v2-extended:latest');
   const [localLlmInitialized, setLocalLlmInitialized] = useState(false);
   
-  // Line range processing state removed - now in LineRangeProcessor component
+  // Rewrite dialog state
+  const [rewriteDialogOpen, setRewriteDialogOpen] = useState(false);
+  
+  // Calculate progress percentage
+  const progressPercentage = allChunks.length > 0
+    ? (allChunks.filter(chunk => chunk.completed).length / allChunks.length) * 100
+    : 0;
   
   // Initialize on mount
   useEffect(() => {
@@ -68,8 +84,6 @@ const ContentProcessorPanel: React.FC = () => {
         });
     }
   }, [initialize, loadAllChunks, useLocalLlm, selectedModel]);
-  
-  // useEffect for calculating total chunks removed
 
   // Handle tab change
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -115,19 +129,13 @@ const ContentProcessorPanel: React.FC = () => {
     try {
       await markCurrentChunkCompleted();
       
-      // If using local LLM and it's initialized, process with local LLM
-      if (useLocalLlm && localLlmInitialized) {
-        await processNextChunk({
-          useLocalLlm: true,
-          localLlmModel: selectedModel
-        });
+      // If there are more chunks to process, automatically process the next one
+      const completedChunks = allChunks.filter(chunk => chunk.completed).length;
+      if (completedChunks < allChunks.length) {
+        console.log(`Marked chunk as completed. ${completedChunks} of ${allChunks.length} chunks completed.`);
       } else {
-        // Otherwise use Claude
-        await processNextChunk();
+        console.log('All chunks completed!');
       }
-      
-      // Reset to theory tab when new content is loaded
-      setTabValue(0);
     } catch (err) {
       console.error('Error marking chunk as completed:', err);
     }
@@ -137,227 +145,153 @@ const ContentProcessorPanel: React.FC = () => {
   const handleReset = async () => {
     try {
       await resetProcessing();
-      // Reset to theory tab
       setTabValue(0);
+      console.log('Content processor reset');
     } catch (err) {
-      console.error('Error resetting processor:', err);
-    }
-  };
-  
-  
-  // Handle export to JSON
-  const handleExportToJson = async () => {
-    try {
-      // Get all chunks from store
-      const chunks = allChunks;
-      
-      // Use ExportUtils to handle the export
-      ExportUtils.exportAndDownload(chunks);
-    } catch (error) {
-      console.error('Error exporting to JSON:', error);
-      alert(`Error exporting to JSON: ${error instanceof Error ? error.message : String(error)}`);
+      console.error('Error resetting content processor:', err);
     }
   };
 
-  // Calculate progress percentage
-  const progressPercentage = processingState
-    ? Math.round((processingState.currentPosition / processingState.totalLines) * 100)
-    : 0;
+  // Handle export to JSON
+  const handleExportToJson = () => {
+    try {
+      ExportUtils.exportAndDownload(allChunks);
+    } catch (err) {
+      console.error('Error exporting to JSON:', err);
+    }
+  };
 
   return (
-    <Paper elevation={3} sx={{ width: '100%', p: 3, mb: 3 }}>
-      <details>
-      <Typography variant="h4" gutterBottom>
-        Content Processor
-      </Typography>
-      
-        <summary style={{ cursor: 'pointer', color: '#666', marginBottom: '8px' }}>
-        </summary>
+    <Box sx={{ width: '100%' }}>
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h5" gutterBottom>Content Processor</Typography>
         
-        <Typography variant="body1" paragraph>
-          This panel processes your MyNotes.md file in chunks, using AI to extract theory, questions, and tasks.
-          You're currently using the <strong>{useLocalLlm ? `local LLM model (${selectedModel})` : 'Claude API'}</strong>.
-        </Typography>
+        {/* Error message */}
+        <ErrorAlert error={error} />
         
-        <Typography variant="body1" paragraph sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-          To process MyNotes.md, click the "Start Processing" button below. If no content appears, click "Reset Processor" and try again.
-        </Typography>
-        
-        {/* LLM Selection */}
-        <Box sx={{ mb: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {useLocalLlm && (
-            <LocalLlmSelector 
-              onModelSelect={(model: string) => {
-                setSelectedModel(model);
-                setLocalLlmInitialized(true);
-              }}
-              onProcessContent={async (content: string, model: string) => {
-                console.log(`Processing test content with ${model}`);
-                try {
-                  const result = await localLlmService.processContent(content, { model });
-                  console.log('Processing result:', result.substring(0, 100) + '...');
-                  return;
-                } catch (err) {
-                  console.error('Error processing test content:', err);
-                  throw err;
-                }
-              }}
-            />
-          )}
-        </Box>
-      </details>
-      
-      {/* Progress indicator */}
-      <Box sx={{ width: '100%', mb: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-          <Typography variant="body2" color="text.secondary">
-            Processing Progress
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {processingState ? `${processingState.currentPosition}/${processingState.totalLines} lines (${progressPercentage}%)` : '0%'}
-          </Typography>
-        </Box>
-        <LinearProgress 
-          variant="determinate" 
-          value={progressPercentage} 
-          sx={{ height: 10, borderRadius: 1 }}
+        {/* Progress bar */}
+        <ProgressBar
+          progressPercentage={progressPercentage}
+          completedChunks={allChunks.filter(chunk => chunk.completed).length}
+          totalChunks={allChunks.length}
         />
-      </Box>
+        
+        {/* Model selector */}
+        <ModelSelector
+          useLocalLlm={useLocalLlm}
+          localLlmInitialized={localLlmInitialized}
+          selectedModel={selectedModel}
+          handleToggleLocalLlm={() => setUseLocalLlm(!useLocalLlm)}
+          handleModelChange={handleModelChange}
+          isLoading={isLoading}
+        />
+        
+        {/* Line range processor */}
+        <LineRangeProcessor
+          useLocalLlm={useLocalLlm}
+          localLlmInitialized={localLlmInitialized}
+          selectedModel={selectedModel}
+        />
+        
+        {/* Chunk selector */}
+        <ChunkSelector
+          allChunks={allChunks}
+          currentChunkId={currentChunk?.id}
+          handleChunkChange={handleChunkChange}
+        />
+        
+        {/* Content area */}
+        {currentChunk ? (
+          <>
+            {/* Chunk info and multi-stage processing controls */}
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                Viewing chunk: Lines {currentChunk.startLine}-{currentChunk.endLine}
+                {currentChunk.completed ? ' (Completed)' : ''}
+              </Typography>
+              
+              {/* Multi-stage processing controls */}
+              <MultiStageControls
+                currentStage={currentStage}
+                isLoading={isLoading}
+                enhanceTheory={enhanceTheory}
+                generateQuestions={generateQuestions}
+                generateTasks={generateTasks}
+                setProcessingStage={setProcessingStage}
+                setRewriteDialogOpen={setRewriteDialogOpen}
+                currentChunkId={currentChunk.id}
+                useLocalLlm={useLocalLlm}
+                selectedModel={selectedModel}
+              />
+            </Box>
+            
+            {/* Content tabs panel */}
+            <ContentTabsPanel 
+              tabValue={tabValue}
+              handleTabChange={handleTabChange}
+              currentChunk={currentChunk}
+            />
+
+            {/* Processing controls */}
+            <ProcessingControls 
+              isLoading={isLoading}
+              progressPercentage={progressPercentage}
+              useLocalLlm={useLocalLlm}
+              setUseLocalLlm={setUseLocalLlm}
+              localLlmInitialized={localLlmInitialized}
+              selectedModel={selectedModel}
+              currentChunkCompleted={currentChunk.completed}
+              handleProcessNextChunk={handleProcessNextChunk}
+              handleMarkCompleted={handleMarkCompleted}
+            />
+          </>
+        ) : (
+          // No current chunk - show start button
+          <Box sx={{ mt: 4, textAlign: 'center', p: 2, bgcolor: 'background.default', borderRadius: 1, minHeight: 200 }}>
+            {isLoading ? (
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 4 }}>
+                <CircularProgress sx={{ mb: 2 }} />
+                <Typography>Initializing content processor...</Typography>
+              </Box>
+            ) : (
+              <>
+                <Typography variant="body1" gutterBottom>
+                  No content has been processed yet. Click the button below to start processing.
+                </Typography>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleProcessNextChunk}
+                  disabled={isLoading || progressPercentage >= 100}
+                  sx={{ mt: 2, fontSize: '1.1rem', py: 1, px: 3 }}
+                  size="large"
+                  startIcon={useLocalLlm && localLlmInitialized ? <span role="img" aria-label="local">🖥️</span> : <span role="img" aria-label="cloud">☁️</span>}
+                >
+                  Start Processing MyNotes.md with {useLocalLlm && localLlmInitialized ? `Local LLM (${selectedModel})` : 'Claude AI'}
+                </Button>
+              </>
+            )}
+          </Box>
+        )}
+        
+        {/* Admin controls */}
+        <AdminControls
+          isLoading={isLoading}
+          hasChunks={allChunks.length > 0}
+          handleReset={handleReset}
+          handleExportToJson={handleExportToJson}
+        />
+      </Paper>
       
-      {/* Line range processing */}
-      <LineRangeProcessor 
+      {/* Dialog manager */}
+      <DialogManager
+        isRewriteDialogOpen={rewriteDialogOpen}
+        handleCloseRewriteDialog={() => setRewriteDialogOpen(false)}
+        currentChunkId={currentChunk?.id || null}
         useLocalLlm={useLocalLlm}
-        localLlmInitialized={localLlmInitialized}
         selectedModel={selectedModel}
       />
-      
-      {/* Error message */}
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      )}
-      
-      {/* Chunk navigation */}
-      {allChunks.length > 0 && (
-        <Box sx={{ mb: 3 }}>
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel id="chunk-select-label">Select Chunk</InputLabel>
-            <Select
-              labelId="chunk-select-label"
-              id="chunk-select"
-              value={currentChunk?.id || ''}
-              label="Select Chunk"
-              onChange={handleChunkChange}
-            >
-              {allChunks.map(chunk => (
-                <MenuItem key={chunk.id} value={chunk.id}>
-                  Lines {chunk.startLine}-{chunk.endLine} {chunk.completed ? '(Completed)' : ''}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Box>
-      )}
-      
-      {/* Content area */}
-      {currentChunk ? (
-        <>
-          {/* Chunk info */}
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="body2" color="text.secondary">
-              Viewing chunk: Lines {currentChunk.startLine}-{currentChunk.endLine}
-              {currentChunk.completed ? ' (Completed)' : ''}
-            </Typography>
-          </Box>
-          
-          {/* Tabs for different content types */}
-          <Box sx={{ borderBottom: 1, borderColor: 'divider', mt: 2 }}>
-            <Tabs value={tabValue} onChange={handleTabChange}>
-              <Tab label={`Theory (${currentChunk.theory.length})`} />
-              <Tab label={`Questions (${currentChunk.questions.length})`} />
-              <Tab label={`Tasks (${currentChunk.tasks.length})`} />
-            </Tabs>
-          </Box>
-
-          {/* Tab panels */}
-          <Box sx={{ py: 2 }}>
-            {tabValue === 0 && <TheoryList theory={currentChunk.theory} />}
-            {tabValue === 1 && <QuestionList questions={currentChunk.questions} />}
-            {tabValue === 2 && <TaskList tasks={currentChunk.tasks} />}
-          </Box>
-
-          {/* Processing controls */}
-          <ProcessingControls 
-            isLoading={isLoading}
-            progressPercentage={progressPercentage}
-            useLocalLlm={useLocalLlm}
-            setUseLocalLlm={setUseLocalLlm}
-            localLlmInitialized={localLlmInitialized}
-            selectedModel={selectedModel}
-            currentChunkCompleted={currentChunk.completed}
-            handleProcessNextChunk={handleProcessNextChunk}
-            handleMarkCompleted={handleMarkCompleted}
-          />
-        </>
-      ) : (
-        // No current chunk - show start button
-        <Box sx={{ mt: 4, textAlign: 'center', p: 2, bgcolor: 'background.default', borderRadius: 1, minHeight: 200 }}>
-          {isLoading ? (
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 4 }}>
-              <CircularProgress sx={{ mb: 2 }} />
-              <Typography>Initializing content processor...</Typography>
-            </Box>
-          ) : (
-            <>
-              <Typography variant="body1" gutterBottom>
-                No content has been processed yet. Click the button below to start processing.
-              </Typography>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleProcessNextChunk}
-                disabled={isLoading || progressPercentage >= 100}
-                sx={{ mt: 2, fontSize: '1.1rem', py: 1, px: 3 }}
-                size="large"
-                startIcon={useLocalLlm && localLlmInitialized ? <span role="img" aria-label="local">🖥️</span> : <span role="img" aria-label="cloud">☁️</span>}
-              >
-                Start Processing MyNotes.md with {useLocalLlm && localLlmInitialized ? `Local LLM (${selectedModel})` : 'Claude AI'}
-              </Button>
-            </>
-          )}
-        </Box>
-      )}
-      
-      {/* Additional processing options removed */}
-      
-      {/* Admin controls */}
-      <Box sx={{ mt: 3, pt: 2, borderTop: '1px dashed #ccc' }}>
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-          Admin Controls
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={handleReset}
-            disabled={isLoading}
-          >
-            Reset Processor
-          </Button>
-          <Button
-            variant="outlined"
-            size="small"
-            color="success"
-            onClick={handleExportToJson}
-            disabled={isLoading || allChunks.length === 0}
-            startIcon={<span role="img" aria-label="download">📥</span>}
-          >
-            Export to JSON
-          </Button>
-        </Box>
-      </Box>
-    </Paper>
+    </Box>
   );
 };
 

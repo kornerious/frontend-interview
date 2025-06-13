@@ -36,6 +36,38 @@ export class FileProcessor {
     }
   }
 
+  /**
+   * Reads a specific line range from a file
+   * @param filePath Path to the file
+   * @param startLine Starting line number (0-based)
+   * @param endLine Ending line number (exclusive)
+   * @returns The content of the specified line range
+   */
+  static async readLineRange(filePath: string, startLine: number, endLine: number): Promise<string> {
+    try {
+      // Fetch the file content
+      const response = await fetch(filePath);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch file: ${response.statusText}`);
+      }
+      
+      const text = await response.text();
+      const lines = text.split('\n');
+      
+      // Ensure endLine doesn't exceed file length
+      const actualEndLine = Math.min(endLine, lines.length);
+      
+      // Extract the specified line range
+      const chunk = lines.slice(startLine, actualEndLine).join('\n');
+      
+      console.log(`Reading line range from line ${startLine} to ${actualEndLine} (${actualEndLine - startLine} lines)`);
+      return chunk;
+    } catch (error) {
+      console.error(`Error reading line range ${startLine}-${endLine}:`, error);
+      throw error;
+    }
+  }
+
   // No longer using findLogicalBlockEnd - AI will determine logical blocks
 
   /**

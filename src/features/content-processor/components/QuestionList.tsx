@@ -9,14 +9,21 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { a11yDark } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 
 interface QuestionListProps {
-  questions: Question[];
+  questions: Question[] | { questions?: Question[] } | any;
 }
 
 /**
  * Component to display a list of questions
  */
 const QuestionList: React.FC<QuestionListProps> = ({ questions }) => {
-  if (!questions || questions.length === 0) {
+  console.log('[DEBUG] QuestionList received questions:', questions);
+  
+  // Ensure questions is always an array
+  const questionArray = Array.isArray(questions) ? questions : [];
+  
+  console.log('[DEBUG] QuestionList using array of length:', questionArray.length);
+  
+  if (questionArray.length === 0) {
     return (
       <Box sx={{ p: 2, textAlign: 'center' }}>
         <Typography variant="body1">No questions found in this chunk.</Typography>
@@ -26,7 +33,7 @@ const QuestionList: React.FC<QuestionListProps> = ({ questions }) => {
 
   return (
     <Box>
-      {questions.map((question) => (
+      {questionArray.map((question) => (
         <Card key={question.id} sx={{ mb: 3, boxShadow: 3 }}>
           <CardContent>
             {/* Topic and metadata */}

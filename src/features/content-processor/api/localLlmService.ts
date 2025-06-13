@@ -18,6 +18,8 @@ export const LOCAL_LLM_MODELS = {
 
 export interface LlmOptions {
   model: string;
+  temperature?: number;
+  maxTokens?: number;
 }
 
 class LocalLlmService {

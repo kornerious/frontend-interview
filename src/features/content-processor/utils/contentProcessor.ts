@@ -11,6 +11,82 @@ export const CHUNK_SIZE = 100;
 export class ContentProcessor {
     // Path to the large markdown file
     private static readonly FILE_PATH = '/data/MyNotes.md';
+    
+    /**
+     * Process content with AI
+     * @param content Content to process
+     * @param prompt Prompt to use
+     * @param options Processing options
+     */
+    static async processWithAI(content: string, prompt: string, options?: {
+        useLocalLlm?: boolean;
+        localLlmModel?: string;
+    }): Promise<string> {
+        try {
+            // Process with AI using ContentAnalyzer
+            return await ContentAnalyzer.processWithPrompt(content, prompt, options);
+        } catch (error) {
+            console.error('Error processing content with AI:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Read the next chunk from the file
+     * @param state Current processing state
+     */
+    static async readNextChunk(state: ProcessingState): Promise<string> {
+        try {
+            // Read the next chunk for AI to analyze
+            return await FileProcessor.readChunk(
+                this.FILE_PATH,
+                state.currentPosition
+            );
+        } catch (error) {
+            console.error('Error reading next chunk:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Read a specific chunk by line range
+     * @param startLine Starting line number
+     * @param endLine Ending line number
+     */
+    static async readChunk(startLine: number, endLine: number): Promise<string> {
+        try {
+            return await FileProcessor.readLineRange(this.FILE_PATH, startLine, endLine);
+        } catch (error) {
+            console.error(`Error reading chunk from line ${startLine} to ${endLine}:`, error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Get a specific chunk by ID
+     * @param chunkId Chunk ID to retrieve
+     */
+    static async getChunk(chunkId: string): Promise<ProcessedChunk | null> {
+        try {
+            return await ContentProcessorStorage.getProcessedChunk(chunkId);
+        } catch (error) {
+            console.error(`Error getting chunk ${chunkId}:`, error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Save a processed chunk
+     * @param chunk Processed chunk to save
+     */
+    static async saveProcessedChunk(chunk: ProcessedChunk): Promise<void> {
+        try {
+            await ContentProcessorStorage.saveProcessedChunk(chunk);
+        } catch (error) {
+            console.error(`Error saving processed chunk ${chunk.id}:`, error);
+            throw error;
+        }
+    }
 
     /**
      * Initializes the content processor

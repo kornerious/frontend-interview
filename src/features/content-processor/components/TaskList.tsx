@@ -8,14 +8,21 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { a11yDark } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 
 interface TaskListProps {
-  tasks: CodeTask[];
+  tasks: CodeTask[] | any;
 }
 
 /**
  * Component to display a list of coding tasks
  */
 const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
-  if (!tasks || tasks.length === 0) {
+  console.log('[DEBUG] TaskList received tasks:', tasks);
+  
+  // Ensure tasks is always an array
+  const taskArray = Array.isArray(tasks) ? tasks : [];
+  
+  console.log('[DEBUG] TaskList using array of length:', taskArray.length);
+  
+  if (taskArray.length === 0) {
     return (
       <Box sx={{ p: 2, textAlign: 'center' }}>
         <Typography variant="body1">No tasks found in this chunk.</Typography>
@@ -25,7 +32,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
 
   return (
     <Box>
-      {tasks.map((task) => (
+      {taskArray.map((task) => (
         <Card key={task.id} sx={{ mb: 3, boxShadow: 3 }}>
           <CardContent>
             {/* Title */}
