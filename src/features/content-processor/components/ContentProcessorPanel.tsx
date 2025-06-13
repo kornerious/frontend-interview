@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, CircularProgress, Typography, Alert, Paper, LinearProgress, Tabs, Tab, Select, MenuItem, FormControl, InputLabel, SelectChangeEvent, Switch, FormControlLabel, TextField, IconButton } from '@mui/material';
+import { 
+  Box, Button, CircularProgress, Typography, Alert, Paper, 
+  LinearProgress, Tabs, Tab, Select, MenuItem, FormControl, 
+  InputLabel, SelectChangeEvent
+} from '@mui/material';
 import { useContentProcessorStore } from '../store/useContentProcessorStore';
 import TheoryList from './TheoryList';
 import QuestionList from './QuestionList';
 import TaskList from './TaskList';
-import { ContentProcessorStorage } from '../utils/storageService';
 import { ContentProcessor } from '../utils/contentProcessor';
-import LocalLlmSelector from './LocalLlmSelector';
+import { ExportUtils } from '../utils/exportUtils';
 import localLlmService from '../api/localLlmService';
+import ProcessingControls from './ProcessingControls';
+import LineRangeProcessor from './LineRangeProcessor';
+import LocalLlmSelector from './LocalLlmSelector';
 
 /**
  * Main content processor panel component
@@ -37,12 +43,7 @@ const ContentProcessorPanel: React.FC = () => {
   const [selectedModel, setSelectedModel] = useState('deepseek-coder-v2-extended:latest');
   const [localLlmInitialized, setLocalLlmInitialized] = useState(false);
   
-  // Line range processing state
-  const [startLine, setStartLine] = useState(0);
-  const [endLine, setEndLine] = useState(1000);
-  const [numChunks, setNumChunks] = useState(10);
-  const [processingDelay, setProcessingDelay] = useState(1);
-  const [isProcessingRange, setIsProcessingRange] = useState(false);
+  // Line range processing state removed - now in LineRangeProcessor component
   
   // Initialize on mount
   useEffect(() => {
@@ -71,8 +72,13 @@ const ContentProcessorPanel: React.FC = () => {
   // useEffect for calculating total chunks removed
 
   // Handle tab change
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
+  };
+
+  // Handle model change
+  const handleModelChange = (event: SelectChangeEvent<string>) => {
+    setSelectedModel(event.target.value);
   };
 
   // Handle chunk selection
@@ -138,87 +144,18 @@ const ContentProcessorPanel: React.FC = () => {
     }
   };
   
-  // Process a specific line range with AI-determined logical blocks
-  const processLineRange = async () => {
-    console.log('DEBUG: processLineRange function called');
-    alert('Starting line range processing...');
-    try {
-      // Validate inputs
-      if (startLine < 0 || endLine <= startLine || numChunks <= 0 || processingDelay < 0) {
-        alert('Please enter valid line range, number of chunks, and delay');
-        return;
-      }
-      
-      setIsProcessingRange(true);
-      console.log(`Processing lines ${startLine}-${endLine} with AI-determined logical blocks, up to ${numChunks} chunks with ${processingDelay}s delay...`);
-      
-      // Use the ContentProcessor service to process the line range
-      const options = {
-        processingDelay,
-        useLocalLlm: useLocalLlm && localLlmInitialized,
-        localLlmModel: useLocalLlm && localLlmInitialized ? selectedModel : undefined
-      };
-      
-      // Process the line range and get all processed chunks
-      const processedChunks = await ContentProcessor.processLineRange(startLine, endLine, numChunks, options);
-      console.log(`Processed ${processedChunks.length} chunks from line range ${startLine}-${endLine}`);
-      
-      // Make sure all chunks are loaded for viewing
-      await loadAllChunks();
-      
-      // Get all processed chunks after processing
-      const allProcessedChunks = await ContentProcessorStorage.getAllProcessedChunks();
-      console.log(`Found ${allProcessedChunks.length} total processed chunks`);
-      
-      // Force update the UI with all processed chunks
-      useContentProcessorStore.setState({ allChunks: allProcessedChunks });
-      
-      // Set the current chunk to the first one so user can see results
-      if (allProcessedChunks.length > 0) {
-        // Get the first chunk ID and set it as current
-        const firstChunkId = allProcessedChunks[0].id;
-        setCurrentChunk(firstChunkId);
-      }
-      
-      // Reset to theory tab when done
-      setTabValue(0);
-      setIsProcessingRange(false);
-      console.log(`Line range processing complete. Processed ${processedChunks.length} chunks from line ${startLine} to ${endLine}.\nYou can now select any chunk from the dropdown to view what the AI did with it.`);
-    } catch (err) {
-      console.error('Error processing line range:', err);
-      setIsProcessingRange(false);
-    }
-  };
   
   // Handle export to JSON
   const handleExportToJson = async () => {
     try {
-      // Get all chunks from Firebase
-      const chunks = await ContentProcessorStorage.getAllProcessedChunks();
+      // Get all chunks from store
+      const chunks = allChunks;
       
-      // Convert to JSON string with pretty formatting
-      const jsonData = JSON.stringify(chunks, null, 2);
-      
-      // Create a blob with the JSON data
-      const blob = new Blob([jsonData], { type: 'application/json' });
-      
-      // Create a URL for the blob
-      const url = URL.createObjectURL(blob);
-      
-      // Create a temporary anchor element
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `content-chunks-${new Date().toISOString().split('T')[0]}.json`;
-      
-      // Append to body, click, and remove
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      
-      // Release the URL object
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Error exporting chunks to JSON:', err);
+      // Use ExportUtils to handle the export
+      ExportUtils.exportAndDownload(chunks);
+    } catch (error) {
+      console.error('Error exporting to JSON:', error);
+      alert(`Error exporting to JSON: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 
@@ -248,24 +185,13 @@ const ContentProcessorPanel: React.FC = () => {
         
         {/* LLM Selection */}
         <Box sx={{ mb: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={useLocalLlm}
-                onChange={(e) => setUseLocalLlm(e.target.checked)}
-                color="primary"
-              />
-            }
-            label="Use Local LLM (Ollama)"
-          />
-          
           {useLocalLlm && (
             <LocalLlmSelector 
-              onModelSelect={(model) => {
+              onModelSelect={(model: string) => {
                 setSelectedModel(model);
                 setLocalLlmInitialized(true);
               }}
-              onProcessContent={async (content, model) => {
+              onProcessContent={async (content: string, model: string) => {
                 console.log(`Processing test content with ${model}`);
                 try {
                   const result = await localLlmService.processContent(content, { model });
@@ -299,68 +225,11 @@ const ContentProcessorPanel: React.FC = () => {
       </Box>
       
       {/* Line range processing */}
-      <Box sx={{ width: '100%', mb: 3, p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
-        <Typography variant="subtitle1" gutterBottom>
-          Process Line Range in Chunks
-        </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <TextField
-            label="Start Line"
-            type="number"
-            value={startLine}
-            onChange={(e) => setStartLine(parseInt(e.target.value) || 0)}
-            InputProps={{ inputProps: { min: 0 } }}
-            size="small"
-            sx={{ width: 120, mr: 2 }}
-          />
-          <TextField
-            label="End Line"
-            type="number"
-            value={endLine}
-            onChange={(e) => setEndLine(parseInt(e.target.value) || 0)}
-            InputProps={{ inputProps: { min: 0 } }}
-            size="small"
-            sx={{ width: 120, mr: 2 }}
-          />
-          <TextField
-            label="Number of Chunks"
-            type="number"
-            value={numChunks}
-            onChange={(e) => setNumChunks(parseInt(e.target.value) || 1)}
-            InputProps={{ inputProps: { min: 1 } }}
-            size="small"
-            sx={{ width: 120, mr: 2 }}
-          />
-          <TextField
-            label="Delay (seconds)"
-            type="number"
-            value={processingDelay}
-            onChange={(e) => setProcessingDelay(parseInt(e.target.value) || 0)}
-            InputProps={{ inputProps: { min: 0 } }}
-            size="small"
-            sx={{ width: 120, mr: 2 }}
-          />
-          <Button
-            variant="contained"
-            color="secondary"
-            onClick={processLineRange}
-            disabled={isLoading || isProcessingRange}
-            sx={{ ml: 2 }}
-          >
-            {isProcessingRange ? (
-              <>
-                <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
-                Processing Line Range...
-              </>
-            ) : (
-              "Process Line Range"
-            )}
-          </Button>
-        </Box>
-        <Typography variant="caption" color="text.secondary">
-          This will process the specified line range divided into the specified number of chunks with configurable delay between chunks.
-        </Typography>
-      </Box>
+      <LineRangeProcessor 
+        useLocalLlm={useLocalLlm}
+        localLlmInitialized={localLlmInitialized}
+        selectedModel={selectedModel}
+      />
       
       {/* Error message */}
       {error && (
@@ -418,32 +287,18 @@ const ContentProcessorPanel: React.FC = () => {
             {tabValue === 2 && <TaskList tasks={currentChunk.tasks} />}
           </Box>
 
-          {/* Action buttons */}
-          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between' }}>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleMarkCompleted}
-              disabled={isLoading || currentChunk.completed}
-            >
-              {isLoading ? (
-                <>
-                  <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
-                  Processing...
-                </>
-              ) : (
-                "I'm Done - Process Next Chunk"
-              )}
-            </Button>
-            
-            <Button
-              variant="outlined"
-              onClick={handleProcessNextChunk}
-              disabled={isLoading || progressPercentage >= 100}
-            >
-              Skip & Process Next Chunk
-            </Button>
-          </Box>
+          {/* Processing controls */}
+          <ProcessingControls 
+            isLoading={isLoading}
+            progressPercentage={progressPercentage}
+            useLocalLlm={useLocalLlm}
+            setUseLocalLlm={setUseLocalLlm}
+            localLlmInitialized={localLlmInitialized}
+            selectedModel={selectedModel}
+            currentChunkCompleted={currentChunk.completed}
+            handleProcessNextChunk={handleProcessNextChunk}
+            handleMarkCompleted={handleMarkCompleted}
+          />
         </>
       ) : (
         // No current chunk - show start button
