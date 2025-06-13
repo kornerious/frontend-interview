@@ -21,7 +21,7 @@ export interface LlmOptions {
 }
 
 class LocalLlmService {
-  private baseUrl: string = 'http://localhost:11434';
+  private baseUrl: string = 'http://192.168.0.225:11434';
   private config: AIConfig | null = null;
   private initialized: boolean = false;
   private defaultModel: string = LOCAL_LLM_MODELS.DEEPSEEK_CODER_V2_EXTENDED;

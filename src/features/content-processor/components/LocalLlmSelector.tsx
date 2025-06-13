@@ -33,7 +33,7 @@ const LocalLlmSelector: React.FC<LocalLlmSelectorProps> = ({
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [customServerUrl, setCustomServerUrl] = useState<string>('http://localhost:11434');
+  const [customServerUrl, setCustomServerUrl] = useState<string>('http://192.168.0.225:11434');
   // No test content needed anymore
 
   // Initialize and fetch available models
