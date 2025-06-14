@@ -48,9 +48,9 @@ const ContentProcessorPanel: React.FC = () => {
   // Tab state
   const [tabValue, setTabValue] = useState(0);
   
-  // Local LLM state - default to using local LLM with DeepSeek Coder V2 Extended
+  // Local LLM state - default to using local LLM with DeepSeek Coder V2 16B
   const [useLocalLlm, setUseLocalLlm] = useState(true);
-  const [selectedModel, setSelectedModel] = useState('deepseek-coder-v2-extended:latest');
+  const [selectedModel, setSelectedModel] = useState('deepseek-coder-v2:16b');
   const [localLlmInitialized, setLocalLlmInitialized] = useState(false);
   
   // Rewrite dialog state

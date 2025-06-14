@@ -27,7 +27,7 @@ const LocalLlmSelector: React.FC<LocalLlmSelectorProps> = ({
   onProcessContent,
   sampleContent = "# Sample Markdown\n\nThis is a test to see if the local LLM is working correctly."
 }) => {
-  const [selectedModel, setSelectedModel] = useState<string>(LOCAL_LLM_MODELS.DEEPSEEK_CODER_V2_EXTENDED);
+  const [selectedModel, setSelectedModel] = useState<string>(LOCAL_LLM_MODELS.DEEPSEEK_CODER_V2);
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
