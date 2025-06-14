@@ -4,7 +4,7 @@
 export function sanitizeAIResponse(response: string): any {
   console.log('[DEBUG] sanitizeAIResponse received response type:', typeof response);
   console.log('[DEBUG] sanitizeAIResponse response length:', response?.length || 0);
-  
+  console.log('[This is esponse:', response);
   try {
     // First, try to parse the response directly
     console.log('[DEBUG] Attempting direct JSON parse');
@@ -13,7 +13,7 @@ export function sanitizeAIResponse(response: string): any {
     return parsed;
   } catch (error) {
     console.log('[DEBUG] Direct JSON parse failed:', error instanceof Error ? error.message : String(error));
-    
+    console.log("response for questions:" + response);
     // If direct parsing fails, try to extract JSON from the response
     try {
       // Look for JSON object pattern

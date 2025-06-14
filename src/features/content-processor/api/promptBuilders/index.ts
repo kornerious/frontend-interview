@@ -9,6 +9,8 @@
 export function buildTheoryExtractionPrompt(markdownChunk: string): string {
   return `Extract theory blocks from this markdown content.
 
+Highest priority: translate all non-english to English, all data should be in English!!!
+
 IMPORTANT INSTRUCTIONS:
 1. INTELLIGENT CONTENT BOUNDARIES: Analyze the semantic structure of the content to identify where one complete topic or concept ends and another begins. Set "suggestedEndLine" to the exact line number where a logical content unit concludes. Look for these signals:
    - Topic transitions (new subject matter being introduced)
@@ -34,9 +36,9 @@ Respond with ONLY a JSON object in this format:
     {
       "id": "theory_[unique_id]",
       "title": "Section Title",
-      "content": "# Detailed Markdown Content\\n\\nThis should be comprehensive content with proper markdown formatting.",
+      "content": "This should be comprehensive content with proper markdown formatting.",
       "tags": ["tag1", "tag2", "tag3"],
-      "technology": "TypeScript",
+      "technology": Technology = "React" | "Next.js" | "TypeScript" | "JavaScript" | "MUI" | "Testing" | "Performance" | "CSS" | "HTML" | "Other",
       "prerequisites": [],
       "complexity": 6,
       "interviewRelevance": 8,
@@ -108,7 +110,19 @@ Respond with ONLY a JSON object containing the enhanced theory block with the sa
  * This prompt takes theory blocks and generates questions of different types
  */
 export function buildQuestionGenerationPrompt(theoryBlocks: any[]): string {
-  return `Generate questions based on these theory blocks.
+  return `EXTRACT QUESTIONS - MAXIMUM QUANTITY and COMPLEXITY. If there are a lot of ? - you should create at list 20 questions!!!
+
+RULES:
+If you see existing questions in the content (like "?"), extract them AND create variations
+Break down some complex concepts into many simple questions
+Create questions about reasonable term, definition, example, or code snippet
+DO NOT SKIP ANYTHING - every piece of information needs can need question
+QUESTION GENERATION EXCELLENCE:
+Include a mix of question types: MCQs, coding challenges, open-ended questions
+Create questions at different difficulty levels (easy, medium, hard)
+Ensure questions test both basic understanding and advanced application
+For MCQs, create plausible but clearly incorrect distractors
+Include detailed explanations and analysis points for each answer
 
 IMPORTANT INSTRUCTIONS:
 1. CREATE DIVERSE QUESTIONS: Generate up to 20 questions of different types (mcq, code, open, flashcard).
@@ -117,49 +131,52 @@ IMPORTANT INSTRUCTIONS:
 4. COMPLETE FIELDS: Fill out all required fields for each question type.
 5. RESPOND WITH VALID JSON: Return ONLY a valid JSON object with the generated questions.
 
-Theory blocks:
-${JSON.stringify(theoryBlocks, null, 2)}
+IMPORTANT: Each question MUST include ALL these fields exactly as specified:
+- id: string (format: "question_[unique_id]")
+- topic: string (the specific topic the question covers)
+- level: 'easy' | 'medium' | 'hard'
+- type: 'mcq' | 'code' | 'open' | 'flashcard'
+- question: string (the actual question text)
+- answer: string (the correct answer or solution)
+- example: string (code example if applicable, otherwise empty string)
+- tags: string[] (relevant tags for categorization)
+- options: string[] (array of options for MCQ questions, empty array for other types)
+- analysisPoints: string[] (key points for analyzing the answer)
+- keyConcepts: string[] (core concepts tested by this question)
+- evaluationCriteria: string[] (criteria for evaluating answers)
+- prerequisites: string[] (concepts needed to understand this question)
+- complexity: number (1-10 scale of conceptual difficulty)
+- interviewFrequency: number (1-10 scale of how often asked in interviews)
+- learningPath: 'beginner' | 'intermediate' | 'advanced' | 'expert'
 
-Respond with ONLY a JSON object containing an array of questions:
+Respond with ONLY a valid JSON object containing an array of questions:
 {
   "questions": [
     {
-      "id": "question_[unique_id]_1",
-      "topic": "Specific Topic Name",
-      "level": "medium",
-      "type": "mcq",
-      "question": "Detailed, specific question text that tests understanding of the concept?",
-      "answer": "The correct answer with complete explanation",
-      "options": [
-        "The correct answer with complete explanation", 
-        "Incorrect option 1 that seems plausible", 
-        "Incorrect option 2 with common misconception", 
-        "Incorrect option 3 that tests edge case understanding"
-      ],
-      "analysisPoints": [
-        "Key analysis point 1",
-        "Key analysis point 2",
-        "Key analysis point 3"
-      ],
-      "keyConcepts": [
-        "Core concept 1",
-        "Core concept 2",
-        "Core concept 3"
-      ],
-      "evaluationCriteria": [
-        "Understanding of fundamental principles",
-        "Ability to distinguish between similar concepts",
-        "Recognition of edge cases"
-      ],
-      "example": "\\n\`\`\`typescript\\n// Example code demonstrating the concept\\nfunction conceptExample() {\\n  // Implementation showing the concept in action\\n  return result;\\n}\\n\`\`\`",
-      "tags": ["tag1", "tag2", "tag3"],
-      "prerequisites": ["prerequisite_1", "prerequisite_2"],
-      "complexity": 7,
+      "id": "question_unique_id",
+      "topic": "Specific Topic",
+      "level": "easy" | "medium" | "hard",
+      "type": "mcq" | "code" | "open" | "flashcard",
+      "question": "What is X?",
+      "answer": "Correct answer with explanation",
+      "example": "Code example if applicable",
+      "tags": ["tag1", "tag2"],
+      "options": ["Correct answer", "Wrong answer 1", "Wrong answer 2", "Wrong answer 3"],
+      "analysisPoints": ["Key point 1", "Key point 2"],
+      "keyConcepts": ["Concept 1", "Concept 2"],
+      "evaluationCriteria": ["Criteria 1", "Criteria 2"],
+      "prerequisites": ["Prerequisite 1"],
+      "complexity": 6,
       "interviewFrequency": 8,
       "learningPath": "intermediate"
     }
   ]
-}`;
+}
+
+Theory blocks to analyze:
+${JSON.stringify(theoryBlocks, null, 2)}
+
+`;
 }
 
 /**

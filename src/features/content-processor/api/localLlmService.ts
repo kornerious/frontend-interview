@@ -23,7 +23,7 @@ export interface LlmOptions {
 }
 
 class LocalLlmService {
-  private baseUrl: string = 'http://192.168.0.225:11434';
+  private baseUrl: string = 'http://localhost:11434';
   private config: AIConfig | null = null;
   private initialized: boolean = false;
   private defaultModel: string = LOCAL_LLM_MODELS.DEEPSEEK_CODER_V2_EXTENDED;
@@ -107,15 +107,17 @@ class LocalLlmService {
       console.log(`Content length: ${content.length}`);
       
       const response = await axios.post(`${this.baseUrl}/api/generate`, {
-        model: options.model || this.defaultModel,
+        model: this.defaultModel,
         prompt: content,
         stream: false,
+        system: "You are a JSON generator. Output ONLY valid JSON with no explanations or thinking process.",
+        format: 'json',
         options: {
-          temperature: 0.9, // Maximum temperature for creative question/task generation
-          num_predict: 127000 // Increased to 150K tokens to match our maxTokens setting
+          temperature: 1, // Zero temperature for deterministic output
+          num_predict: 65536, // Token limit
         }
       }, {
-        timeout: 600000 // 10 minute timeout for large content processing
+        timeout: 200000 // 10 minute timeout for large content processing
       });
       
       console.log(`Response received. Length: ${response.data.response.length}`);
@@ -145,8 +147,8 @@ class LocalLlmService {
       // Use maximum available tokens for DeepSeek Coder 2 Extended
       const response = await this.processContent(fullPrompt, {
         model: this.defaultModel,
-        temperature: 0.9, // Maximum temperature for creative question/task generation
-        maxTokens: 127000 // Increased to 150K tokens to handle larger chunks
+        temperature: 1, // Maximum temperature for creative question/task generation
+        maxTokens: 65536 // Increased to 150K tokens to handle larger chunks
       });
       
       console.log('RECEIVED FROM LOCAL LLM:', response.substring(0, 100) + '...');

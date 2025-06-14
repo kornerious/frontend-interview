@@ -1,6 +1,6 @@
 export type Difficulty = 'easy' | 'medium' | 'hard';
 export type QuestionType = 'mcq' | 'code' | 'open' | 'flashcard';
-export type Technology = 'React' | 'Next.js' | 'TypeScript' | 'JavaScript' | 'MUI' | 'Testing' | 'Performance' | 'CSS' | 'HTML';
+export type Technology = 'React' | 'Next.js' | 'TypeScript' | 'JavaScript' | 'MUI' | 'Testing' | 'Performance' | 'CSS' | 'HTML' | 'Other' ;
 
 export type Question = {
   id: string;
