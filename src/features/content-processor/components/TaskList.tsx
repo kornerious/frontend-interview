@@ -74,7 +74,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
             {/* Tags */}
             {task.tags && task.tags.length > 0 && (
               <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                {task.tags.map((tag, index) => (
+                {task.tags.map((tag: string, index: number) => (
                   <Chip key={index} label={tag} size="small" />
                 ))}
               </Box>
@@ -157,7 +157,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
                   </AccordionSummary>
                   <AccordionDetails>
                     <Box component="ol" sx={{ pl: 2 }}>
-                      {task.hints.map((hint, index) => (
+                      {task.hints.map((hint: string, index: number) => (
                         <Box component="li" key={index} sx={{ mb: 1 }}>
                           <Typography>{hint}</Typography>
                         </Box>
@@ -192,7 +192,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
                   Related Concepts:
                 </Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
-                  {task.relatedConcepts.map((concept, index) => (
+                  {task.relatedConcepts.map((concept: string, index: number) => (
                     <Chip key={index} label={concept} size="small" color="info" />
                   ))}
                 </Box>

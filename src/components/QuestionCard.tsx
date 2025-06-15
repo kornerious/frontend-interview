@@ -633,9 +633,6 @@ export default function QuestionCard({
                     question={question.question}
                     userAnswer={userAnswer}
                     modelAnswer={question.answer}
-                    questionId={question.id}
-                    questionTopic={question.topic}
-                    questionCategory={question.level}
                     onEvaluationComplete={(evaluation) => {
                       // Save the analysis if settings allow
                       if (settings.saveAnswers) {

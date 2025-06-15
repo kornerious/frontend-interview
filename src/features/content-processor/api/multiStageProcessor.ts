@@ -11,7 +11,6 @@ import {
   buildChunkRewritePrompt
 } from './promptBuilders/index';
 import { sanitizeAIResponse } from './sanitizers';
-import { ResponseBackupService } from '../utils/responseBackupService';
 
 /**
  * Processing stage types
@@ -102,14 +101,7 @@ export class MultiStageProcessor {
         maxOutputTokens: 65536
       });
       
-      // Save response backup with metadata
-      await ResponseBackupService.saveResponseBackup(response, 'gemini', {
-        stage,
-        timestamp: new Date().toISOString(),
-        contentLength: content.length,
-        responseLength: response.length,
-        processingOptions: options
-      });
+      // Response backup functionality removed as requested
     } else if (useLocalLlm && localLlmModel) {
       console.log(`Processing stage ${stage} with local LLM model: ${localLlmModel}`);
       response = await localLlmService.processContent(prompt, { 

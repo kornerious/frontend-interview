@@ -271,13 +271,16 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
       // Create new program structure
       const newProgram: LearningProgram = {
         id: programId,
+        dateStarted: new Date().toISOString(),
         topics,
-        duration,
+        durationDays: duration,
+        currentDay: 0,
+        dailyPlans: [],
+        progress: [],
         days: Array(duration).fill(null).map(() => ({ 
           completed: false,
           tasks: []
         })),
-        created: new Date().toISOString(),
         archived: false
       };
       

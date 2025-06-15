@@ -38,15 +38,15 @@ export class MarkdownParser {
    */
   private static parseQuestionSection(section: string): Question | null {
     // Extract question text
-    const questionMatch = section.match(/Q:\s*(.*?)(?=\n[A|E]:|\n##|$)/s);
+    const questionMatch = section.match(/Q:\s*(.*?)(?=\n[A|E]:|\n##|$)/);
     if (!questionMatch) return null;
     
     // Extract answer
-    const answerMatch = section.match(/A:\s*(.*?)(?=\n[Q|E]:|\n##|$)/s);
+    const answerMatch = section.match(/A:\s*(.*?)(?=\n[Q|E]:|\n##|$)/);
     if (!answerMatch) return null;
     
     // Extract example (optional)
-    const exampleMatch = section.match(/E:\s*(.*?)(?=\n[Q|A]:|\n##|$)/s);
+    const exampleMatch = section.match(/E:\s*(.*?)(?=\n[Q|A]:|\n##|$)/);
     
     // Extract category/topic from context or header
     const topicMatch = section.match(/Category:\s*(.*?)(?=\n|$)/i) || 
@@ -71,8 +71,16 @@ export class MarkdownParser {
       type,
       question: questionMatch[1].trim(),
       answer: answerMatch[1].trim(),
-      example: exampleMatch ? exampleMatch[1].trim() : undefined,
-      tags
+      example: exampleMatch ? exampleMatch[1].trim() : '',
+      tags,
+      options: [],
+      analysisPoints: [],
+      keyConcepts: [],
+      evaluationCriteria: [],
+      prerequisites: [],
+      complexity: 5,
+      interviewFrequency: 5,
+      learningPath: 'intermediate'
     };
   }
   

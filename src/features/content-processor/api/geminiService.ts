@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { AIConfig } from '../../../utils/aiService';
 import { buildGeminiAnalysisPrompt } from './geminiPromptBuilder';
-import ResponseBackupService from '../utils/responseBackupService';
 
 // Gemini API configuration
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent';
@@ -139,16 +138,10 @@ class GeminiService {
       // Extract the text from the response
       const responseText = response.data.candidates[0].content.parts[0].text;
       console.log(`Response received. Length: ${responseText.length}`);
-      
-      // Use the ResponseBackupService directly
-      await ResponseBackupService.saveResponseBackup(responseText, 'gemini', {
-        timestamp: new Date().toISOString(),
-        contentLength: content.length,
-        responseLength: responseText.length,
-        options
-      });
-      
-      return responseText;
+    
+    // Response backup removed as requested
+    
+    return responseText;
     } catch (error) {
       console.error('Error processing content with Gemini:', error);
       throw error;

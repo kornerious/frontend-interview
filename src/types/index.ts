@@ -79,6 +79,7 @@ export type UserProgress = {
   topic?: string;
   difficulty?: Difficulty;
   problemAreas?: string[];
+  timestamp?: string; // Added for sorting by time
 };
 
 export type LearningProgram = {
@@ -91,6 +92,7 @@ export type LearningProgram = {
   progress: UserProgress[];
   savedExamples?: Record<string, string>;
   archived?: boolean; // Whether this program is archived
+  days?: Array<{completed: boolean, tasks: any[]}>; // Added for day completion tracking
 };
 
 export type DailyPlan = {
