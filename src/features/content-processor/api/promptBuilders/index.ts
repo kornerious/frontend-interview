@@ -151,24 +151,36 @@ IMPORTANT: Each question MUST include ALL these fields exactly as specified:
 
 Respond with ONLY a valid JSON object containing an array of questions:
 {
-  "questions": [
+  "theory": [
     {
-      "id": "question_unique_id",
-      "topic": "Specific Topic",
-      "level": "easy" | "medium" | "hard",
-      "type": "mcq" | "code" | "open" | "flashcard",
-      "question": "What is X?",
-      "answer": "Correct answer with explanation",
-      "example": "Code example if applicable",
-      "tags": ["tag1", "tag2"],
-      "options": ["Correct answer", "Wrong answer 1", "Wrong answer 2", "Wrong answer 3"],
-      "analysisPoints": ["Key point 1", "Key point 2"],
-      "keyConcepts": ["Concept 1", "Concept 2"],
-      "evaluationCriteria": ["Criteria 1", "Criteria 2"],
-      "prerequisites": ["Prerequisite 1"],
+      "id": "theory_[unique_id]",
+      "title": "Section Title",
+      "content": "This should be comprehensive content with proper markdown formatting, including:\\n\\n## Key Concepts\\n- Important point 1\\n- Important point 2\\n\\n## Implementation\\n\`\`\`typescript\\nfunction example() {\\n  // Implementation details\\n  return true;\\n}\\n\`\`\`",
+      "examples": [
+        {
+          "id": "example_[unique_id]_1",
+          "title": "Basic Example",
+          "code": "// Code example\\nfunction example() {\\n  const result = true;\\n  return result;\\n}",
+          "explanation": "This example demonstrates the basic implementation with detailed explanation of how it works and why it's important.",
+          "language": "typescript"
+        },
+        {
+          "id": "example_[unique_id]_2",
+          "title": "Advanced Example",
+          "code": "// Advanced implementation\\nfunction advancedExample(input: string): boolean {\\n  // Complex logic here\\n  return input.length > 0;\\n}",
+          "explanation": "This more complex example shows how to handle edge cases and provides additional implementation details.",
+          "language": "typescript"
+        }
+      ],
+      "relatedQuestions": [],
+      "relatedTasks": [],
+      "tags": ["tag1", "tag2", "tag3", "tag4"],
+      "technology": "TypeScript",
+      "prerequisites": ["prerequisite_concept_1", "prerequisite_concept_2"],
       "complexity": 6,
-      "interviewFrequency": 8,
-      "learningPath": "intermediate"
+      "interviewRelevance": 8,
+      "learningPath": "beginner" | "intermediate" | "advanced" | "expert",
+      "requiredFor": ["advanced_concept_1", "advanced_concept_2"]
     }
   ]
 }
@@ -205,23 +217,26 @@ Respond with ONLY a JSON object containing an array of tasks:
       "description": "\\nDetailed task description with clear requirements:\\n\\n1. Implement X functionality with these specific requirements\\n2. Handle these edge cases properly\\n3. Ensure performance meets these criteria\\n4. Write tests to verify your implementation\\n\\nYour solution should demonstrate understanding of key concepts and follow best practices.\\n",
       "difficulty": "medium",
       "startingCode": "// Starting template with structure\\nfunction implementation(input: any): any {\\n  // TODO: Implement the required functionality\\n  // Consider edge cases:\\n  // 1. What if input is empty?\\n  // 2. What if input contains invalid data?\\n  \\n  return null; // Replace with your implementation\\n}\\n\\n// Example usage:\\n// const result = implementation(sampleInput);\\n",
-      "solutionCode": "// Complete working solution\\nfunction implementation(input: any): any {\\n  // Input validation\\n  if (!input || typeof input !== 'object') {\\n    throw new Error('Invalid input');\\n  }\\n  \\n  // Core implementation logic\\n  const result = processInput(input);\\n  \\n  // Handle edge cases\\n  if (specialCase(result)) {\\n    return handleSpecialCase(result);\\n  }\\n  \\n  return result;\\n}\\n",
+      "solutionCode": "// Complete working solution\\nfunction implementation(input: any): any {\\n  // Input validation\\n  if (!input || typeof input !== 'object') {\\n    throw new Error('Invalid input');\\n  }\\n  \\n  // Core implementation logic\\n  const result = processInput(input);\\n  \\n  // Handle edge cases\\n  if (specialCase(result)) {\\n    return handleSpecialCase(result);\\n  }\\n  \\n  return result;\\n}\\n\\n// Helper functions\\nfunction processInput(input) {\\n  // Processing logic\\n  return transformedInput;\\n}\\n\\nfunction specialCase(data) {\\n  return data.hasOwnProperty('special');\\n}\\n\\nfunction handleSpecialCase(data) {\\n  // Special case handling\\n  return modifiedData;\\n}\\n",
       "testCases": [
         "Test with valid input: implementation({data: 'valid'}) should return expected output",
         "Test with empty input: implementation({}) should handle gracefully",
-        "Test with invalid input: implementation(null) should throw appropriate error"
+        "Test with invalid input: implementation(null) should throw appropriate error",
+        "Test with special case: implementation({special: true}) should handle special case correctly",
+        "Test performance: implementation should complete within acceptable time limits for large inputs"
       ],
       "hints": [
         "Consider using technique X to optimize the solution",
-        "Don't forget to validate all inputs before processing"
+        "Don't forget to validate all inputs before processing",
+        "The edge case with empty arrays requires special handling"
       ],
-      "tags": ["algorithm", "optimization", "data-structure"],
+      "tags": ["algorithm", "optimization", "data-structure", "best-practices"],
       "timeEstimate": 45,
       "prerequisites": ["concept_1", "concept_2"],
       "complexity": 6,
       "interviewRelevance": 8,
-      "learningPath": "intermediate",
-      "relatedConcepts": ["related_concept_1", "related_concept_2"]
+      "learningPath": "beginner" | "intermediate" | "advanced" | "expert",
+      "relatedConcepts": ["related_concept_1", "related_concept_2", "related_concept_3"]
     }
   ]
 }`;

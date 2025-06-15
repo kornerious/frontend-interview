@@ -8,63 +8,40 @@
  * This version is more direct and structured to help local models generate valid JSON
  */
 export function buildLocalLlmAnalysisPrompt(markdownChunk: string): string {
-  const lineCount = markdownChunk.split('\n').length;
-  
   // Create the prompt with enhanced instructions for maximum content extraction and generation
-  const prompt = `You are an expert content analyzer for frontend interview preparation. Your task is to thoroughly analyze the provided markdown content and transform it into comprehensive theory, questions, and tasks.
+  const prompt = `You are an expert content analyzer for frontend interview preparation. Your task is to thoroughly analyze the provided markdown content and transforming it into a comprehensive theory, questions, and tasks.
 
-CRITICAL INSTRUCTIONS - FOLLOW EXACTLY:
-Keep total response (input and output) under 127000 tokens to avoid truncation!!!
+! Stage 1: Extract theory blocks from provided markdown content. 
+- Important! Translate non-English content to English and normalize code style.
+- Create multiple theory blocks for distinct topics or concepts Include ALL subtopics and ensure theory blocks contain proper explanations.
+- Add few practical code examples that demonstrate the concepts in the theory block, they should be short.
+- When a concept is under-explained or ambiguous or missing, you may use your expertise to fill in missing details or clarify — just keep it concise, stay faithful to the original intent.
+- Text, code blocks, examples should be a related content.
+- Preserve all image references from the markdown. DO NOT modify image paths - keep them exactly as they appear in the original markdown.
+- If there is generally the same information in markdown content, it should be in one theory block, and you should make it compact.
 
-1. CONTENT EXTRACTION EXCELLENCE: Extract 100% of the valuable content from the provided markdown. Leave nothing important behind. Identify ALL topics, concepts, code examples, and explanations.
+! Stage 2: EXTRACT QUESTIONS from provided markdown content (MAXIMUM QUANTITY and COMPLEXITY).
+- Generate as many questions, coding tasks, theory blocks, flashcards as possible. 
+- Each question should be directly related to concepts in the provided markdown content.
+- If you see existing questions in the content (like "?"), extract them AND create variations.
+- Break down some complex concepts into simple questions.
+- Include a mix of different types - mcq, code, open, flashcard.
+- For MCQs: create plausible but clearly incorrect distractors, focus on conceptual and practical scenarios.
+- For Coding Challenges: can include edge cases and performance optimizations etc...
+- For Open-Ended Questions: can encourage critical thinking and detailed explanations etc...
+- Create questions at different difficulty levels (easy, medium, hard).
+- Ensure questions test both basic understanding and advanced application.
+- Include explanations and analysis points for each answer.
+- Can be a question: Features mentioned briefly without examples, Content phrased as questions with answers, Small code snippets demonstrating a feature.
 
-2. SEMANTIC BOUNDARY DETECTION: Identify logical content boundaries within the chunk. If the content starts or ends mid-topic, make a note in your logicalBlockInfo response with a suggestedEndLine value to indicate where a better boundary would be. IMPORTANT: Logical blocks should NOT exceed 100 lines - break larger topics into smaller logical units.
+! Stage 3: Generate practical coding tasks for EACH theory block.
+- Tasks should be realistic and relevant to frontend interviews.
+- Include clear requirements, starting code templates, and solution code.
+- Provide multiple test cases that cover edge cases.
+- Include helpful hints that guide without giving away solutions.
+- Tasks should range from simple implementation to complex problem-solving - Comprehensive implementation scenarios, Content asking to implement or create something, Practical coding exercises, implementation challenges, Multi-feature integration exercises, Best practice demonstrations etc... 
 
-3. PARTIAL CONTENT HANDLING (CRITICAL): 
-   - If content starts mid-topic: Create a complete theory block with a title indicating continuation (e.g., "JavaScript Design Patterns (Continued)"). Include sufficient context to make it standalone.
-   - If content ends mid-topic: Process the available content completely and indicate in logicalBlockInfo where the logical boundary should be.
-   - Never leave a chunk empty - extract whatever partial content is available rather than skipping it.
-   - STRICT SIZE LIMIT: Never process more than 100 lines in a single logical block. If a topic exceeds this limit, break it into smaller, coherent sections.
-
-4. COMPREHENSIVE CONTENT EXTRACTION: Extract ALL relevant content from the provided chunk. Create multiple theory blocks for distinct topics, with corresponding questions and tasks for each theory block. with unique ID and complete content. Include ALL subtopics and ensure theory blocks contain rich, detailed explanations.
-
-5. IMAGE PRESERVATION (HIGHEST PRIORITY): 
-   - MANDATORY: Scan the entire content for ALL image references using pattern ![alt text](image_url)
-   - Include EVERY image found in the appropriate theory section with EXACT original syntax preserved
-   - DO NOT modify image paths - keep them exactly as they appear in the original markdown
-   - Images are CRITICAL visual aids and must be preserved with highest priority
-   - If you find ANY images in the content, they MUST appear in your output
-
-6. QUESTION GENERATION EXCELLENCE: For EACH theory block, generate AT LEAST 5 diverse questions (total minimum 10 questions):
-   - Include a mix of question types: MCQs, coding challenges, open-ended questions
-   - Create questions at different difficulty levels (easy, medium, hard)
-   - Ensure questions test both basic understanding and advanced application
-   - For MCQs, create plausible but clearly incorrect distractors
-   - Include detailed explanations and analysis points for each answer
-
-6. PRACTICAL TASK CREATION: Generate AT LEAST 3 practical coding tasks for EACH theory block:
-   - Tasks should range from simple implementation to complex problem-solving
-   - Include clear requirements, starting code templates, and solution code
-   - Provide multiple test cases that cover edge cases
-   - Include helpful hints that guide without giving away solutions
-   - Tasks should be realistic and relevant to frontend interviews
-
-7. COMPLETE ALL FIELDS: Every single field in the JSON structure must be filled with high-quality content:
-   - No empty arrays or placeholder text
-   - Include comprehensive metadata (tags, complexity ratings, etc.)
-   - Create proper relationships between theory, questions, and tasks
-   - Use descriptive IDs that reflect content (e.g., "theory_event_loop", "question_event_loop_1")
-
-8. VALID JSON OUTPUT: Your response MUST be valid, parseable JSON with no markdown formatting or explanations outside the JSON structure.
-
-REQUIRED FIELDS WITH ENHANCED REQUIREMENTS:
-- Theory: title (concise, descriptive), content (COMPLETE with ALL code examples and image references intact), examples (3+ per theory block), tags (5+), technology, learningPath, complexity (1-10), interviewRelevance (1-10)
-- Questions: text (clear, specific), difficulty (easy/medium/hard), type (mcq/code/open/flashcard), options (exactly 4 for MCQs with one correct answer), answer (comprehensive), analysis (5+), tags (5+)
-- Tasks: title (descriptive), description (detailed requirements), difficulty, startingCode (functional template), solutionCode (complete working solution), testCases (5+), hints (3+), tags (5+), timeEstimate
-
-YOUR MISSION: Parse this content with 100% thoroughness. Generate a complete, interview-ready resource with rich theory explanations, challenging questions, and practical tasks. Leave no concept unexplained, no question unasked, no practical application unexplored.
-
-RESPOND WITH ONLY VALID JSON IN THIS EXACT FORMAT:
+! RESPOND WITH ONLY VALID JSON IN THIS EXACT FORMAT !!! :
 {
   "logicalBlockInfo": {
     "suggestedEndLine": -1
@@ -73,7 +50,7 @@ RESPOND WITH ONLY VALID JSON IN THIS EXACT FORMAT:
     {
       "id": "theory_[unique_id]",
       "title": "Section Title",
-      "content": "# Detailed Markdown Content\\n\\nThis should be comprehensive content with proper markdown formatting, including:\\n\\n## Key Concepts\\n- Important point 1\\n- Important point 2\\n\\n## Implementation\\n\`\`\`typescript\\nfunction example() {\\n  // Implementation details\\n  return true;\\n}\\n\`\`\`",
+      "content": "This should be comprehensive content with proper markdown formatting, including:\\n\\n## Key Concepts\\n- Important point 1\\n- Important point 2\\n\\n## Implementation\\n\`\`\`typescript\\nfunction example() {\\n  // Implementation details\\n  return true;\\n}\\n\`\`\`",
       "examples": [
         {
           "id": "example_[unique_id]_1",
@@ -97,7 +74,7 @@ RESPOND WITH ONLY VALID JSON IN THIS EXACT FORMAT:
       "prerequisites": ["prerequisite_concept_1", "prerequisite_concept_2"],
       "complexity": 6,
       "interviewRelevance": 8,
-      "learningPath": "intermediate",
+      "learningPath": "advanced",
       "requiredFor": ["advanced_concept_1", "advanced_concept_2"]
     }
   ],
@@ -138,41 +115,8 @@ RESPOND WITH ONLY VALID JSON IN THIS EXACT FORMAT:
       "prerequisites": ["prerequisite_1", "prerequisite_2"],
       "complexity": 7,
       "interviewFrequency": 8,
-      "learningPath": "intermediate"
+      "learningPath": "intermediate",
     },
-    {
-      "id": "question_[unique_id]_2",
-      "topic": "Specific Topic Name",
-      "level": "hard",
-      "type": "open",
-      "question": "Comprehensive open-ended question that requires detailed explanation?",
-      "answer": "Detailed model answer that covers all key points, edge cases, and provides code examples where relevant. The answer should be thorough enough to serve as a reference implementation.",
-      "options": [],
-      "analysisPoints": [
-        "Deep analysis point 1",
-        "Deep analysis point 2",
-        "Deep analysis point 3",
-        "Deep analysis point 4"
-      ],
-      "keyConcepts": [
-        "Advanced concept 1",
-        "Advanced concept 2",
-        "Advanced concept 3",
-        "Advanced concept 4"
-      ],
-      "evaluationCriteria": [
-        "Depth of understanding",
-        "Completeness of explanation",
-        "Consideration of edge cases",
-        "Code quality and best practices"
-      ],
-      "example": "\\n\`\`\`typescript\\n// Complex example demonstrating the concept\\nfunction complexExample(input: any): any {\\n  // Detailed implementation\\n  return processedResult;\\n}\\n\`\`\`",
-      "tags": ["advanced", "tag2", "tag3", "tag4"],
-      "prerequisites": ["intermediate_concept_1", "intermediate_concept_2"],
-      "complexity": 9,
-      "interviewFrequency": 7,
-      "learningPath": "advanced"
-    }
   ],
   "tasks": [
     {
@@ -199,13 +143,21 @@ RESPOND WITH ONLY VALID JSON IN THIS EXACT FORMAT:
       "prerequisites": ["concept_1", "concept_2"],
       "complexity": 6,
       "interviewRelevance": 8,
-      "learningPath": "intermediate",
+      "learningPath": "beginner",
       "relatedConcepts": ["related_concept_1", "related_concept_2", "related_concept_3"]
     }
   ]
 }
 
-Here's the content to analyze:
+! Specifications:
+- learningPath can be: "beginner" | "intermediate" | "advanced" | "expert".
+- COMPLETE ALL FIELDS: Every single field in the JSON structure must be filled with high-quality content:
+- No empty arrays or placeholder text.
+- Include metadata (tags, complexity ratings, etc.).
+- Create proper relationships between theory, questions, and tasks.
+- Use descriptive IDs that reflect content (e.g., "theory_event_loop", "question_event_loop_1").
+
+! Here's the markdown content to analyze:
 
 ${markdownChunk}`;
   return prompt;
