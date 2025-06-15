@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Box, Typography, 
-  FormControl, InputLabel, Select, MenuItem, SelectChangeEvent,
-  Checkbox, FormControlLabel, FormGroup, Chip
+  Box, Typography, SelectChangeEvent,
 } from '@mui/material';
 import { useContentProcessorStore } from '../store/useContentProcessorStore';
 import { ProcessingStage, MultiStageProcessingOptions } from '../api/multiStageProcessor';
@@ -38,6 +36,7 @@ const LineRangeProcessor: React.FC<LineRangeProcessorProps> = ({
   const [isProcessingRange, setIsProcessingRange] = useState(false);
   const [isSequentialProcessing, setIsSequentialProcessing] = useState(false);
   const [isCompleteProcessing, setIsCompleteProcessing] = useState(false);
+  const [isProcessingWithGemini, setIsProcessingWithGemini] = useState(false);
   
   // Multi-stage processing state
   const [processingStage, setProcessingStage] = useState<ProcessingStage>('theory-extraction');
@@ -175,6 +174,68 @@ const LineRangeProcessor: React.FC<LineRangeProcessorProps> = ({
     });
   };
   
+  // Process line range with Gemini API
+  const processLineRangeWithGemini = async () => {
+    try {
+      // Validate inputs
+      if (startLine < 0 || endLine <= startLine || processingDelay < 0) {
+        alert('Please enter valid line range and delay');
+        return;
+      }
+      
+      // Get API key from environment variable
+      const geminiApiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+      
+      // Validate API key
+      if (!geminiApiKey) {
+        alert('Gemini API key not found in environment variables. Please add NEXT_PUBLIC_GEMINI_API_KEY to your .env file.');
+        return;
+      }
+      
+      // Calculate number of chunks based on line range (1 chunk per 100 lines)
+      const lineCount = endLine - startLine;
+      const calculatedNumChunks = Math.max(1, Math.ceil(lineCount / 100));
+      
+      setIsProcessingWithGemini(true);
+      
+      console.log(`Processing line range ${startLine}-${endLine} with Gemini API...`);
+      
+      // Process line range with Gemini API
+      await storeProcessLineRange(startLine, endLine, calculatedNumChunks, {
+        useGemini: true,
+        geminiApiKey: geminiApiKey,
+        processingDelay: processingDelay
+      });
+      
+      console.log('Processing with Gemini API completed');
+      
+      // Load all chunks to get the latest data
+      await useContentProcessorStore.getState().loadAllChunks();
+      
+      // Get the latest chunks after processing
+      const allChunks = useContentProcessorStore.getState().allChunks;
+      
+      // Find chunks that match our line range
+      const relevantChunks = allChunks.filter(chunk => 
+        chunk.startLine >= startLine && chunk.endLine <= endLine
+      );
+      
+      console.log(`Found ${relevantChunks.length} processed chunks in the line range`);
+      
+      // Set the first chunk as current if available
+      if (relevantChunks.length > 0) {
+        // Get the first chunk ID and set it as current
+        useContentProcessorStore.setState({ currentChunk: relevantChunks[0] });
+        setSelectedChunkId(relevantChunks[0].id);
+      }
+    } catch (error) {
+      console.error('Error processing with Gemini:', error);
+      alert(`Error processing with Gemini: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setIsProcessingWithGemini(false);
+    }
+  };
+  
   // Complete end-to-end processing: Process Line Range followed by All Stages Sequentially
   const processCompleteEndToEnd = async () => {
     try {
@@ -223,14 +284,18 @@ const LineRangeProcessor: React.FC<LineRangeProcessorProps> = ({
           setProcessingDelay={setProcessingDelay}
         />
         
+
+        
         {/* Processing buttons component */}
         <ProcessingButtons
           isProcessingRange={isProcessingRange}
           isSequentialProcessing={isSequentialProcessing}
           isCompleteProcessing={isCompleteProcessing}
+          isProcessingWithGemini={isProcessingWithGemini}
           onProcessLineRange={processLineRange}
           onProcessAllSequentially={processAllChunksSequentially}
           onCompleteProcessing={processCompleteEndToEnd}
+          onProcessWithGemini={processLineRangeWithGemini}
         />
       </Box>
       <Typography variant="caption" color="text.secondary">

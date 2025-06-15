@@ -1,13 +1,9 @@
 /**
- * Builds prompts specifically optimized for local LLM models
- * These prompts are designed to work well with models like DeepSeek Coder, LLaMA, etc.
+ * Builds an analysis prompt optimized for Google Gemini 2.5 Flash Preview API
+ * This prompt is structured to leverage Gemini's strengths in one-shot processing
  */
 
-/**
- * Builds an analysis prompt optimized for local LLMs
- * This version is more direct and structured to help local models generate valid JSON
- */
-export function buildLocalLlmAnalysisPrompt(markdownChunk: string): string {
+export function buildGeminiAnalysisPrompt(markdownChunk: string): string {
   // Create the prompt with enhanced instructions for maximum content extraction and generation
   const prompt = `You are an expert content analyzer for frontend interview preparation. Your task is to thoroughly analyze the provided markdown content and transforming it into a comprehensive theory, questions, and tasks.
 
@@ -149,7 +145,7 @@ export function buildLocalLlmAnalysisPrompt(markdownChunk: string): string {
   ]
 }
 
-! Specifications:
+! GUIDELINES:
 - learningPath can be: "beginner" | "intermediate" | "advanced" | "expert".
 - COMPLETE ALL FIELDS: Every single field in the JSON structure must be filled with high-quality content:
 - No empty arrays or placeholder text.
@@ -160,5 +156,6 @@ export function buildLocalLlmAnalysisPrompt(markdownChunk: string): string {
 ! Here's the markdown content to analyze:
 
 ${markdownChunk}`;
+
   return prompt;
 }

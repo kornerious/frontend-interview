@@ -2,6 +2,7 @@ import { ContentProcessor } from '../utils/contentProcessor';
 import { ProcessedChunk, ProcessingState, AIAnalysisResult } from '../types';
 import { ContentProcessorStorage } from '../utils/storageService';
 import localLlmService from './localLlmService';
+import geminiService from './geminiService';
 import { 
   buildTheoryExtractionPrompt, 
   buildTheoryEnhancementPrompt,
@@ -10,6 +11,7 @@ import {
   buildChunkRewritePrompt
 } from './promptBuilders/index';
 import { sanitizeAIResponse } from './sanitizers';
+import { ResponseBackupService } from '../utils/responseBackupService';
 
 /**
  * Processing stage types
@@ -27,6 +29,8 @@ export type ProcessingStage =
 export interface MultiStageProcessingOptions {
   useLocalLlm?: boolean;
   localLlmModel?: string;
+  useGemini?: boolean;
+  geminiApiKey?: string;
   processingDelay?: number;
   maxChunks?: number;
   stage?: ProcessingStage;
@@ -56,7 +60,7 @@ export class MultiStageProcessor {
     content: any,
     options: MultiStageProcessingOptions = {}
   ): Promise<any> {
-    const { useLocalLlm, localLlmModel } = options;
+    const { useLocalLlm, localLlmModel, useGemini, geminiApiKey } = options;
     let prompt = '';
     
     // Build prompt based on stage
@@ -80,13 +84,37 @@ export class MultiStageProcessor {
         throw new Error(`Unknown processing stage: ${stage}`);
     }
     
-    // Process with local LLM or cloud service
+    // Process with appropriate service based on options
     let response: string;
-    if (useLocalLlm && localLlmModel) {
+    
+    if (useGemini) {
+      console.log(`Processing stage ${stage} with Gemini API`);
+      
+      // Initialize Gemini service if needed
+      if (!geminiService.isInitialized() && geminiApiKey) {
+        await geminiService.initialize({ apiKey: geminiApiKey });
+      }
+      
+      // Process with Gemini
+      response = await geminiService.processContent(prompt, {
+        temperature: 1.0,
+        enableCodeExecution: true,
+        maxOutputTokens: 65536
+      });
+      
+      // Save response backup with metadata
+      await ResponseBackupService.saveResponseBackup(response, 'gemini', {
+        stage,
+        timestamp: new Date().toISOString(),
+        contentLength: content.length,
+        responseLength: response.length,
+        processingOptions: options
+      });
+    } else if (useLocalLlm && localLlmModel) {
       console.log(`Processing stage ${stage} with local LLM model: ${localLlmModel}`);
       response = await localLlmService.processContent(prompt, { 
         model: localLlmModel,
-        temperature: stage !== 'theory-extraction' ? 0.9 : 0.7 // Higher temperature for creative tasks
+        temperature: 1.0 // Higher temperature for creative tasks
       });
     } else {
       console.log(`Processing stage ${stage} with cloud AI`);
@@ -160,37 +188,52 @@ export class MultiStageProcessor {
     
     // Process each chunk
     for (let i = 0; i < numChunks && i < maxChunks; i++) {
-      const chunkStartLine = startLine + (i * linesPerChunk);
-      const chunkEndLine = Math.min(chunkStartLine + linesPerChunk - 1, endLine);
+      const chunkStartLine = startLine + Math.floor(i * linesPerChunk);
+      const chunkEndLine = i === numChunks - 1 ? endLine : startLine + Math.floor((i + 1) * linesPerChunk);
+      
+      console.log(`Processing chunk ${i + 1}/${numChunks}: lines ${chunkStartLine}-${chunkEndLine}`);
       
       try {
-        // Read chunk content
-        const content = await ContentProcessor.readChunk(chunkStartLine, chunkEndLine);
+        // Read content for this chunk
+        const chunkContent = await ContentProcessor.readChunk(chunkStartLine, chunkEndLine);
         
         // Process with theory extraction stage
-        const result = await this.processStage('theory-extraction', content, options) as AIAnalysisResult;
+        const result = await this.processStage('theory-extraction', chunkContent, options) as AIAnalysisResult;
+        
+        // Validate the result structure if using Gemini
+        if (options.useGemini) {
+          if (!result || !result.theory || !Array.isArray(result.theory)) {
+            console.error('Invalid response format from Gemini API. Expected theory array.');
+            console.error('Received:', JSON.stringify(result).substring(0, 200) + '...');
+            throw new Error('Invalid response format from Gemini API. Processing stopped.');
+          }
+        }
         
         // Create processed chunk
         const chunk: ProcessedChunk = {
           id: `chunk_${chunkStartLine}_${chunkEndLine}`,
           startLine: chunkStartLine,
           endLine: chunkEndLine,
-          processedDate: new Date().toISOString(),
+          theory: result.theory || [],
+          questions: result.questions || [],
+          tasks: result.tasks || [],
+          logicalBlockInfo: result.logicalBlockInfo || { suggestedEndLine: -1 },
           completed: false,
-          ...result
+          processedDate: new Date().toISOString()
         };
         
-        // Save chunk
+        // Save processed chunk
         await ContentProcessor.saveProcessedChunk(chunk);
         processedChunks.push(chunk);
         
-        // Add delay between chunks
-        if (i < numChunks - 1) {
-          await new Promise(resolve => setTimeout(resolve, processingDelay));
+        // Add delay between chunks if specified
+        if (processingDelay && i < numChunks - 1) {
+          console.log(`Waiting ${processingDelay} seconds before processing next chunk...`);
+          await new Promise(resolve => setTimeout(resolve, processingDelay * 1000));
         }
       } catch (error) {
         console.error(`Error processing chunk ${i + 1}/${numChunks}:`, error);
-        // Continue with next chunk
+        throw error;
       }
     }
     
