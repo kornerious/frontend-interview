@@ -78,7 +78,7 @@ const LocalLlmSelector: React.FC<LocalLlmSelectorProps> = ({
   // Handle model selection
   const handleModelSelect = () => {
     setSuccess(`Model selected: ${selectedModel}`);
-    console.log(`Selected model: ${selectedModel}`);
+    // Console log removed
   };
 
   // Handle process content button click

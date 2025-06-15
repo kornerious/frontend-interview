@@ -64,7 +64,7 @@ export const useContentProcessorStore = create<ContentProcessorStore>((set, get)
         isLoading: false
       });
     } catch (error) {
-      console.error('Error initializing content processor store:', error);
+      // Console log removed
       set({
         error: error instanceof Error ? error.message : 'Failed to initialize content processor',
         isLoading: false
@@ -91,7 +91,7 @@ export const useContentProcessorStore = create<ContentProcessorStore>((set, get)
         isLoading: false
       }));
     } catch (error) {
-      console.error('Error processing next chunk:', error);
+      // Console log removed
       set({
         error: error instanceof Error ? error.message : 'Failed to process next chunk',
         isLoading: false
@@ -127,7 +127,7 @@ export const useContentProcessorStore = create<ContentProcessorStore>((set, get)
         isLoading: false
       }));
     } catch (error) {
-      console.error('Error marking chunk as completed:', error);
+      // Console log removed
       set({
         error: error instanceof Error ? error.message : 'Failed to mark chunk as completed',
         isLoading: false
@@ -151,7 +151,7 @@ export const useContentProcessorStore = create<ContentProcessorStore>((set, get)
         isLoading: false
       });
     } catch (error) {
-      console.error('Error resetting processing:', error);
+      // Console log removed
       set({
         error: error instanceof Error ? error.message : 'Failed to reset processing',
         isLoading: false
@@ -173,7 +173,7 @@ export const useContentProcessorStore = create<ContentProcessorStore>((set, get)
         isLoading: false
       });
     } catch (error) {
-      console.error('Error loading all chunks:', error);
+      // Console log removed
       set({
         error: error instanceof Error ? error.message : 'Failed to load all chunks',
         isLoading: false
@@ -199,7 +199,7 @@ export const useContentProcessorStore = create<ContentProcessorStore>((set, get)
   // Process a line range with multi-stage processor
   processLineRange: async (startLine: number, endLine: number, numChunks: number, options?: MultiStageProcessingOptions) => {
     try {
-      console.log('🔍 STORE: processLineRange called with options:', JSON.stringify(options));
+      // Console log removed
       set({ isLoading: true, error: null });
       
       // Process the line range
@@ -219,7 +219,7 @@ export const useContentProcessorStore = create<ContentProcessorStore>((set, get)
         isLoading: false
       }));
     } catch (error) {
-      console.error('Error processing line range:', error);
+      // Console log removed
       set({
         error: error instanceof Error ? error.message : 'Failed to process line range',
         isLoading: false
@@ -244,7 +244,7 @@ export const useContentProcessorStore = create<ContentProcessorStore>((set, get)
         isLoading: false
       }));
     } catch (error) {
-      console.error('Error enhancing theory:', error);
+      // Console log removed
       set({
         error: error instanceof Error ? error.message : 'Failed to enhance theory',
         isLoading: false
@@ -269,7 +269,7 @@ export const useContentProcessorStore = create<ContentProcessorStore>((set, get)
         isLoading: false
       }));
     } catch (error) {
-      console.error('Error generating questions:', error);
+      // Console log removed
       set({
         error: error instanceof Error ? error.message : 'Failed to generate questions',
         isLoading: false
@@ -294,7 +294,7 @@ export const useContentProcessorStore = create<ContentProcessorStore>((set, get)
         isLoading: false
       }));
     } catch (error) {
-      console.error('Error generating tasks:', error);
+      // Console log removed
       set({
         error: error instanceof Error ? error.message : 'Failed to generate tasks',
         isLoading: false
@@ -319,7 +319,7 @@ export const useContentProcessorStore = create<ContentProcessorStore>((set, get)
         isLoading: false
       }));
     } catch (error) {
-      console.error('Error rewriting chunk:', error);
+      // Console log removed
       set({
         error: error instanceof Error ? error.message : 'Failed to rewrite chunk',
         isLoading: false

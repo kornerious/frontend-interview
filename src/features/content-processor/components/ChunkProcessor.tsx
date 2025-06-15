@@ -59,7 +59,7 @@ const ChunkProcessor = {
         rewriteOptions
       };
       
-      console.log(`Processing chunk ${selectedChunkId} with stage: ${processingStage}`);
+      // Console log removed
       
       // Call the appropriate function based on the selected stage
       switch (processingStage) {
@@ -95,7 +95,7 @@ const ChunkProcessor = {
       alert(`Successfully processed chunk with ${processingStage}`);
       return true;
     } catch (error) {
-      console.error(`Error processing chunk with ${processingStage}:`, error);
+      // Console log removed
       alert(`Error processing chunk: ${error instanceof Error ? error.message : String(error)}`);
       return false;
     } finally {

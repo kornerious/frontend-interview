@@ -94,7 +94,7 @@ const RewriteChunkDialog: React.FC<RewriteChunkDialogProps> = ({
       await rewriteChunk(chunkId, options);
       onClose();
     } catch (error) {
-      console.error('Error rewriting chunk:', error);
+      // Console log removed
       alert(`Error rewriting chunk: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsProcessing(false);

@@ -28,10 +28,10 @@ export class FileProcessor {
       // Extract the chunk
       const chunk = lines.slice(startLine, endLine).join('\n');
       
-      console.log(`Reading chunk from line ${startLine} to ${endLine} (${endLine - startLine} lines)`);
+      // Console log removed
       return chunk;
     } catch (error) {
-      console.error('Error reading file chunk:', error);
+      // Console log removed
       throw error;
     }
   }
@@ -60,10 +60,10 @@ export class FileProcessor {
       // Extract the specified line range
       const chunk = lines.slice(startLine, actualEndLine).join('\n');
       
-      console.log(`Reading line range from line ${startLine} to ${actualEndLine} (${actualEndLine - startLine} lines)`);
+      // Console log removed
       return chunk;
     } catch (error) {
-      console.error(`Error reading line range ${startLine}-${endLine}:`, error);
+      // Console log removed
       throw error;
     }
   }
@@ -85,7 +85,7 @@ export class FileProcessor {
       const text = await response.text();
       return text.split('\n').length;
     } catch (error) {
-      console.error('Error getting total lines:', error);
+      // Console log removed
       throw error;
     }
   }
@@ -104,7 +104,7 @@ export class FileProcessor {
       
       return await response.text();
     } catch (error) {
-      console.error('Error getting file content:', error);
+      // Console log removed
       throw error;
     }
   }

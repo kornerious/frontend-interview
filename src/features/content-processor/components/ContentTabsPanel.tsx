@@ -22,10 +22,10 @@ const ContentTabsPanel: React.FC<ContentTabsPanelProps> = ({
   handleTabChange,
   currentChunk
 }) => {
-  console.log('[DEBUG] ContentTabsPanel received currentChunk:', currentChunk);
-  console.log('[DEBUG] Questions data:', currentChunk?.questions);
-  console.log('[DEBUG] Questions is array:', Array.isArray(currentChunk?.questions));
-  console.log('[DEBUG] Questions length:', Array.isArray(currentChunk?.questions) ? currentChunk?.questions?.length : 'not an array');
+  // Console log removed
+  // Console log removed
+  // Console log removed
+  // Console log removed
 
   return (
     <>

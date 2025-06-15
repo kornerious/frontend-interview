@@ -66,7 +66,7 @@ const ContentProcessorPanel: React.FC = () => {
     initialize()
       .then(() => loadAllChunks())
       .catch(err => {
-        console.error('Failed to initialize content processor:', err);
+        // Console log removed
       });
     
     // Initialize local LLM service
@@ -76,11 +76,11 @@ const ContentProcessorPanel: React.FC = () => {
           setLocalLlmInitialized(initialized);
           if (initialized) {
             localLlmService.setDefaultModel(selectedModel);
-            console.log('Local LLM service initialized with model:', selectedModel);
+            // Console log removed
           }
         })
         .catch(err => {
-          console.error('Failed to initialize local LLM service:', err);
+          // Console log removed
         });
     }
   }, [initialize, loadAllChunks, useLocalLlm, selectedModel]);
@@ -106,21 +106,21 @@ const ContentProcessorPanel: React.FC = () => {
     try {
       // If using local LLM and it's initialized, process with local LLM
       if (useLocalLlm && localLlmInitialized) {
-        console.log(`Processing next chunk with local LLM model: ${selectedModel}`);
+        // Console log removed
         await processNextChunk({
           useLocalLlm: true,
           localLlmModel: selectedModel
         });
       } else {
         // Otherwise use Claude
-        console.log('Processing next chunk with Claude API');
+        // Console log removed
         await processNextChunk();
       }
       
       // Reset to theory tab when new content is loaded
       setTabValue(0);
     } catch (err) {
-      console.error('Error processing next chunk:', err);
+      // Console log removed
     }
   };
 
@@ -132,12 +132,12 @@ const ContentProcessorPanel: React.FC = () => {
       // If there are more chunks to process, automatically process the next one
       const completedChunks = allChunks.filter(chunk => chunk.completed).length;
       if (completedChunks < allChunks.length) {
-        console.log(`Marked chunk as completed. ${completedChunks} of ${allChunks.length} chunks completed.`);
+        // Console log removed
       } else {
-        console.log('All chunks completed!');
+        // Console log removed
       }
     } catch (err) {
-      console.error('Error marking chunk as completed:', err);
+      // Console log removed
     }
   };
 
@@ -146,9 +146,9 @@ const ContentProcessorPanel: React.FC = () => {
     try {
       await resetProcessing();
       setTabValue(0);
-      console.log('Content processor reset');
+      // Console log removed
     } catch (err) {
-      console.error('Error resetting content processor:', err);
+      // Console log removed
     }
   };
 
@@ -157,7 +157,7 @@ const ContentProcessorPanel: React.FC = () => {
     try {
       ExportUtils.exportAndDownload(allChunks);
     } catch (err) {
-      console.error('Error exporting to JSON:', err);
+      // Console log removed
     }
   };
 

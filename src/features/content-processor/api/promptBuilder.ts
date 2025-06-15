@@ -186,9 +186,7 @@ Here's the content to analyze:
 ${markdownChunk}`;
   
   // Log the prompt (excluding the full markdown content)
-  console.log('PROMPT TO CLAUDE (template part):', prompt.substring(0, prompt.indexOf("Here's the content to analyze:") + 30) + '...');
-  console.log('MARKDOWN CHUNK LENGTH:', markdownChunk.length);
-  console.log('MARKDOWN CHUNK PREVIEW (first 200 chars):', markdownChunk.substring(0, 200) + (markdownChunk.length > 200 ? '...' : ''));
+  // Prompt built successfully
   
   return prompt;
 }

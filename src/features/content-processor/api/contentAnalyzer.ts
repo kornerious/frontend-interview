@@ -32,7 +32,7 @@ export class ContentAnalyzer {
       }
       
       try {
-        console.log(`Processing content with local LLM model: ${options.localLlmModel || 'default'}`);
+        // Console log removed
         
         // Set the model if specified
         if (options.localLlmModel) {
@@ -42,7 +42,6 @@ export class ContentAnalyzer {
         // Send the prompt to local LLM
         return await localLlmService.processContent(prompt);
       } catch (error) {
-        console.error('Error processing content with local LLM:', error);
         throw error;
       }
     } else {
@@ -55,7 +54,7 @@ export class ContentAnalyzer {
         // Send the prompt to Claude
         return await claudeService.sendMessage(prompt);
       } catch (error) {
-        console.error('Error processing content with Claude:', error);
+        // Console log removed
         throw error;
       }
     }
@@ -86,7 +85,7 @@ export class ContentAnalyzer {
       }
       
       try {
-        console.log(`Processing content with local LLM model: ${options.localLlmModel || 'default'}`);
+        // Console log removed
         
         // Set the model if specified
         if (options.localLlmModel) {
@@ -99,7 +98,7 @@ export class ContentAnalyzer {
         // Process the response
         return processResponse(response);
       } catch (error) {
-        console.error('Error analyzing content with local LLM:', error);
+        // Console log removed
         throw error;
       }
     } else {
@@ -115,7 +114,7 @@ export class ContentAnalyzer {
         // Process the response
         return processResponse(response);
       } catch (error) {
-        console.error('Error analyzing content with Claude:', error);
+        // Console log removed
         throw error;
       }
     }

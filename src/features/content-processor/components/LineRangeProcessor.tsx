@@ -99,7 +99,7 @@ const LineRangeProcessor: React.FC<LineRangeProcessorProps> = ({
       const calculatedNumChunks = Math.ceil(lineCount / chunkSize);
       
       setIsProcessingRange(true);
-      console.log(`Processing lines ${startLine}-${endLine} with fixed 100-line chunks, ${calculatedNumChunks} chunks with ${processingDelay}s delay...`);
+      // Process line range
       
       // Use the store action to process the line range
       const options: MultiStageProcessingOptions = {
@@ -114,7 +114,7 @@ const LineRangeProcessor: React.FC<LineRangeProcessorProps> = ({
       
       // Get all processed chunks after processing
       const allProcessedChunks = await ContentProcessorStorage.getAllProcessedChunks();
-      console.log(`Found ${allProcessedChunks.length} total processed chunks`);
+      // Update UI with processed chunks
       
       // Force update the UI with all processed chunks
       useContentProcessorStore.setState({ allChunks: allProcessedChunks });
@@ -126,7 +126,7 @@ const LineRangeProcessor: React.FC<LineRangeProcessorProps> = ({
         setSelectedChunkId(allProcessedChunks[0].id);
       }
     } catch (error) {
-      console.error('Error processing line range:', error);
+      // Console log removed
       alert(`Error processing line range: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsProcessingRange(false);
@@ -199,7 +199,7 @@ const LineRangeProcessor: React.FC<LineRangeProcessorProps> = ({
       
       setIsProcessingWithGemini(true);
       
-      console.log(`Processing line range ${startLine}-${endLine} with Gemini API...`);
+      // Console log removed
       
       // Process line range with Gemini API
       await storeProcessLineRange(startLine, endLine, calculatedNumChunks, {
@@ -208,7 +208,7 @@ const LineRangeProcessor: React.FC<LineRangeProcessorProps> = ({
         processingDelay: processingDelay
       });
       
-      console.log('Processing with Gemini API completed');
+      // Console log removed
       
       // Load all chunks to get the latest data
       await useContentProcessorStore.getState().loadAllChunks();
@@ -221,7 +221,7 @@ const LineRangeProcessor: React.FC<LineRangeProcessorProps> = ({
         chunk.startLine >= startLine && chunk.endLine <= endLine
       );
       
-      console.log(`Found ${relevantChunks.length} processed chunks in the line range`);
+      // Console log removed
       
       // Set the first chunk as current if available
       if (relevantChunks.length > 0) {
@@ -230,7 +230,7 @@ const LineRangeProcessor: React.FC<LineRangeProcessorProps> = ({
         setSelectedChunkId(relevantChunks[0].id);
       }
     } catch (error) {
-      console.error('Error processing with Gemini:', error);
+      // Console log removed
       alert(`Error processing with Gemini: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsProcessingWithGemini(false);
@@ -241,7 +241,7 @@ const LineRangeProcessor: React.FC<LineRangeProcessorProps> = ({
   const processCompleteEndToEnd = async () => {
     try {
       setIsCompleteProcessing(true);
-      console.log(`Starting complete end-to-end processing for lines ${startLine}-${endLine}...`);
+      // Console log removed
       
       // First process the line range
       await processLineRange();
@@ -249,10 +249,10 @@ const LineRangeProcessor: React.FC<LineRangeProcessorProps> = ({
       // Then process all stages sequentially
       await processAllChunksSequentially();
       
-      console.log('Complete end-to-end processing finished successfully!');
+      // Console log removed
       return true;
     } catch (error) {
-      console.error('Error during complete processing:', error);
+      // Console log removed
       alert(`Error during complete processing: ${error instanceof Error ? error.message : String(error)}`);
       return false;
     } finally {

@@ -26,7 +26,6 @@ export class ContentProcessor {
             // Process with AI using ContentAnalyzer
             return await ContentAnalyzer.processWithPrompt(content, prompt, options);
         } catch (error) {
-            console.error('Error processing content with AI:', error);
             throw error;
         }
     }
@@ -43,7 +42,6 @@ export class ContentProcessor {
                 state.currentPosition
             );
         } catch (error) {
-            console.error('Error reading next chunk:', error);
             throw error;
         }
     }
@@ -57,7 +55,7 @@ export class ContentProcessor {
         try {
             return await FileProcessor.readLineRange(this.FILE_PATH, startLine, endLine);
         } catch (error) {
-            console.error(`Error reading chunk from line ${startLine} to ${endLine}:`, error);
+            // Console log removed
             throw error;
         }
     }
@@ -70,7 +68,7 @@ export class ContentProcessor {
         try {
             return await ContentProcessorStorage.getProcessedChunk(chunkId);
         } catch (error) {
-            console.error(`Error getting chunk ${chunkId}:`, error);
+            // Console log removed
             throw error;
         }
     }
@@ -83,7 +81,7 @@ export class ContentProcessor {
         try {
             await ContentProcessorStorage.saveProcessedChunk(chunk);
         } catch (error) {
-            console.error(`Error saving processed chunk ${chunk.id}:`, error);
+            // Console log removed
             throw error;
         }
     }
@@ -110,7 +108,7 @@ export class ContentProcessor {
 
             return state;
         } catch (error) {
-            console.error('Error initializing content processor:', error);
+            // Console log removed
             throw error;
         }
     }
@@ -164,7 +162,7 @@ export class ContentProcessor {
             if (analysisResult.logicalBlockInfo && analysisResult.logicalBlockInfo.suggestedEndLine > 0) {
                 // AI has suggested a specific end line for the logical block
                 linesRead = analysisResult.logicalBlockInfo.suggestedEndLine;
-                console.log(`AI suggested ending logical block at line ${linesRead} (${linesRead - state.currentPosition} lines)`);
+                // Console log removed
             }
 
             // Create a processed chunk
@@ -192,7 +190,7 @@ export class ContentProcessor {
 
             return {chunk, state};
         } catch (error) {
-            console.error('Error processing next chunk:', error);
+            // Console log removed
 
             // Update state to indicate error
             const state = await ContentProcessorStorage.getProcessingState();
@@ -258,7 +256,7 @@ export class ContentProcessor {
             processingDelay?: number;
         }
     ): Promise<ProcessedChunk[]> {
-        console.log(`Processing line range ${startLine}-${endLine} in ${numChunks} chunks`);
+        // Console log removed
 
         try {
             // Validate inputs
@@ -286,7 +284,7 @@ export class ContentProcessor {
             // Calculate number of chunks needed based on fixed chunk size
             const calculatedNumChunks = Math.ceil(totalLinesToProcess / linesPerChunk);
 
-            console.log(`Processing ${totalLinesToProcess} lines in ${calculatedNumChunks} chunks (${linesPerChunk} lines per chunk, adjusted from user request of ${numChunks} chunks)`);
+            // Console log removed
 
             // Clear existing chunks
             await ContentProcessorStorage.clearAllProcessedChunks();
@@ -297,62 +295,50 @@ export class ContentProcessor {
             // Process each chunk
             const processedChunks: ProcessedChunk[] = [];
 
-            console.log(`DEBUG: Total lines in file: ${totalLines}`);
-            console.log(`DEBUG: Processing line range ${startLine}-${actualEndLine} in ${calculatedNumChunks} chunks`);
+            // Process line range in chunks
 
             for (let i = 0; i < calculatedNumChunks; i++) {
                 try {
                     const chunkStartLine = startLine + (i * linesPerChunk);
 
-                    // Stop if we've reached the end
-                    if (chunkStartLine >= actualEndLine) {
-                        console.log(`DEBUG: Stopping at chunk ${i + 1} because start line ${chunkStartLine} >= end line ${actualEndLine}`);
+                    // Stop if we've reached the end or would create an empty chunk
+                    if (chunkStartLine >= actualEndLine || chunkStartLine === actualEndLine - 1) {
                         break;
                     }
 
                     // Calculate end line (exclusive) to avoid overlap with next chunk
                     const chunkEndLine = Math.min(chunkStartLine + linesPerChunk, actualEndLine);
+                    
+                    // Skip chunks with no content (where start and end are the same or too close)
+                    if (chunkEndLine <= chunkStartLine || chunkEndLine - chunkStartLine < 2) {
+                        continue;
+                    }
 
-                    console.log(`DEBUG: Processing chunk ${i + 1}/${calculatedNumChunks}: lines ${chunkStartLine}-${chunkEndLine}`);
+                    // Processing chunk
 
                     // Get chunk content
                     const chunkContent = allLines.slice(chunkStartLine, chunkEndLine).join('\n');
-                    console.log(`DEBUG: Chunk ${i + 1} content length: ${chunkContent.length} characters`);
+                    // Get chunk content
                     
-                    // Add extra debug for lines 600-700
-                    if (chunkStartLine >= 600 && chunkStartLine < 700) {
-                        console.log(`DEBUG: DETAILED INSPECTION FOR LINES ${chunkStartLine}-${chunkEndLine}`);
-                        console.log(`DEBUG: First 100 chars: ${chunkContent.substring(0, 100)}`);
-                        console.log(`DEBUG: Content has whitespace only: ${chunkContent.trim().length === 0}`);
-                        console.log(`DEBUG: Content character count: ${chunkContent.length}`);
-                        console.log(`DEBUG: Line count in chunk: ${chunkContent.split('\n').length}`);
-                    }
+                    // No extra debug needed
 
                     if (chunkContent.trim().length === 0) {
-                        console.log(`DEBUG: Chunk ${i + 1} is empty, skipping`);
                         continue;
                     }
 
                     // Process with AI
-                    console.log(`DEBUG: Starting AI analysis for chunk ${i + 1} (lines ${chunkStartLine}-${chunkEndLine})`);
+                    // Starting AI analysis
                     let analysisResult;
                     try {
                         analysisResult = await ContentAnalyzer.analyzeContent(chunkContent, {
                             useLocalLlm: options?.useLocalLlm,
                             localLlmModel: options?.localLlmModel
                         });
-                        console.log(`DEBUG: AI analysis completed for chunk ${i + 1}`);
+                        // AI analysis completed
                         
-                        // For chunks in the 600-700 range, log the analysis result structure
-                        if (chunkStartLine >= 600 && chunkStartLine < 700) {
-                            console.log(`DEBUG: Analysis result for chunk ${i + 1} has theory blocks: ${analysisResult.theory ? analysisResult.theory.length : 0}`);
-                            console.log(`DEBUG: Analysis result for chunk ${i + 1} has questions: ${analysisResult.questions ? analysisResult.questions.length : 0}`);
-                            console.log(`DEBUG: Analysis result for chunk ${i + 1} has tasks: ${analysisResult.tasks ? analysisResult.tasks.length : 0}`);
-                        }
+                        // No extra debug needed
                     } catch (analysisError) {
-                        console.error(`DEBUG: ERROR in AI analysis for chunk ${i + 1}:`, analysisError);
                         // Skip this chunk and continue with the next one instead of throwing
-                        console.log(`DEBUG: Skipping chunk ${i + 1} due to analysis error and continuing...`);
                         continue; // Skip to the next iteration of the loop
                     }
 
@@ -371,7 +357,7 @@ export class ContentProcessor {
                     // Save chunk
                     await ContentProcessorStorage.saveProcessedChunk(chunk);
                     processedChunks.push(chunk);
-                    console.log(`DEBUG: Saved AI-processed chunk ${i + 1}/${calculatedNumChunks} with ID ${chunk.id}`);
+                    // Saved AI-processed chunk
 
 
                     // Update processing state
@@ -382,23 +368,19 @@ export class ContentProcessor {
                     // Add delay between chunks if specified
                     if (i < calculatedNumChunks - 1 && options?.processingDelay) {
                         const delay = options.processingDelay || 0;
-                        console.log(`DEBUG: Waiting ${delay} seconds before processing next chunk...`);
                         await new Promise(resolve => setTimeout(resolve, delay * 1000));
                     }
                 } catch (chunkError) {
-                    console.error(`ERROR processing chunk ${i + 1}:`, chunkError);
                     // Continue with next chunk even if this one fails
                 }
             }
 
             // Get all processed chunks to verify
             const allChunks = await ContentProcessorStorage.getAllProcessedChunks();
-            console.log(`Line range processing complete. Processed ${processedChunks.length} chunks.`);
-            console.log(`Total chunks in storage: ${allChunks.length}`);
 
             return allChunks;
         } catch (error) {
-            console.error('Error processing line range:', error);
+            // Console log removed
             throw error;
         }
     }

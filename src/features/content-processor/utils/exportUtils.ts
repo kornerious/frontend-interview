@@ -32,9 +32,9 @@ export class ExportUtils {
       // Release the URL object
       URL.revokeObjectURL(url);
       
-      console.log(`Exported ${chunks.length} chunks to JSON`);
+      // Console log removed
     } catch (error) {
-      console.error('Error exporting chunks to JSON:', error);
+      // Console log removed
       throw new Error(`Failed to export chunks: ${error instanceof Error ? error.message : String(error)}`);
     }
   }

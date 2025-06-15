@@ -15,12 +15,12 @@ interface TaskListProps {
  * Component to display a list of coding tasks
  */
 const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
-  console.log('[DEBUG] TaskList received tasks:', tasks);
+  // Console log removed
   
   // Ensure tasks is always an array
   const taskArray = Array.isArray(tasks) ? tasks : [];
   
-  console.log('[DEBUG] TaskList using array of length:', taskArray.length);
+  // Console log removed
   
   if (taskArray.length === 0) {
     return (

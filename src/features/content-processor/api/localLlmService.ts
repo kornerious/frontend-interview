@@ -41,14 +41,14 @@ class LocalLlmService {
       try {
         await axios.get(`${this.baseUrl}/api/version`);
       } catch (error) {
-        console.error('Ollama service is not running. Please start Ollama with: ollama serve');
+        // Console log removed
         return false;
       }
       
       this.initialized = true;
       return true;
     } catch (error) {
-      console.error('Error initializing Local LLM service:', error);
+      // Console log removed
       return false;
     }
   }
@@ -82,7 +82,7 @@ class LocalLlmService {
       const response = await axios.get(`${this.baseUrl}/api/tags`);
       return response.data.models.map((model: any) => model.name);
     } catch (error) {
-      console.error('Error listing models:', error);
+      // Console log removed
       return [];
     }
   }
@@ -103,8 +103,8 @@ class LocalLlmService {
     }
 
     try {
-      console.log(`Processing content with ${options.model || this.defaultModel}...`);
-      console.log(`Content length: ${content.length}`);
+      // Console log removed
+      // Console log removed
       
       const response = await axios.post(`${this.baseUrl}/api/generate`, {
         model: this.defaultModel,
@@ -120,10 +120,10 @@ class LocalLlmService {
         timeout: 200000 // 10 minute timeout for large content processing
       });
       
-      console.log(`Response received. Length: ${response.data.response.length}`);
+      // Console log removed
       return response.data.response;
     } catch (error) {
-      console.error('Error processing content with local LLM:', error);
+      // Console log removed
       throw error;
     }
   }
@@ -141,8 +141,8 @@ class LocalLlmService {
       // Use the specialized local LLM prompt builder instead of the general prompt template
       const fullPrompt = buildLocalLlmAnalysisPrompt(markdownContent);
       
-      console.log('SENDING TO LOCAL LLM:', fullPrompt.substring(0, 100) + '...');
-      console.log('FULL PROMPT LENGTH:', fullPrompt.length);
+      // Console log removed
+      // Console log removed
       
       // Use maximum available tokens for DeepSeek Coder 2 Extended
       const response = await this.processContent(fullPrompt, {
@@ -151,12 +151,12 @@ class LocalLlmService {
         maxTokens: 65536 // Increased to 150K tokens to handle larger chunks
       });
       
-      console.log('RECEIVED FROM LOCAL LLM:', response.substring(0, 100) + '...');
-      console.log('FULL RESPONSE LENGTH:', response.length);
+      // Console log removed
+      // Console log removed
       
       return response;
     } catch (error) {
-      console.error('Error analyzing content with local LLM:', error);
+      // Console log removed
       throw error;
     }
   }
@@ -168,7 +168,7 @@ class LocalLlmService {
     const results: Record<string, any> = {};
     
     for (const model of models) {
-      console.log(`Testing model: ${model}`);
+      // Console log removed
       try {
         const startTime = Date.now();
         const response = await this.processContent(content, { model });

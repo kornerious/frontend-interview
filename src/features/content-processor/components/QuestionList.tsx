@@ -16,12 +16,12 @@ interface QuestionListProps {
  * Component to display a list of questions
  */
 const QuestionList: React.FC<QuestionListProps> = ({ questions }) => {
-  console.log('[DEBUG] QuestionList received questions:', questions);
+  // Console log removed
   
   // Ensure questions is always an array
   const questionArray = Array.isArray(questions) ? questions : [];
   
-  console.log('[DEBUG] QuestionList using array of length:', questionArray.length);
+  // Console log removed
   
   if (questionArray.length === 0) {
     return (

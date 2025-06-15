@@ -65,7 +65,7 @@ export class MultiStageProcessor {
     
     // If using Gemini, use the specialized Gemini prompt builder
     if (useGemini) {
-      console.log(`Using specialized Gemini prompt builder for ${stage} stage`);
+      // Console log removed
       const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
       prompt = buildGeminiAnalysisPrompt(contentStr);
     } else {
@@ -94,10 +94,10 @@ export class MultiStageProcessor {
     // Process with appropriate service based on options
     let response: string;
    
-    console.log(`[DEBUG] Request JSON:`, prompt);
+    // Console log removed
     
     if (useGemini) {
-      console.log(`Processing stage ${stage} with Gemini API`);
+      // Console log removed
       
       // Initialize Gemini service if needed
       if (!geminiService.isInitialized() && geminiApiKey) {
@@ -109,13 +109,13 @@ export class MultiStageProcessor {
       
       // Response backup functionality removed as requested
     } else if (useLocalLlm && localLlmModel) {
-      console.log(`Processing stage ${stage} with local LLM model: ${localLlmModel}`);
+      // Console log removed
       response = await localLlmService.processContent(prompt, { 
         model: localLlmModel,
         temperature: 1.0 // Higher temperature for creative tasks
       });
     } else {
-      console.log(`Processing stage ${stage} with cloud AI`);
+      // Console log removed
       // Use ContentProcessor's AI service for cloud processing
       response = await ContentProcessor.processWithAI(content, prompt, options);
     }
@@ -178,7 +178,7 @@ export class MultiStageProcessor {
     numChunks: number,
     options: MultiStageProcessingOptions = {}
   ): Promise<ProcessedChunk[]> {
-    console.log('🔍 PROCESSOR: processLineRange called with options:', JSON.stringify(options));
+    // Console log removed
     const { processingDelay = 10000, chunkSize = 100 } = options; // Default to 10 seconds delay and 100-line chunks
     const processedChunks: ProcessedChunk[] = [];
     
@@ -195,7 +195,7 @@ export class MultiStageProcessor {
       // For the last chunk, use endLine, otherwise use fixed 99-line chunks
       const chunkEndLine = i === calculatedNumChunks - 1 ? endLine : chunkStartLine + linesPerChunk - 1;
       
-      console.log(`Processing chunk ${i + 1}/${calculatedNumChunks}: lines ${chunkStartLine}-${chunkEndLine}`);
+      // Console log removed
       
       try {
         // Read content for this chunk
@@ -206,8 +206,8 @@ export class MultiStageProcessor {
         
         // If using Gemini, use analyzeContent directly which now returns parsed JSON
         if (options.useGemini && options.geminiApiKey) {
-          console.log(`🔍🔍🔍 GEMINI FLOW TRIGGERED: Using Gemini API directly for content analysis`);
-          console.log(`Gemini API Key available: ${options.geminiApiKey ? 'YES' : 'NO'}`);
+          // Console log removed
+          // Console log removed
           
           // Initialize Gemini service if needed
           if (!geminiService.isInitialized()) {
@@ -216,14 +216,12 @@ export class MultiStageProcessor {
           
           // Use geminiService.analyzeContent which uses the specialized Gemini prompt builder
           // and returns a parsed JSON object directly
-          console.log('🔴🔴🔴 BEFORE CALLING geminiService.analyzeContent');
+          // Console log removed
           try {
             result = await geminiService.analyzeContent(chunkContent) as AIAnalysisResult;
-            console.log('🔴🔴🔴 AFTER CALLING geminiService.analyzeContent - SUCCESS');
-            console.log('Received parsed result from geminiService.analyzeContent:', 
-              JSON.stringify(result));
+            // Console log removed
           } catch (analyzeError) {
-            console.error('🔴🔴🔴 ERROR CALLING geminiService.analyzeContent:', analyzeError);
+            // Console log removed
             throw analyzeError;
           }
         } else {
@@ -234,8 +232,8 @@ export class MultiStageProcessor {
         // Validate the result structure if using Gemini
         if (options.useGemini) {
           if (!result || !result.theory || !Array.isArray(result.theory)) {
-            console.error('Invalid response format from Gemini API. Expected theory array.');
-            console.error('Received:', JSON.stringify(result).substring(0, 200) + '...');
+            // Console log removed
+            // Console log removed
             throw new Error('Invalid response format from Gemini API. Processing stopped.');
           }
         }
@@ -261,13 +259,13 @@ export class MultiStageProcessor {
         
         // Add delay between chunks if specified
         if (processingDelay && i < calculatedNumChunks - 1) {
-          console.log(`Waiting ${processingDelay} seconds before processing next chunk...`);
+          // Console log removed
           await new Promise(resolve => setTimeout(resolve, processingDelay * 1000));
         }
       } catch (error) {
-        console.error(`Error processing chunk ${i + 1}/${calculatedNumChunks}:`, error);
+        // Console log removed
         // Log the error but continue processing the next chunk instead of stopping
-        console.log(`Continuing to next chunk despite error...`);
+        // Console log removed
         // Don't throw the error, which would stop the entire process
       }
     }
@@ -321,36 +319,36 @@ export class MultiStageProcessor {
     chunkId: string,
     options: MultiStageProcessingOptions = {}
   ): Promise<ProcessedChunk> {
-    console.log('[DEBUG] Starting generateQuestions for chunk:', chunkId);
+    // Console log removed
     
     // Get the chunk
     const chunk = await ContentProcessor.getChunk(chunkId);
     if (!chunk) {
-      console.error('[DEBUG] Chunk not found:', chunkId);
+      // Console log removed
       throw new Error(`Chunk not found: ${chunkId}`);
     }
     
-    console.log('[DEBUG] Chunk theory blocks:', chunk.theory);
+    // Console log removed
     
     // Generate questions based on theory blocks
     const theoryContent = (chunk.theory || []).map(t => JSON.stringify(t)).join('\n\n');
-    console.log('[DEBUG] Theory content length:', theoryContent.length);
+    // Console log removed
     
     try {
-      console.log('[DEBUG] Calling processStage for question-generation');
+      // Console log removed
       const result = await this.processStage('question-generation', theoryContent, options);
-      console.log('[DEBUG] Questions received from AI:', result);
+      // Console log removed
       
       // Extract questions array from the result - ensure we get the actual array
       let questionsArray;
       if (typeof result === 'object' && result !== null && 'questions' in result && Array.isArray(result.questions)) {
         // The AI returned { questions: [...] } format
         questionsArray = result.questions;
-        console.log('[DEBUG] Extracted questions array from result:', questionsArray);
+        // Console log removed
       } else {
         // Fallback if the structure is different
         questionsArray = Array.isArray(result) ? result : [];
-        console.log('[DEBUG] Using result directly as questions array:', questionsArray);
+        // Console log removed
       }
       
       // Update chunk with questions array directly (not nested)
@@ -360,14 +358,14 @@ export class MultiStageProcessor {
         processedDate: new Date().toISOString()
       };
       
-      console.log('[DEBUG] Updated chunk with questions:', updatedChunk.questions);
+      // Console log removed
       
       // Save updated chunk
       await ContentProcessor.saveProcessedChunk(updatedChunk);
       
       return updatedChunk;
     } catch (error) {
-      console.error('[DEBUG] Error in generateQuestions:', error);
+      // Console log removed
       throw error;
     }
   }
@@ -390,20 +388,20 @@ export class MultiStageProcessor {
     
     // Generate tasks based on theory blocks
     const theoryContent = (chunk.theory || []).map(t => JSON.stringify(t)).join('\n\n');
-    console.log('[DEBUG] Calling processStage for task-generation');
+    // Console log removed
     const result = await this.processStage('task-generation', theoryContent, options);
-    console.log('[DEBUG] Tasks received from AI:', result);
+    // Console log removed
     
     // Extract tasks array from the result - ensure we get the actual array
     let tasksArray;
     if (typeof result === 'object' && result !== null && 'tasks' in result && Array.isArray(result.tasks)) {
       // The AI returned { tasks: [...] } format
       tasksArray = result.tasks;
-      console.log('[DEBUG] Extracted tasks array from result:', tasksArray);
+      // Console log removed
     } else {
       // Fallback if the structure is different
       tasksArray = Array.isArray(result) ? result : [];
-      console.log('[DEBUG] Using result directly as tasks array:', tasksArray);
+      // Console log removed
     }
     
     // Update chunk with tasks array directly (not nested)

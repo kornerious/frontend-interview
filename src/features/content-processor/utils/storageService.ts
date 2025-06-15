@@ -28,7 +28,7 @@ export class ContentProcessorStorage {
         }
       });
     } catch (error) {
-      console.error('Error saving processing state to Firebase:', error);
+      // Console log removed
       throw error;
     }
   }
@@ -54,7 +54,7 @@ export class ContentProcessorStorage {
       
       return state as ProcessingState;
     } catch (error) {
-      console.error('Error getting processing state from Firebase:', error);
+      // Console log removed
       // Return default state on error
       return {
         currentPosition: 0,
@@ -86,7 +86,7 @@ export class ContentProcessorStorage {
         }
       });
     } catch (error) {
-      console.error('Error saving processed chunk to Firebase:', error);
+      // Console log removed
       throw error;
     }
   }
@@ -101,7 +101,7 @@ export class ContentProcessorStorage {
       
       return chunks[id] || null;
     } catch (error) {
-      console.error('Error getting processed chunk from Firebase:', error);
+      // Console log removed
       return null;
     }
   }
@@ -120,7 +120,7 @@ export class ContentProcessorStorage {
       // Sort chunks by startLine
       return chunkArray.sort((a, b) => a.startLine - b.startLine);
     } catch (error) {
-      console.error('Error getting all processed chunks from Firebase:', error);
+      // Console log removed
       return [];
     }
   }
@@ -141,9 +141,9 @@ export class ContentProcessorStorage {
         }
       });
       
-      console.log('All processed chunks cleared successfully');
+      // Console log removed
     } catch (error) {
-      console.error('Error clearing processed chunks from Firebase:', error);
+      // Console log removed
       throw error;
     }
   }
@@ -164,7 +164,7 @@ export class ContentProcessorStorage {
         await this.saveProcessedChunk(chunk);
       }
     } catch (error) {
-      console.error('Error marking chunk as completed in Firebase:', error);
+      // Console log removed
       throw error;
     }
   }
@@ -182,7 +182,7 @@ export class ContentProcessorStorage {
         [this.CONTENT_PROCESSOR_KEY]: null
       });
     } catch (error) {
-      console.error('Error resetting processing state in Firebase:', error);
+      // Console log removed
       throw error;
     }
   }

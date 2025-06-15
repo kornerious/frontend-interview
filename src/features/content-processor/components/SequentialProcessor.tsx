@@ -52,7 +52,7 @@ const SequentialProcessor = {
       const calculatedNumChunks = Math.ceil(lineCount / chunkSize);
       
       setIsSequentialProcessing(true);
-      console.log(`Starting sequential processing for lines ${startLine}-${endLine} with ${calculatedNumChunks} fixed-size chunks...`);
+      // Console log removed
       
       // First process the line range to extract theory
       const options: MultiStageProcessingOptions = {
@@ -65,11 +65,11 @@ const SequentialProcessor = {
       
       // Step 1: Process line range to extract theory chunks
       await storeProcessLineRange(startLine, endLine, calculatedNumChunks, options);
-      console.log('Theory extraction completed. Getting all chunks...');
+      // Console log removed
       
       // Get all processed chunks after initial processing
       const allProcessedChunks = await ContentProcessorStorage.getAllProcessedChunks();
-      console.log(`Found ${allProcessedChunks.length} chunks to process sequentially`);
+      // Console log removed
       
       // Force update the UI with all processed chunks
       useContentProcessorStore.setState({ allChunks: allProcessedChunks });
@@ -80,11 +80,11 @@ const SequentialProcessor = {
         (chunk.displayEndLine !== undefined ? chunk.displayEndLine : chunk.endLine - 1) <= endLine
       );
       
-      console.log(`Filtered ${chunksToProcess.length} chunks within the specified line range`);
+      // Console log removed
       
       // Step 2: Enhance theory for each chunk
       for (const chunk of chunksToProcess) {
-        console.log(`Enhancing theory for chunk ${chunk.id} (${chunk.startLine}-${chunk.displayEndLine !== undefined ? chunk.displayEndLine : chunk.endLine - 1})`);
+        // Console log removed
         setStoreProcessingStage('theory-enhancement');
         await enhanceTheory(chunk.id, {
           useLocalLlm: useLocalLlm && localLlmInitialized,
@@ -99,7 +99,7 @@ const SequentialProcessor = {
       
       // Step 3: Generate questions for each chunk
       for (const chunk of chunksToProcess) {
-        console.log(`Generating questions for chunk ${chunk.id} (${chunk.startLine}-${chunk.displayEndLine !== undefined ? chunk.displayEndLine : chunk.endLine - 1})`);
+        // Console log removed
         setStoreProcessingStage('question-generation');
         await generateQuestions(chunk.id, {
           useLocalLlm: useLocalLlm && localLlmInitialized,
@@ -114,7 +114,7 @@ const SequentialProcessor = {
       
       // Step 4: Generate tasks for each chunk
       for (const chunk of chunksToProcess) {
-        console.log(`Generating tasks for chunk ${chunk.id} (${chunk.startLine}-${chunk.displayEndLine !== undefined ? chunk.displayEndLine : chunk.endLine - 1})`);
+        // Console log removed
         setStoreProcessingStage('task-generation');
         await generateTasks(chunk.id, {
           useLocalLlm: useLocalLlm && localLlmInitialized,
@@ -145,7 +145,7 @@ const SequentialProcessor = {
       
       return true;
     } catch (error) {
-      console.error('Error during sequential processing:', error);
+      // Console log removed
       alert(`Error during sequential processing: ${error instanceof Error ? error.message : String(error)}`);
       return false;
     } finally {

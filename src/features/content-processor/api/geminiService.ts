@@ -31,7 +31,7 @@ class GeminiService {
       if (envApiKey) {
         this.apiKey = envApiKey;
         this.initialized = true;
-        console.log('Gemini service initialized with environment variable');
+        // Console log removed
       }
     } catch (error) {
       console.error('Error initializing Gemini service with environment variable:', error);
@@ -82,14 +82,14 @@ class GeminiService {
     }
 
     try {
-      console.log(`Processing content with Gemini 2.5 Flash Preview...`);
-      console.log(`Content length: ${content.length}`);
+      // Processing content with Gemini 2.5 Flash Preview
+      // Content length tracking removed
       
       // Prepare request payload according to Gemini 2.5 Flash API documentation
       const requestPayload = {
         contents: [
-          {
-            parts: [
+          { role: "user",
+          parts: [
               {
                 text: content
               }
@@ -103,11 +103,11 @@ class GeminiService {
         },
       };
       
-      console.log('GEMINI REQUEST PAYLOAD:');
-      console.log(JSON.stringify(requestPayload, null, 2));
+      // Request payload logging removed
+      // Request payload details removed
       
       // Make the API request with better error handling
-      console.log(`Sending request to Gemini API: ${GEMINI_API_URL}?key=*****`);
+      // API request logging removed
       
       const response = await axios.post(
         `${GEMINI_API_URL}?key=${this.apiKey}`,
@@ -120,51 +120,35 @@ class GeminiService {
         }
       );
       
-      // Log the full response structure
-      console.log('FULL RESPONSE STRUCTURE FROM GEMINI API:');
-      console.log(JSON.stringify(response.data, null, 2));
+      // Response logging removed
       
       // Validate response structure
       if (!response.data || !response.data.candidates || !response.data.candidates[0] ||
           !response.data.candidates[0].content || !response.data.candidates[0].content.parts ||
           !response.data.candidates[0].content.parts[0] || !response.data.candidates[0].content.parts[0].text) {
-        console.error('Invalid response structure from Gemini API');
-        console.error('Response data:', response.data);
         throw new Error('Invalid response structure from Gemini API');
       }
       
       // Extract the text from the response
       const responseText = response.data.candidates[0].content.parts[0].text;
-      console.log(`Response received. Length: ${responseText.length}`);
-      console.log('RESPONSE TEXT FROM GEMINI:');
-      console.log(responseText);
+      // Get chunk info from the request payload if available
+      const chunkInfo = content.includes('lines') ? content.match(/lines (\d+)-(\d+)/) : null;
+      const chunkRange = chunkInfo ? `chunk ${chunkInfo[1]}-${chunkInfo[2]}` : 'current chunk';
+      
+      // Keep only this one console log showing chunk info and last 100 symbols
+      console.log(`Gemini response for ${chunkRange}: ...${responseText.slice(-100)}`);
       
       return responseText;
     } catch (error) {
-      console.error('Error processing content with Gemini:');
-      
+      // Type-safe error handling
       if (axios.isAxiosError(error)) {
-        console.error('Axios error details:');
-        console.error('Status:', error.response?.status);
-        console.error('Status text:', error.response?.statusText);
-        console.error('Response data:', error.response?.data);
-        console.error('Request config:', error.config);
-        
-        const status = error.response?.status;
-        if (status === 400) {
-          console.error('Bad request - check API key and request format');
-        } else if (status === 401 || status === 403) {
-          console.error('Authentication error - check your API key');
-        } else if (status === 429) {
-          console.error('Rate limit exceeded - slow down requests');
-        } else if (status && status >= 500) {
-          console.error('Server error - Gemini API might be experiencing issues');
-        }
+        const errorMessage = `Gemini API error: ${error.response?.status || 'unknown'} - ${error.response?.statusText || error.message}`;
+        throw new Error(errorMessage);
+      } else if (error instanceof Error) {
+        throw new Error(`Error: ${error.message}`);
       } else {
-        console.error('Non-Axios error:', error);
+        throw new Error('Unknown error occurred');
       }
-      
-      throw error;
     }
   }
 
@@ -181,27 +165,17 @@ class GeminiService {
       // Use the specialized Gemini prompt builder
       const fullPrompt = buildGeminiAnalysisPrompt(markdownContent);
       
-      console.log('SENDING TO GEMINI (FULL PROMPT):');
-      console.log(fullPrompt);
-      console.log('FULL PROMPT LENGTH:', fullPrompt.length);
-      
       const response = await this.processContent(fullPrompt);
-      
-      console.log('RECEIVED FROM GEMINI (FULL RESPONSE):');
-      console.log(response);
-      console.log('FULL RESPONSE LENGTH:', response.length);
       
       // Use the existing sanitizeAIResponse function to handle JSON parsing
       try {
         const parsedJson = sanitizeAIResponse(response);
-        console.log('Successfully parsed response as JSON using sanitizeAIResponse');
         return parsedJson;
       } catch (error) {
-        console.error('Failed to parse Gemini response as JSON:', error);
-        throw new Error('Failed to parse Gemini response as JSON. Please check the prompt and response format.');
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        throw new Error(`Failed to parse Gemini response as JSON: ${errorMessage}`);
       }
     } catch (error) {
-      console.error('Error analyzing content with Gemini:', error);
       throw error;
     }
   }
