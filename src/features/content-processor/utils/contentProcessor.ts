@@ -279,15 +279,14 @@ export class ContentProcessor {
             // Ensure endLine doesn't exceed total lines
             const actualEndLine = Math.min(endLine, totalLines);
 
-            // Calculate lines per chunk
+            // Use fixed 100-line chunks (0-99, 100-199, etc.)
             const totalLinesToProcess = actualEndLine - startLine;
-            // Enforce a maximum of 100 lines per chunk regardless of user input
-            const linesPerChunk = Math.min(100, Math.ceil(totalLinesToProcess / numChunks));
+            const linesPerChunk = CHUNK_SIZE; // Use the constant defined at the top of the file
             
-            // Recalculate number of chunks based on the enforced line limit
-            const adjustedNumChunks = Math.ceil(totalLinesToProcess / linesPerChunk);
+            // Calculate number of chunks needed based on fixed chunk size
+            const calculatedNumChunks = Math.ceil(totalLinesToProcess / linesPerChunk);
 
-            console.log(`Processing ${totalLinesToProcess} lines in ${adjustedNumChunks} chunks (${linesPerChunk} lines per chunk, adjusted from user request of ${numChunks} chunks)`);
+            console.log(`Processing ${totalLinesToProcess} lines in ${calculatedNumChunks} chunks (${linesPerChunk} lines per chunk, adjusted from user request of ${numChunks} chunks)`);
 
             // Clear existing chunks
             await ContentProcessorStorage.clearAllProcessedChunks();
@@ -299,9 +298,9 @@ export class ContentProcessor {
             const processedChunks: ProcessedChunk[] = [];
 
             console.log(`DEBUG: Total lines in file: ${totalLines}`);
-            console.log(`DEBUG: Processing line range ${startLine}-${actualEndLine} in ${adjustedNumChunks} chunks`);
+            console.log(`DEBUG: Processing line range ${startLine}-${actualEndLine} in ${calculatedNumChunks} chunks`);
 
-            for (let i = 0; i < adjustedNumChunks; i++) {
+            for (let i = 0; i < calculatedNumChunks; i++) {
                 try {
                     const chunkStartLine = startLine + (i * linesPerChunk);
 
@@ -311,9 +310,10 @@ export class ContentProcessor {
                         break;
                     }
 
+                    // Calculate end line (exclusive) to avoid overlap with next chunk
                     const chunkEndLine = Math.min(chunkStartLine + linesPerChunk, actualEndLine);
 
-                    console.log(`DEBUG: Processing chunk ${i + 1}/${numChunks}: lines ${chunkStartLine}-${chunkEndLine}`);
+                    console.log(`DEBUG: Processing chunk ${i + 1}/${calculatedNumChunks}: lines ${chunkStartLine}-${chunkEndLine}`);
 
                     // Get chunk content
                     const chunkContent = allLines.slice(chunkStartLine, chunkEndLine).join('\n');
@@ -351,7 +351,9 @@ export class ContentProcessor {
                         }
                     } catch (analysisError) {
                         console.error(`DEBUG: ERROR in AI analysis for chunk ${i + 1}:`, analysisError);
-                        throw analysisError;
+                        // Skip this chunk and continue with the next one instead of throwing
+                        console.log(`DEBUG: Skipping chunk ${i + 1} due to analysis error and continuing...`);
+                        continue; // Skip to the next iteration of the loop
                     }
 
                     // Create chunk with unique timestamp
@@ -359,7 +361,8 @@ export class ContentProcessor {
                     const chunk: ProcessedChunk = {
                         id: `chunk_${chunkStartLine}_${timestamp}`,
                         startLine: chunkStartLine,
-                        endLine: chunkEndLine,
+                        endLine: chunkEndLine + 1, // Store as exclusive end line for internal processing
+                        displayEndLine: chunkEndLine, // Store the actual inclusive end line for display
                         processedDate: new Date().toISOString(),
                         completed: true,
                         ...analysisResult
@@ -368,7 +371,7 @@ export class ContentProcessor {
                     // Save chunk
                     await ContentProcessorStorage.saveProcessedChunk(chunk);
                     processedChunks.push(chunk);
-                    console.log(`DEBUG: Saved AI-processed chunk ${i + 1}/${numChunks} with ID ${chunk.id}`);
+                    console.log(`DEBUG: Saved AI-processed chunk ${i + 1}/${calculatedNumChunks} with ID ${chunk.id}`);
 
 
                     // Update processing state
@@ -377,7 +380,7 @@ export class ContentProcessor {
                     await ContentProcessorStorage.saveProcessingState(state);
 
                     // Add delay between chunks if specified
-                    if (i < numChunks - 1 && options?.processingDelay) {
+                    if (i < calculatedNumChunks - 1 && options?.processingDelay) {
                         const delay = options.processingDelay || 0;
                         console.log(`DEBUG: Waiting ${delay} seconds before processing next chunk...`);
                         await new Promise(resolve => setTimeout(resolve, delay * 1000));

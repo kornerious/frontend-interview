@@ -8,6 +8,7 @@ interface ChunkSelectorProps {
     id: string;
     startLine: number;
     endLine: number;
+    displayEndLine?: number;
     completed: boolean;
   }>;
   currentChunkId: string | null | undefined;
@@ -42,7 +43,7 @@ const ChunkSelector: React.FC<ChunkSelectorProps> = ({
         >
           {allChunks.map(chunk => (
             <MenuItem key={chunk.id} value={chunk.id}>
-              Lines {chunk.startLine}-{chunk.endLine} {chunk.completed ? '(Completed)' : ''}
+              Lines {chunk.startLine}-{chunk.displayEndLine !== undefined ? chunk.displayEndLine : chunk.endLine - 1} {chunk.completed ? '(Completed)' : ''}
             </MenuItem>
           ))}
         </Select>

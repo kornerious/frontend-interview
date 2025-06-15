@@ -32,7 +32,7 @@ const LineRangeProcessor: React.FC<LineRangeProcessorProps> = ({
   // Line range state
   const [startLine, setStartLine] = useState(0);
   const [endLine, setEndLine] = useState(1000);
-  const [processingDelay, setProcessingDelay] = useState(1);
+  const [processingDelay, setProcessingDelay] = useState(10);
   const [isProcessingRange, setIsProcessingRange] = useState(false);
   const [isSequentialProcessing, setIsSequentialProcessing] = useState(false);
   const [isCompleteProcessing, setIsCompleteProcessing] = useState(false);
@@ -93,17 +93,18 @@ const LineRangeProcessor: React.FC<LineRangeProcessorProps> = ({
         return;
       }
       
-      // Calculate number of chunks based on line range (1 chunk per 100 lines)
+      // Use fixed 100-line chunks
       const lineCount = endLine - startLine;
-      const calculatedNumChunks = Math.max(1, Math.ceil(lineCount / 100));
+      const chunkSize = 100;
+      const calculatedNumChunks = Math.ceil(lineCount / chunkSize);
       
       setIsProcessingRange(true);
-      console.log(`Processing lines ${startLine}-${endLine} with AI-determined logical blocks, up to ${calculatedNumChunks} chunks with ${processingDelay}s delay...`);
+      console.log(`Processing lines ${startLine}-${endLine} with fixed 100-line chunks, ${calculatedNumChunks} chunks with ${processingDelay}s delay...`);
       
       // Use the store action to process the line range
       const options: MultiStageProcessingOptions = {
         processingDelay,
-        maxChunks: calculatedNumChunks,
+        chunkSize,
         useLocalLlm: useLocalLlm && localLlmInitialized,
         localLlmModel: useLocalLlm && localLlmInitialized ? selectedModel : undefined,
         stage: 'theory-extraction'

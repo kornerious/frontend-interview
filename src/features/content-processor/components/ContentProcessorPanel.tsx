@@ -206,7 +206,7 @@ const ContentProcessorPanel: React.FC = () => {
             {/* Chunk info and multi-stage processing controls */}
             <Box sx={{ mb: 2 }}>
               <Typography variant="body2" color="text.secondary">
-                Viewing chunk: Lines {currentChunk.startLine}-{currentChunk.endLine}
+                Viewing chunk: Lines {currentChunk.startLine}-{currentChunk.displayEndLine !== undefined ? currentChunk.displayEndLine : currentChunk.endLine - 1}
                 {currentChunk.completed ? ' (Completed)' : ''}
               </Typography>
               

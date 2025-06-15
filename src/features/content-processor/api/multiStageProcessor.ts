@@ -32,7 +32,7 @@ export interface MultiStageProcessingOptions {
   useGemini?: boolean;
   geminiApiKey?: string;
   processingDelay?: number;
-  maxChunks?: number;
+  chunkSize?: number;
   stage?: ProcessingStage;
   rewriteOptions?: {
     focus?: 'theory' | 'questions' | 'tasks';
@@ -179,18 +179,23 @@ export class MultiStageProcessor {
     options: MultiStageProcessingOptions = {}
   ): Promise<ProcessedChunk[]> {
     console.log('🔍 PROCESSOR: processLineRange called with options:', JSON.stringify(options));
-    const { processingDelay = 1000, maxChunks = 1000 } = options;
+    const { processingDelay = 10000, chunkSize = 100 } = options; // Default to 10 seconds delay and 100-line chunks
     const processedChunks: ProcessedChunk[] = [];
     
-    // Calculate lines per chunk
-    const linesPerChunk = Math.ceil((endLine - startLine + 1) / numChunks);
+    // Use fixed-size chunks (0-99, 100-199, etc.)
+    const linesPerChunk = chunkSize;
+    
+    // Calculate number of chunks needed
+    const calculatedNumChunks = Math.ceil((endLine - startLine + 1) / linesPerChunk);
     
     // Process each chunk
-    for (let i = 0; i < numChunks && i < maxChunks; i++) {
-      const chunkStartLine = startLine + Math.floor(i * linesPerChunk);
-      const chunkEndLine = i === numChunks - 1 ? endLine : startLine + Math.floor((i + 1) * linesPerChunk);
+    for (let i = 0; i < calculatedNumChunks; i++) {
+      // Calculate chunk boundaries based on fixed 100-line chunks
+      const chunkStartLine = startLine + (i * linesPerChunk);
+      // For the last chunk, use endLine, otherwise use fixed 99-line chunks
+      const chunkEndLine = i === calculatedNumChunks - 1 ? endLine : chunkStartLine + linesPerChunk - 1;
       
-      console.log(`Processing chunk ${i + 1}/${numChunks}: lines ${chunkStartLine}-${chunkEndLine}`);
+      console.log(`Processing chunk ${i + 1}/${calculatedNumChunks}: lines ${chunkStartLine}-${chunkEndLine}`);
       
       try {
         // Read content for this chunk
@@ -235,11 +240,13 @@ export class MultiStageProcessor {
           }
         }
         
-        // Create processed chunk
+        // Create processed chunk with a unique timestamp to avoid ID collisions
+        const timestamp = Date.now() + i;
         const chunk: ProcessedChunk = {
-          id: `chunk_${chunkStartLine}_${chunkEndLine}`,
+          id: `chunk_${chunkStartLine}_${chunkEndLine}_${timestamp}`,
           startLine: chunkStartLine,
-          endLine: chunkEndLine,
+          endLine: chunkEndLine + 1, // Store as exclusive end line for internal processing
+          displayEndLine: chunkEndLine, // Store the actual inclusive end line for display
           theory: result.theory || [],
           questions: result.questions || [],
           tasks: result.tasks || [],
@@ -253,13 +260,15 @@ export class MultiStageProcessor {
         processedChunks.push(chunk);
         
         // Add delay between chunks if specified
-        if (processingDelay && i < numChunks - 1) {
+        if (processingDelay && i < calculatedNumChunks - 1) {
           console.log(`Waiting ${processingDelay} seconds before processing next chunk...`);
           await new Promise(resolve => setTimeout(resolve, processingDelay * 1000));
         }
       } catch (error) {
-        console.error(`Error processing chunk ${i + 1}/${numChunks}:`, error);
-        throw error;
+        console.error(`Error processing chunk ${i + 1}/${calculatedNumChunks}:`, error);
+        // Log the error but continue processing the next chunk instead of stopping
+        console.log(`Continuing to next chunk despite error...`);
+        // Don't throw the error, which would stop the entire process
       }
     }
     

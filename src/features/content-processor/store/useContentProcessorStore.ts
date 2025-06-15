@@ -208,14 +208,13 @@ export const useContentProcessorStore = create<ContentProcessorStore>((set, get)
         endLine,
         numChunks,
         {
-          ...options,
-          maxChunks: 1000 // Limit to first 1000 chunks as requested
+          ...options
         }
       );
       
-      // Update the store with new chunks
+      // Update the store with new chunks (replacing existing ones)
       set(prevState => ({
-        allChunks: [...prevState.allChunks, ...processedChunks],
+        allChunks: processedChunks, // Replace instead of append
         currentChunk: processedChunks.length > 0 ? processedChunks[0] : prevState.currentChunk,
         isLoading: false
       }));

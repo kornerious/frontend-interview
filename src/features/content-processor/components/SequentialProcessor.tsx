@@ -46,17 +46,18 @@ const SequentialProcessor = {
         return;
       }
       
-      // Calculate number of chunks based on line range (1 chunk per 100 lines)
+      // Use fixed 100-line chunks
+      const chunkSize = 100;
       const lineCount = endLine - startLine;
-      const calculatedNumChunks = Math.max(1, Math.ceil(lineCount / 100));
+      const calculatedNumChunks = Math.ceil(lineCount / chunkSize);
       
       setIsSequentialProcessing(true);
-      console.log(`Starting sequential processing for lines ${startLine}-${endLine} with ${calculatedNumChunks} chunks...`);
+      console.log(`Starting sequential processing for lines ${startLine}-${endLine} with ${calculatedNumChunks} fixed-size chunks...`);
       
       // First process the line range to extract theory
       const options: MultiStageProcessingOptions = {
         processingDelay,
-        maxChunks: calculatedNumChunks,
+        chunkSize,
         useLocalLlm: useLocalLlm && localLlmInitialized,
         localLlmModel: useLocalLlm && localLlmInitialized ? selectedModel : undefined,
         stage: 'theory-extraction'
@@ -75,14 +76,15 @@ const SequentialProcessor = {
       
       // Filter chunks that are within our line range
       const chunksToProcess = allProcessedChunks.filter(chunk => 
-        chunk.startLine >= startLine && chunk.endLine <= endLine
+        chunk.startLine >= startLine && 
+        (chunk.displayEndLine !== undefined ? chunk.displayEndLine : chunk.endLine - 1) <= endLine
       );
       
       console.log(`Filtered ${chunksToProcess.length} chunks within the specified line range`);
       
       // Step 2: Enhance theory for each chunk
       for (const chunk of chunksToProcess) {
-        console.log(`Enhancing theory for chunk ${chunk.id} (${chunk.startLine}-${chunk.endLine})`);
+        console.log(`Enhancing theory for chunk ${chunk.id} (${chunk.startLine}-${chunk.displayEndLine !== undefined ? chunk.displayEndLine : chunk.endLine - 1})`);
         setStoreProcessingStage('theory-enhancement');
         await enhanceTheory(chunk.id, {
           useLocalLlm: useLocalLlm && localLlmInitialized,
@@ -97,7 +99,7 @@ const SequentialProcessor = {
       
       // Step 3: Generate questions for each chunk
       for (const chunk of chunksToProcess) {
-        console.log(`Generating questions for chunk ${chunk.id} (${chunk.startLine}-${chunk.endLine})`);
+        console.log(`Generating questions for chunk ${chunk.id} (${chunk.startLine}-${chunk.displayEndLine !== undefined ? chunk.displayEndLine : chunk.endLine - 1})`);
         setStoreProcessingStage('question-generation');
         await generateQuestions(chunk.id, {
           useLocalLlm: useLocalLlm && localLlmInitialized,
@@ -112,7 +114,7 @@ const SequentialProcessor = {
       
       // Step 4: Generate tasks for each chunk
       for (const chunk of chunksToProcess) {
-        console.log(`Generating tasks for chunk ${chunk.id} (${chunk.startLine}-${chunk.endLine})`);
+        console.log(`Generating tasks for chunk ${chunk.id} (${chunk.startLine}-${chunk.displayEndLine !== undefined ? chunk.displayEndLine : chunk.endLine - 1})`);
         setStoreProcessingStage('task-generation');
         await generateTasks(chunk.id, {
           useLocalLlm: useLocalLlm && localLlmInitialized,
@@ -132,7 +134,8 @@ const SequentialProcessor = {
       // Set the current chunk to the first one in our processed range
       if (updatedChunks.length > 0) {
         const firstChunk = updatedChunks.find(chunk => 
-          chunk.startLine >= startLine && chunk.endLine <= endLine
+          chunk.startLine >= startLine && 
+          (chunk.displayEndLine !== undefined ? chunk.displayEndLine : chunk.endLine - 1) <= endLine
         );
         if (firstChunk) {
           useContentProcessorStore.setState({ currentChunk: firstChunk });

@@ -35,6 +35,7 @@ export interface ProcessedChunk extends AIAnalysisResult {
   id: string;
   startLine: number;
   endLine: number;
+  displayEndLine?: number; // Optional display end line for UI (inclusive end)
   processedDate: string;
   completed: boolean;
 }
