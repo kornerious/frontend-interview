@@ -216,13 +216,21 @@ export class MultiStageProcessor {
           
           // Use geminiService.analyzeContent which uses the specialized Gemini prompt builder
           // and returns a parsed JSON object directly
-          // Console log removed
+          // Pass chunk range for better logging
           try {
-            result = await geminiService.analyzeContent(chunkContent) as AIAnalysisResult;
+            // Pass the chunk range as a string for logging purposes
+            const chunkRangeStr = `${chunkStartLine}-${chunkEndLine}`;
+            result = await geminiService.analyzeContent(chunkContent, chunkRangeStr) as AIAnalysisResult;
             // Console log removed
+            
+            // Skip this chunk if analyzeContent returned null
+            if (result === null) {
+              continue; // Move to the next chunk
+            }
           } catch (analyzeError) {
             // Console log removed
-            throw analyzeError;
+            // Skip this chunk instead of stopping the process
+            continue; // Move to the next chunk
           }
         } else {
           // Use regular processStage with theory-extraction for non-Gemini processing
@@ -234,7 +242,8 @@ export class MultiStageProcessor {
           if (!result || !result.theory || !Array.isArray(result.theory)) {
             // Console log removed
             // Console log removed
-            throw new Error('Invalid response format from Gemini API. Processing stopped.');
+            // Skip this chunk instead of stopping the process
+            continue; // Move to the next chunk
           }
         }
         

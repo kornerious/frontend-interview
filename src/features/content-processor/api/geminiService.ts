@@ -67,10 +67,12 @@ class GeminiService {
   /**
    * Process content with Gemini API
    * @param content The content to process
+   * @param chunkRange Optional chunk range for logging (e.g., "100-199")
    * @param config Optional configuration to override default settings
    */
-  async processContent(
+  public async processContent(
     content: string,
+    chunkRange?: string,
     config?: {
       temperature?: number;
       maxOutputTokens?: number;
@@ -131,12 +133,13 @@ class GeminiService {
       
       // Extract the text from the response
       const responseText = response.data.candidates[0].content.parts[0].text;
-      // Get chunk info from the request payload if available
-      const chunkInfo = content.includes('lines') ? content.match(/lines (\d+)-(\d+)/) : null;
-      const chunkRange = chunkInfo ? `chunk ${chunkInfo[1]}-${chunkInfo[2]}` : 'current chunk';
+      
+      // Format the chunk range for logging
+      const formattedChunkRange = chunkRange ? `chunk ${chunkRange}` : 'current chunk';
       
       // Keep only this one console log showing chunk info and last 100 symbols
-      console.log(`Gemini response for ${chunkRange}: ...${responseText.slice(-100)}`);
+      console.log(`Gemini response for ${formattedChunkRange} ...${responseText.slice(-100)}`);
+      
       
       return responseText;
     } catch (error) {
@@ -154,9 +157,9 @@ class GeminiService {
 
   /**
    * Analyze markdown content and generate structured JSON
-   * @returns Parsed JSON object from Gemini response
+   * @returns Parsed JSON object from Gemini response or null if parsing fails
    */
-  async analyzeContent(markdownContent: string): Promise<any> {
+  async analyzeContent(markdownContent: string, chunkRange?: string): Promise<any | null> {
     if (!this.initialized) {
       throw new Error('Gemini service is not initialized');
     }
@@ -165,18 +168,20 @@ class GeminiService {
       // Use the specialized Gemini prompt builder
       const fullPrompt = buildGeminiAnalysisPrompt(markdownContent);
       
-      const response = await this.processContent(fullPrompt);
+      // Pass the chunk range to processContent for logging
+      const response = await this.processContent(fullPrompt, chunkRange);
       
       // Use the existing sanitizeAIResponse function to handle JSON parsing
       try {
         const parsedJson = sanitizeAIResponse(response);
         return parsedJson;
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        throw new Error(`Failed to parse Gemini response as JSON: ${errorMessage}`);
+        // Return null instead of throwing an error so we can skip this chunk
+        return null;
       }
     } catch (error) {
-      throw error;
+      // Return null for any errors to allow skipping this chunk
+      return null;
     }
   }
 
