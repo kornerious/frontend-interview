@@ -137,10 +137,10 @@ class GeminiService {
       // Format the chunk range for logging
       const formattedChunkRange = chunkRange ? `chunk ${chunkRange}` : 'current chunk';
       
-      // Keep only this one console log showing chunk info and last 100 symbols
-      console.log(`Gemini response for ${formattedChunkRange} ...${responseText.slice(-100)}`);
+      // Keep log showing chunk info and last 100 symbols
+      console.log(`Gemini response end for ${formattedChunkRange} : ${responseText}`);
       
-      
+
       return responseText;
     } catch (error) {
       // Type-safe error handling
@@ -176,6 +176,9 @@ class GeminiService {
         const parsedJson = sanitizeAIResponse(response);
         return parsedJson;
       } catch (error) {
+        // Log skipped chunks with range information
+        const skippedChunkInfo = chunkRange ? `chunk ${chunkRange}` : 'current chunk';
+        console.log(`${skippedChunkInfo} rejected, JSON incorrect format`);
         // Return null instead of throwing an error so we can skip this chunk
         return null;
       }

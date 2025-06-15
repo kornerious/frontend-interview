@@ -571,7 +571,11 @@ class FirebaseStorageService {
     return this.withRetry(async () => {
       await this.ensureInitialized();
       
-      console.log('Saving settings to Firebase:', settings);
+      // Calculate and log the data size
+      const dataJson = JSON.stringify(settings);
+      const dataSizeKB = (dataJson.length / 1024).toFixed(2);
+      console.log(`Firebase data size: ${dataSizeKB} KB`);
+      console.log('Saving settings to Firebase...');
       
       // Store settings in the user document
       const userDocRef = this.getUserDocRef();
