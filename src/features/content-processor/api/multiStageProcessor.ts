@@ -10,6 +10,7 @@ import {
   buildTaskGenerationPrompt,
   buildChunkRewritePrompt
 } from './promptBuilders/index';
+import { buildGeminiAnalysisPrompt } from './geminiPromptBuilder';
 import { sanitizeAIResponse } from './sanitizers';
 
 /**
@@ -62,29 +63,38 @@ export class MultiStageProcessor {
     const { useLocalLlm, localLlmModel, useGemini, geminiApiKey } = options;
     let prompt = '';
     
-    // Build prompt based on stage
-    switch (stage) {
-      case 'theory-extraction':
-        prompt = buildTheoryExtractionPrompt(content);
-        break;
-      case 'theory-enhancement':
-        prompt = buildTheoryEnhancementPrompt(content);
-        break;
-      case 'question-generation':
-        prompt = buildQuestionGenerationPrompt(content);
-        break;
-      case 'task-generation':
-        prompt = buildTaskGenerationPrompt(content);
-        break;
-      case 'chunk-rewrite':
-        prompt = buildChunkRewritePrompt(content, options.rewriteOptions || {});
-        break;
-      default:
-        throw new Error(`Unknown processing stage: ${stage}`);
+    // If using Gemini, use the specialized Gemini prompt builder
+    if (useGemini) {
+      console.log(`Using specialized Gemini prompt builder for ${stage} stage`);
+      const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
+      prompt = buildGeminiAnalysisPrompt(contentStr);
+    } else {
+      // Build prompt based on stage for non-Gemini processing
+      switch (stage) {
+        case 'theory-extraction':
+          prompt = buildTheoryExtractionPrompt(content);
+          break;
+        case 'theory-enhancement':
+          prompt = buildTheoryEnhancementPrompt(content);
+          break;
+        case 'question-generation':
+          prompt = buildQuestionGenerationPrompt(content);
+          break;
+        case 'task-generation':
+          prompt = buildTaskGenerationPrompt(content);
+          break;
+        case 'chunk-rewrite':
+          prompt = buildChunkRewritePrompt(content, options.rewriteOptions || {});
+          break;
+        default:
+          throw new Error(`Unknown processing stage: ${stage}`);
+      }
     }
     
     // Process with appropriate service based on options
     let response: string;
+   
+    console.log(`[DEBUG] Request JSON:`, prompt);
     
     if (useGemini) {
       console.log(`Processing stage ${stage} with Gemini API`);
@@ -95,11 +105,7 @@ export class MultiStageProcessor {
       }
       
       // Process with Gemini
-      response = await geminiService.processContent(prompt, {
-        temperature: 1.0,
-        enableCodeExecution: true,
-        maxOutputTokens: 65536
-      });
+      response = await geminiService.processContent(prompt);
       
       // Response backup functionality removed as requested
     } else if (useLocalLlm && localLlmModel) {
@@ -172,6 +178,7 @@ export class MultiStageProcessor {
     numChunks: number,
     options: MultiStageProcessingOptions = {}
   ): Promise<ProcessedChunk[]> {
+    console.log('🔍 PROCESSOR: processLineRange called with options:', JSON.stringify(options));
     const { processingDelay = 1000, maxChunks = 1000 } = options;
     const processedChunks: ProcessedChunk[] = [];
     
@@ -189,8 +196,35 @@ export class MultiStageProcessor {
         // Read content for this chunk
         const chunkContent = await ContentProcessor.readChunk(chunkStartLine, chunkEndLine);
         
-        // Process with theory extraction stage
-        const result = await this.processStage('theory-extraction', chunkContent, options) as AIAnalysisResult;
+        // Process content based on options
+        let result: AIAnalysisResult;
+        
+        // If using Gemini, use analyzeContent directly which now returns parsed JSON
+        if (options.useGemini && options.geminiApiKey) {
+          console.log(`🔍🔍🔍 GEMINI FLOW TRIGGERED: Using Gemini API directly for content analysis`);
+          console.log(`Gemini API Key available: ${options.geminiApiKey ? 'YES' : 'NO'}`);
+          
+          // Initialize Gemini service if needed
+          if (!geminiService.isInitialized()) {
+            await geminiService.initialize({ apiKey: options.geminiApiKey });
+          }
+          
+          // Use geminiService.analyzeContent which uses the specialized Gemini prompt builder
+          // and returns a parsed JSON object directly
+          console.log('🔴🔴🔴 BEFORE CALLING geminiService.analyzeContent');
+          try {
+            result = await geminiService.analyzeContent(chunkContent) as AIAnalysisResult;
+            console.log('🔴🔴🔴 AFTER CALLING geminiService.analyzeContent - SUCCESS');
+            console.log('Received parsed result from geminiService.analyzeContent:', 
+              JSON.stringify(result));
+          } catch (analyzeError) {
+            console.error('🔴🔴🔴 ERROR CALLING geminiService.analyzeContent:', analyzeError);
+            throw analyzeError;
+          }
+        } else {
+          // Use regular processStage with theory-extraction for non-Gemini processing
+          result = await this.processStage('theory-extraction', chunkContent, options) as AIAnalysisResult;
+        }
         
         // Validate the result structure if using Gemini
         if (options.useGemini) {

@@ -199,6 +199,7 @@ export const useContentProcessorStore = create<ContentProcessorStore>((set, get)
   // Process a line range with multi-stage processor
   processLineRange: async (startLine: number, endLine: number, numChunks: number, options?: MultiStageProcessingOptions) => {
     try {
+      console.log('🔍 STORE: processLineRange called with options:', JSON.stringify(options));
       set({ isLoading: true, error: null });
       
       // Process the line range

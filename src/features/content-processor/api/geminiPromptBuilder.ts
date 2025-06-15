@@ -6,6 +6,8 @@
 export function buildGeminiAnalysisPrompt(markdownChunk: string): string {
   // Create the prompt with enhanced instructions for maximum content extraction and generation
   const prompt = `You are an expert content analyzer for frontend interview preparation. Your task is to thoroughly analyze the provided markdown content and transforming it into a comprehensive theory, questions, and tasks.
+! Make sure that your response should not be more than 60000 tokens.
+! IMPORTANT: Return your response as plain JSON without wrapping it in markdown code blocks (do NOT use \`\`\`json ... \`\`\`). Return the raw JSON object directly.
 
 ! Stage 1: Extract theory blocks from provided markdown content. 
 - Important! Translate non-English content to English and normalize code style.
