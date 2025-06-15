@@ -1,0 +1,123 @@
+/* Enhanced styling for ChunkTestingPanel */
+
+.mainContainer {
+  padding: 32px;
+  width: 100%;
+  margin: 0 auto;
+  border-radius: 8px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+}
+
+.pageTitle {
+  font-weight: bold;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.sectionContainer {
+  padding: 24px;
+  margin-bottom: 24px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background-color: rgba(30, 30, 30, 0.6);
+}
+
+.sectionTitle {
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.buttonPrimary {
+  background: linear-gradient(45deg, #2196F3 30%, #21CBF3 90%);
+  box-shadow: 0 3px 5px 2px rgba(33, 203, 243, .3);
+  color: white;
+  font-weight: bold;
+  border-radius: 4px;
+  text-transform: none;
+}
+
+.buttonPrimary:hover {
+  background: linear-gradient(45deg, #1976D2 30%, #00B0FF 90%);
+}
+
+.buttonPrimary:disabled {
+  background: rgba(0, 0, 0, 0.12);
+  color: rgba(255, 255, 255, 0.3);
+  box-shadow: none;
+}
+
+.buttonSecondary {
+  background: linear-gradient(45deg, #9c27b0 30%, #d500f9 90%);
+  box-shadow: 0 3px 5px 2px rgba(156, 39, 176, .3);
+  color: white;
+  font-weight: bold;
+  border-radius: 4px;
+  text-transform: none;
+}
+
+.buttonSecondary:hover {
+  background: linear-gradient(45deg, #7b1fa2 30%, #aa00ff 90%);
+}
+
+.buttonOutlined {
+  border: 2px solid #2196F3;
+  color: #2196F3;
+  font-weight: bold;
+  border-radius: 4px;
+  text-transform: none;
+}
+
+.buttonOutlined:hover {
+  background-color: rgba(33, 150, 243, 0.08);
+}
+
+.selectedItem {
+  background-color: rgba(33, 150, 243, 0.2);
+}
+
+.selectedItem:hover {
+  background-color: rgba(33, 150, 243, 0.3);
+}
+
+.chunkList {
+  max-height: 300px;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  background-color: rgba(18, 18, 18, 0.8);
+}
+
+.tabsContainer {
+  width: 100%;
+  margin-top: 32px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-top: 24px;
+}
+
+.flexCenter {
+  display: flex;
+  align-items: center;
+}
+
+.spaceBetween {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.marginBottom {
+  margin-bottom: 16px;
+}
+
+.marginTop {
+  margin-top: 16px;
+}
+
+.padding {
+  padding: 16px;
+}

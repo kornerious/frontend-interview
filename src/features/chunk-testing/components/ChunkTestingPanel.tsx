@@ -1,0 +1,485 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Box, Button, Typography, TextField, Paper, List, ListItem, 
+  ListItemText, IconButton, Tabs, Tab, FormControl, InputLabel,
+  Select, MenuItem, SelectChangeEvent, Grid, Alert, Divider, CircularProgress,
+  ListItemSecondaryAction
+} from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import { v4 as uuidv4 } from 'uuid';
+import { useChunkTestingStore } from '../store/useChunkTestingStore';
+import { TestChunk } from '../utils/chunkStorage';
+import { chunkProcessingService } from '../api/chunkProcessingService';
+import ContentTabsPanel from './ContentTabsPanel';
+import LineRangeInput from './LineRangeInput';
+import ChunkSelector from './ChunkSelector';
+import ChunkViewer from './ChunkViewer';
+import DebugChunkContent from './DebugChunkContent';
+import AdminControls from '../../content-processor/components/AdminControls';
+
+/**
+ * Main panel for testing chunk processing
+ */
+const ChunkTestingPanel: React.FC = () => {
+  // State
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [tabValue, setTabValue] = useState<number>(0);
+  const [parsedContent, setParsedContent] = useState<{
+    theory: any[];
+    questions: any[];
+    tasks: any[];
+  }>({ theory: [], questions: [], tasks: [] });
+  
+  // Store
+  const { 
+    chunks, 
+    currentChunk, 
+    loadAllChunks, 
+    saveChunk, 
+    deleteChunk,
+    clearAllChunks,
+    setCurrentChunk
+  } = useChunkTestingStore();
+  
+  // Load chunks on mount
+  useEffect(() => {
+    const initializeChunks = async () => {
+      await loadAllChunks();
+      
+      // After loading chunks, initialize the parsed content for the first chunk
+      const { chunks, currentChunk } = useChunkTestingStore.getState();
+      if (currentChunk && currentChunk.content) {
+        try {
+          const parsedContent = JSON.parse(currentChunk.content);
+          setParsedContent({
+            theory: parsedContent.theory || [],
+            questions: parsedContent.questions || [],
+            tasks: parsedContent.tasks || []
+          });
+          console.log('Initialized parsed content from first chunk');
+        } catch (error) {
+          console.error('Error parsing initial chunk content:', error);
+          setParsedContent({ theory: [], questions: [], tasks: [] });
+        }
+      }
+    };
+    
+    initializeChunks();
+  }, [loadAllChunks]);
+  
+  // Initialize chunkProcessingService on component mount
+  useEffect(() => {
+    const initializeServices = async () => {
+      try {
+        await chunkProcessingService.initialize();
+        console.log('Chunk processing service initialized');
+      } catch (error) {
+        console.error('Failed to initialize chunk processing service:', error);
+        setError('Failed to initialize services. Please check your API keys.');
+      }
+    };
+    
+    initializeServices();
+  }, []);
+  
+  // Process content with Gemini
+  const processContent = async (startLine: number, endLine: number) => {
+    try {
+      setIsProcessing(true);
+      setError(null);
+      setParsedContent({ theory: [], questions: [], tasks: [] });
+      
+      console.log(`Processing content for lines ${startLine}-${endLine}`);
+      
+      // Check if there's an existing chunk with the same line range that we should update
+      const existingChunk = chunks.find(chunk => 
+        chunk.startLine === startLine && chunk.endLine === endLine
+      );
+      
+      // Use the chunk processing service to handle all the logic
+      const result = await chunkProcessingService.processChunkContent(
+        startLine,
+        endLine,
+        saveChunk, // Pass the saveChunk function from the store
+        existingChunk?.id // Pass the existing chunk ID if found
+      );
+      
+      // Update UI with the processed content
+      setParsedContent(result.parsedContent);
+      setCurrentChunk(result.chunk);
+      setIsProcessing(false);
+    } catch (error) {
+      console.error('Error processing content:', error);
+      setError(error instanceof Error ? error.message : 'Unknown error');
+      setIsProcessing(false);
+    }
+  };
+  
+
+  
+  // Handle chunk selection
+  const handleChunkSelect = (event: SelectChangeEvent) => {
+    const chunkId = event.target.value;
+    const selectedChunk = chunks.find(chunk => chunk.id === chunkId);
+    if (selectedChunk) {
+      console.log('Selected chunk:', selectedChunk);
+      console.log('Chunk content exists:', !!selectedChunk.content);
+      if (selectedChunk.content) {
+        console.log('Content sample:', selectedChunk.content.substring(0, 100) + '...');
+      }
+      
+      setCurrentChunk(selectedChunk);
+      
+      // Parse the content if it exists
+      if (selectedChunk.content) {
+        try {
+          const parsedContent = JSON.parse(selectedChunk.content);
+          console.log('Successfully parsed content:', parsedContent);
+          console.log('Theory items:', parsedContent.theory?.length || 0);
+          console.log('Questions items:', parsedContent.questions?.length || 0);
+          console.log('Tasks items:', parsedContent.tasks?.length || 0);
+          
+          setParsedContent({
+            theory: parsedContent.theory || [],
+            questions: parsedContent.questions || [],
+            tasks: parsedContent.tasks || []
+          });
+        } catch (error) {
+          console.error('Error parsing chunk content:', error);
+          console.error('Raw content causing error:', selectedChunk.content);
+          setParsedContent({ theory: [], questions: [], tasks: [] });
+        }
+      } else {
+        console.log('No content to parse for this chunk');
+        setParsedContent({ theory: [], questions: [], tasks: [] });
+      }
+    }
+  };
+  
+  // Process existing chunk (update with new Gemini analysis)
+  const processExistingChunk = async (chunk: TestChunk) => {
+    try {
+      setIsProcessing(true);
+      setError(null);
+      
+      console.log(`Reprocessing existing chunk: ${chunk.id} (lines ${chunk.startLine}-${chunk.endLine})`);
+      
+      // Use the chunk processing service to reprocess the chunk
+      const result = await chunkProcessingService.processChunkContent(
+        chunk.startLine,
+        chunk.endLine,
+        saveChunk,
+        chunk.id // Pass the existing chunk ID
+      );
+      
+      // Update UI with the processed content
+      setParsedContent(result.parsedContent);
+      setCurrentChunk(result.chunk);
+      setIsProcessing(false);
+    } catch (error) {
+      console.error('Error reprocessing chunk:', error);
+      setError(error instanceof Error ? error.message : 'Unknown error reprocessing chunk');
+      setIsProcessing(false);
+    }
+  };
+  
+  // Handle tab change
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
+  
+  // Handle reset - clear all chunks
+  const handleReset = async () => {
+    try {
+      setIsProcessing(true);
+      setError(null);
+      await clearAllChunks();
+      setParsedContent({ theory: [], questions: [], tasks: [] });
+      setCurrentChunk(null);
+      setIsProcessing(false);
+    } catch (error) {
+      console.error('Error resetting chunks:', error);
+      setError(error instanceof Error ? error.message : 'Unknown error during reset');
+      setIsProcessing(false);
+    }
+  };
+  
+  // Handle export to JSON
+  const handleExportToJson = () => {
+    try {
+      // Convert TestChunk[] to the format expected by ExportUtils
+      const exportData = chunks.map(chunk => {
+        let parsedContent = {};
+        try {
+          if (chunk.content) {
+            parsedContent = JSON.parse(chunk.content);
+          }
+        } catch (e) {
+          console.error('Error parsing chunk content for export:', e);
+        }
+        
+        return {
+          id: chunk.id,
+          startLine: chunk.startLine,
+          endLine: chunk.endLine,
+          processedDate: chunk.processedDate,
+          content: parsedContent
+        };
+      });
+      
+      // Create a blob with the JSON data
+      const jsonData = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([jsonData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      // Create a download link
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `test-chunks-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+    } catch (error) {
+      console.error('Error exporting chunks:', error);
+      setError(error instanceof Error ? error.message : 'Unknown error during export');
+    }
+  };
+  
+  return (
+    <Paper 
+      elevation={3}
+      sx={{ 
+        p: 4, 
+        width: '100%',
+        margin: '0 auto',
+        backgroundColor: 'background.paper',
+        borderRadius: 2,
+        boxShadow: '0 8px 16px rgba(0, 0, 0, 0.4)'
+      }}
+    >
+      <Typography 
+        variant="h4" 
+        gutterBottom 
+        sx={{ 
+          fontWeight: 'bold', 
+          mb: 3,
+          pb: 2,
+          borderBottom: '1px solid',
+          borderColor: 'divider'
+        }}
+      >
+        Markdown Parser
+      </Typography>
+      
+      <Grid container spacing={4}>
+        <Grid item xs={12} md={6}>
+          <Box sx={{ mb: 4 }}>
+            <Paper 
+              elevation={2} 
+              sx={{ 
+                p: 3, 
+                mb: 4, 
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: 'divider',
+                backgroundColor: 'background.paper'
+              }}
+            >
+              <Typography variant="h6" gutterBottom sx={{ mb: 2, fontWeight: 'medium' }}>
+                Process Content
+              </Typography>
+              <LineRangeInput onProcess={processContent} isProcessing={isProcessing} />
+              
+              {isProcessing && (
+                <Box display="flex" alignItems="center" sx={{ mt: 2 }}>
+                  <CircularProgress size={20} sx={{ mr: 1 }} />
+                  <Typography variant="body2">Processing...</Typography>
+                </Box>
+              )}
+              
+              {error && (
+                <Alert severity="error" sx={{ mt: 2 }}>
+                  {error}
+                </Alert>
+              )}
+            </Paper>
+            <Paper
+              elevation={2}
+              sx={{ 
+                p: 3, 
+                mb: 4, 
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: 'divider',
+                backgroundColor: 'background.paper'
+              }}
+            >
+              <AdminControls
+                isLoading={isProcessing}
+                hasChunks={chunks.length > 0}
+                handleReset={handleReset}
+                handleExportToJson={handleExportToJson}
+              />
+            </Paper>
+            
+          </Box>
+        </Grid>
+        
+        <Grid item xs={12} md={6}>
+        <Paper 
+              elevation={2} 
+              sx={{ 
+                p: 3, 
+                mb: 3, 
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: 'divider',
+                backgroundColor: 'background.paper',
+              }}
+            >
+            <Typography variant="h6" gutterBottom>Saved Chunks</Typography>
+            {chunks.length === 0 ? (
+              <Typography variant="body2" color="text.secondary">
+                No chunks saved yet. Use the line range input to process and save chunks.
+              </Typography>
+            ) : (
+              <List sx={{ maxHeight: '300px', overflow: 'auto' }}>
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <InputLabel id="chunk-select-label">Select Chunk</InputLabel>
+                  <Select
+                    labelId="chunk-select-label"
+                    value={currentChunk?.id || ''}
+                    label="Select Chunk"
+                    onChange={handleChunkSelect}
+                    disabled={isProcessing}
+                  >
+                    {chunks.map((chunk) => (
+                      <MenuItem key={chunk.id} value={chunk.id}>
+                        Lines {chunk.startLine}-{chunk.endLine} ({new Date(chunk.processedDate).toLocaleString()})
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                
+                {currentChunk && (
+                  <Button 
+                    variant="outlined" 
+                    color="secondary"
+                    onClick={() => processExistingChunk(currentChunk)}
+                    disabled={isProcessing || !currentChunk}
+                    sx={{ mb: 2 }}
+                    startIcon={<RefreshIcon />}
+                  >
+                    Reprocess Selected Chunk
+                  </Button>
+                )}
+                
+                {chunks.map((chunk) => (
+                  <React.Fragment key={chunk.id}>
+                    <ListItem 
+                      button 
+                      selected={currentChunk?.id === chunk.id}
+                      onClick={() => {
+                        console.log('List item clicked - chunk:', chunk);
+                        console.log('Content exists:', !!chunk.content);
+                        
+                        // Manually set the current chunk since we're not using the Select component here
+                        setCurrentChunk(chunk);
+                        
+                        // Parse the content if it exists
+                        if (chunk.content) {
+                          console.log('Content sample from list click:', chunk.content.substring(0, 100) + '...');
+                          try {
+                            const parsedContent = JSON.parse(chunk.content);
+                            console.log('List click - parsed content:', parsedContent);
+                            console.log('List click - theory items:', parsedContent.theory?.length || 0);
+                            console.log('List click - questions items:', parsedContent.questions?.length || 0);
+                            console.log('List click - tasks items:', parsedContent.tasks?.length || 0);
+                            
+                            setParsedContent({
+                              theory: parsedContent.theory || [],
+                              questions: parsedContent.questions || [],
+                              tasks: parsedContent.tasks || []
+                            });
+                          } catch (error) {
+                            console.error('List click - error parsing chunk content:', error);
+                            console.error('List click - raw content causing error:', chunk.content);
+                            setParsedContent({ theory: [], questions: [], tasks: [] });
+                          }
+                        } else {
+                          console.log('List click - no content to parse');
+                          setParsedContent({ theory: [], questions: [], tasks: [] });
+                        }
+                      }}
+                    >
+                      <ListItemText 
+                        primary={`Lines ${chunk.startLine}-${chunk.endLine}`}
+                        secondary={`ID: ${chunk.id.substring(0, 8)}... | ${new Date(chunk.processedDate).toLocaleString()}`}
+                      />
+                      <ListItemSecondaryAction>
+                        <IconButton 
+                          edge="end" 
+                          aria-label="delete"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteChunk(chunk.id);
+                          }}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </ListItemSecondaryAction>
+                    </ListItem>
+                    <Divider />
+                  </React.Fragment>
+                ))}
+              </List>
+            )}
+          </Paper>
+          <Box sx={{ mb: 4 }}>
+            {currentChunk && (
+              <Paper
+                elevation={2}
+                sx={{ 
+                  p: 3, 
+                  borderRadius: 2,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  backgroundColor: 'background.paper'
+                }}
+              >
+                <ChunkViewer chunk={currentChunk} />
+              </Paper>
+            )}
+          </Box>
+        </Grid>
+        
+        <Grid item xs={12}>
+          <Box sx={{  width: '100%' }}>
+            <Paper
+              elevation={1}
+              sx={{ 
+                p: 3, 
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: 'divider',
+                backgroundColor: 'background.paper'
+              }}
+            >
+              <ContentTabsPanel 
+                tabValue={tabValue}
+                handleTabChange={handleTabChange}
+                currentChunk={parsedContent}
+              />
+            </Paper>
+          </Box>
+        </Grid>
+      </Grid>
+    </Paper>
+  );
+};
+
+export default ChunkTestingPanel;

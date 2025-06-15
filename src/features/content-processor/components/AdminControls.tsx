@@ -18,7 +18,7 @@ const AdminControls: React.FC<AdminControlsProps> = ({
   handleExportToJson
 }) => {
   return (
-    <Box sx={{ mt: 3, pt: 2, borderTop: '1px dashed #ccc' }}>
+    <Box sx={{ mt: 3, pt: 2 }}>
       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
         Admin Controls
       </Typography>
